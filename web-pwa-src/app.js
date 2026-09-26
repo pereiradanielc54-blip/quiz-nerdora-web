@@ -220,8 +220,8 @@ function bind(){
  $$('[data-buy]').forEach(b=>b.onclick=()=>purchaseItem(b.dataset.buy));
  $$('[data-equip]').forEach(b=>b.onclick=()=>equipItem(b.dataset.equip));
  $$('[data-crate]').forEach(b=>b.onclick=claimDailyCrate);
- $('[data-qualityhub]').forEach(b=>b.onclick=()=>qualityHub());
- $('[data-homepass]').forEach(b=>b.onclick=()=>shop('pass'));
+ $$('[data-qualityhub]').forEach(b=>b.onclick=()=>qualityHub());
+ $$('[data-homepass]').forEach(b=>b.onclick=()=>shop('pass'));
  $$('[data-qualitytab]').forEach(b=>b.onclick=()=>qualityHub(b.dataset.qualitytab));
  $$('[data-qualityaction]').forEach(b=>b.onclick=()=>{const a=b.dataset.qualityaction;if(a==='reviewstart')startWrongReview();if(a==='resume')resumeSavedRun();if(a==='newrun'){clearResumeState();startMain(true)}});
  $$('[data-missionclaim]').forEach(b=>b.onclick=()=>{const [scope,id]=b.dataset.missionclaim.split(':');claimMission(scope,id)});
