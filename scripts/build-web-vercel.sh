@@ -101,3 +101,5 @@ bad=[line for line in block.splitlines() if line.lstrip().startswith("$('[data-"
 assert not bad, "Seletores singulares usados com .forEach: " + " | ".join(bad)
 print("Bind selector guard OK")
 PY
+
+test -s site/home_screen_v2.jpg
