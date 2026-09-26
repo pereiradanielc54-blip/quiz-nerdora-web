@@ -1,0 +1,2004 @@
+{
+  "version": "1.0",
+  "bank_revision": "semantic-options-2026-09-26",
+  "reviewed_questions": 900,
+  "updated_questions": 95,
+  "policy": "Somente alternativas foram alteradas. Enunciado, fact_id, correct_option e resposta correta foram preservados.",
+  "questions": [
+    {
+      "id": "L1-F055-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Saiyajin"
+        },
+        {
+          "id": "B",
+          "text": "Humano"
+        },
+        {
+          "id": "C",
+          "text": "Androide"
+        },
+        {
+          "id": "D",
+          "text": "Namekuseijin"
+        }
+      ]
+    },
+    {
+      "id": "L1-F072-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Atirador"
+        },
+        {
+          "id": "B",
+          "text": "Cozinheiro"
+        },
+        {
+          "id": "C",
+          "text": "Navegador"
+        },
+        {
+          "id": "D",
+          "text": "Médico"
+        }
+      ]
+    },
+    {
+      "id": "L1-F073-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Atirador"
+        },
+        {
+          "id": "B",
+          "text": "Navegador"
+        },
+        {
+          "id": "C",
+          "text": "Médico"
+        },
+        {
+          "id": "D",
+          "text": "Cozinheiro"
+        }
+      ]
+    },
+    {
+      "id": "L1-F074-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Nami"
+        },
+        {
+          "id": "B",
+          "text": "Brook"
+        },
+        {
+          "id": "C",
+          "text": "Franky"
+        },
+        {
+          "id": "D",
+          "text": "Nico Robin"
+        }
+      ]
+    },
+    {
+      "id": "L1-F075-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Franky"
+        },
+        {
+          "id": "B",
+          "text": "Brook"
+        },
+        {
+          "id": "C",
+          "text": "Nami"
+        },
+        {
+          "id": "D",
+          "text": "Nico Robin"
+        }
+      ]
+    },
+    {
+      "id": "L1-F076-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Brook"
+        },
+        {
+          "id": "B",
+          "text": "Nico Robin"
+        },
+        {
+          "id": "C",
+          "text": "Franky"
+        },
+        {
+          "id": "D",
+          "text": "Nami"
+        }
+      ]
+    },
+    {
+      "id": "L1-F077-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Going Merry"
+        },
+        {
+          "id": "B",
+          "text": "Thousand Sunny"
+        },
+        {
+          "id": "C",
+          "text": "Red Force"
+        },
+        {
+          "id": "D",
+          "text": "Moby Dick"
+        }
+      ]
+    },
+    {
+      "id": "L1-F079-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Thousand Sunny"
+        },
+        {
+          "id": "B",
+          "text": "Red Force"
+        },
+        {
+          "id": "C",
+          "text": "Moby Dick"
+        },
+        {
+          "id": "D",
+          "text": "Going Merry"
+        }
+      ]
+    },
+    {
+      "id": "L1-F083-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Shinigami"
+        },
+        {
+          "id": "B",
+          "text": "Arrancar"
+        },
+        {
+          "id": "C",
+          "text": "Quincy"
+        },
+        {
+          "id": "D",
+          "text": "Fullbringer"
+        }
+      ]
+    },
+    {
+      "id": "L1-F090-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Arrancars"
+        },
+        {
+          "id": "B",
+          "text": "Shinigamis"
+        },
+        {
+          "id": "C",
+          "text": "Hollows"
+        },
+        {
+          "id": "D",
+          "text": "Fullbringers"
+        }
+      ]
+    },
+    {
+      "id": "L1-F120-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "All For One"
+        },
+        {
+          "id": "B",
+          "text": "Dabi"
+        },
+        {
+          "id": "C",
+          "text": "Stain"
+        },
+        {
+          "id": "D",
+          "text": "Tomura Shigaraki"
+        }
+      ]
+    },
+    {
+      "id": "L1-F133-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Advogado"
+        },
+        {
+          "id": "B",
+          "text": "Professor"
+        },
+        {
+          "id": "C",
+          "text": "Pesquisador"
+        },
+        {
+          "id": "D",
+          "text": "Médico"
+        }
+      ]
+    },
+    {
+      "id": "L1-F141-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Flame Alchemist"
+        },
+        {
+          "id": "B",
+          "text": "Strong Arm Alchemist"
+        },
+        {
+          "id": "C",
+          "text": "Crimson Alchemist"
+        },
+        {
+          "id": "D",
+          "text": "Fullmetal Alchemist"
+        }
+      ]
+    },
+    {
+      "id": "L1-F158-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "L"
+        },
+        {
+          "id": "B",
+          "text": "Kira"
+        },
+        {
+          "id": "C",
+          "text": "Segundo Kira"
+        },
+        {
+          "id": "D",
+          "text": "X-Kira"
+        }
+      ]
+    },
+    {
+      "id": "L1-F159-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Atriz"
+        },
+        {
+          "id": "B",
+          "text": "Modelo e idol"
+        },
+        {
+          "id": "C",
+          "text": "Cantora"
+        },
+        {
+          "id": "D",
+          "text": "Repórter"
+        }
+      ]
+    },
+    {
+      "id": "L1-F162-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "50"
+        },
+        {
+          "id": "B",
+          "text": "100"
+        },
+        {
+          "id": "C",
+          "text": "75"
+        },
+        {
+          "id": "D",
+          "text": "120"
+        }
+      ]
+    },
+    {
+      "id": "L1-F165-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Flash"
+        },
+        {
+          "id": "B",
+          "text": "Black Swordsman"
+        },
+        {
+          "id": "C",
+          "text": "Absolute Sword"
+        },
+        {
+          "id": "D",
+          "text": "Beater"
+        }
+      ]
+    },
+    {
+      "id": "L1-F171-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Humana"
+        },
+        {
+          "id": "B",
+          "text": "Demônio"
+        },
+        {
+          "id": "C",
+          "text": "Anã"
+        },
+        {
+          "id": "D",
+          "text": "Elfa"
+        }
+      ]
+    },
+    {
+      "id": "L1-F176-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Dez anos"
+        },
+        {
+          "id": "B",
+          "text": "Cinco anos"
+        },
+        {
+          "id": "C",
+          "text": "Vinte anos"
+        },
+        {
+          "id": "D",
+          "text": "Cinquenta anos"
+        }
+      ]
+    },
+    {
+      "id": "L1-F188-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Portais"
+        },
+        {
+          "id": "B",
+          "text": "Masmorras"
+        },
+        {
+          "id": "C",
+          "text": "Núcleos"
+        },
+        {
+          "id": "D",
+          "text": "Torres"
+        }
+      ]
+    },
+    {
+      "id": "L1-F192-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Cinco"
+        },
+        {
+          "id": "B",
+          "text": "Três"
+        },
+        {
+          "id": "C",
+          "text": "Quatro"
+        },
+        {
+          "id": "D",
+          "text": "Seis"
+        }
+      ]
+    },
+    {
+      "id": "L1-F193-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Três"
+        },
+        {
+          "id": "B",
+          "text": "Quatro"
+        },
+        {
+          "id": "C",
+          "text": "Cinco"
+        },
+        {
+          "id": "D",
+          "text": "Seis"
+        }
+      ]
+    },
+    {
+      "id": "L1-F196-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Demon-Dweller Sword"
+        },
+        {
+          "id": "B",
+          "text": "Demon-Destroyer Sword"
+        },
+        {
+          "id": "C",
+          "text": "Demon-Slasher Katana"
+        },
+        {
+          "id": "D",
+          "text": "Demon-Slayer Sword"
+        }
+      ]
+    },
+    {
+      "id": "L1-F211-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Reino de Dwargon"
+        },
+        {
+          "id": "B",
+          "text": "Reino de Blumund"
+        },
+        {
+          "id": "C",
+          "text": "Reino de Falmuth"
+        },
+        {
+          "id": "D",
+          "text": "Federação Jura Tempest"
+        }
+      ]
+    },
+    {
+      "id": "L1-F220-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Slime"
+        },
+        {
+          "id": "B",
+          "text": "Humano"
+        },
+        {
+          "id": "C",
+          "text": "Goblin"
+        },
+        {
+          "id": "D",
+          "text": "Ogro"
+        }
+      ]
+    },
+    {
+      "id": "L1-F221-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Para enriquecer rapidamente"
+        },
+        {
+          "id": "B",
+          "text": "Para entrar na escola"
+        },
+        {
+          "id": "C",
+          "text": "Para pagar dívidas"
+        },
+        {
+          "id": "D",
+          "text": "Para viajar pelo país"
+        }
+      ]
+    },
+    {
+      "id": "L1-F227-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Uma alavanca no braço"
+        },
+        {
+          "id": "B",
+          "text": "Um botão no pescoço"
+        },
+        {
+          "id": "C",
+          "text": "Uma corrente na cintura"
+        },
+        {
+          "id": "D",
+          "text": "Uma corda de partida"
+        }
+      ]
+    },
+    {
+      "id": "L1-F243-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Classe B"
+        },
+        {
+          "id": "B",
+          "text": "Classe C"
+        },
+        {
+          "id": "C",
+          "text": "Classe A"
+        },
+        {
+          "id": "D",
+          "text": "Classe S"
+        }
+      ]
+    },
+    {
+      "id": "L1-F258-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Squirtle"
+        },
+        {
+          "id": "B",
+          "text": "Charmander"
+        },
+        {
+          "id": "C",
+          "text": "Bulbasaur"
+        },
+        {
+          "id": "D",
+          "text": "Pikachu"
+        }
+      ]
+    },
+    {
+      "id": "L1-F259-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Bulbasaur"
+        },
+        {
+          "id": "B",
+          "text": "Charmander"
+        },
+        {
+          "id": "C",
+          "text": "Squirtle"
+        },
+        {
+          "id": "D",
+          "text": "Pikachu"
+        }
+      ]
+    },
+    {
+      "id": "L1-F260-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Pikachu"
+        },
+        {
+          "id": "B",
+          "text": "Ditto"
+        },
+        {
+          "id": "C",
+          "text": "Eevee"
+        },
+        {
+          "id": "D",
+          "text": "Meowth"
+        }
+      ]
+    },
+    {
+      "id": "L1-F272-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Líbero"
+        },
+        {
+          "id": "B",
+          "text": "Levantador"
+        },
+        {
+          "id": "C",
+          "text": "Central"
+        },
+        {
+          "id": "D",
+          "text": "Ponteiro"
+        }
+      ]
+    },
+    {
+      "id": "L1-F273-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Nekoma"
+        },
+        {
+          "id": "B",
+          "text": "Karasuno"
+        },
+        {
+          "id": "C",
+          "text": "Aoba Johsai"
+        },
+        {
+          "id": "D",
+          "text": "Shiratorizawa"
+        }
+      ]
+    },
+    {
+      "id": "L1-F280-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Nekoma"
+        },
+        {
+          "id": "B",
+          "text": "Karasuno"
+        },
+        {
+          "id": "C",
+          "text": "Fukurodani"
+        },
+        {
+          "id": "D",
+          "text": "Aoba Johsai"
+        }
+      ]
+    },
+    {
+      "id": "L1-F288-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Yoichi Isagi"
+        },
+        {
+          "id": "B",
+          "text": "Meguru Bachira"
+        },
+        {
+          "id": "C",
+          "text": "Shoei Barou"
+        },
+        {
+          "id": "D",
+          "text": "Reo Mikage"
+        }
+      ]
+    },
+    {
+      "id": "L2-F055-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Oozaru"
+        },
+        {
+          "id": "B",
+          "text": "Super Saiyajin 2"
+        },
+        {
+          "id": "C",
+          "text": "Super Saiyajin"
+        },
+        {
+          "id": "D",
+          "text": "Super Saiyajin God"
+        }
+      ]
+    },
+    {
+      "id": "L2-F056-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Androides 16 e 17"
+        },
+        {
+          "id": "B",
+          "text": "Androides 17 e 18"
+        },
+        {
+          "id": "C",
+          "text": "Androides 18 e 19"
+        },
+        {
+          "id": "D",
+          "text": "Androides 19 e 20"
+        }
+      ]
+    },
+    {
+      "id": "L2-F059-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Champa"
+        },
+        {
+          "id": "B",
+          "text": "Belmod"
+        },
+        {
+          "id": "C",
+          "text": "Toppo"
+        },
+        {
+          "id": "D",
+          "text": "Beerus"
+        }
+      ]
+    },
+    {
+      "id": "L2-F072-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Adam Wood"
+        },
+        {
+          "id": "B",
+          "text": "Wapometal"
+        },
+        {
+          "id": "C",
+          "text": "Pyrobloin"
+        },
+        {
+          "id": "D",
+          "text": "Kairouseki"
+        }
+      ]
+    },
+    {
+      "id": "L2-F080-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Três"
+        },
+        {
+          "id": "B",
+          "text": "Cinco"
+        },
+        {
+          "id": "C",
+          "text": "Quatro"
+        },
+        {
+          "id": "D",
+          "text": "Seis"
+        }
+      ]
+    },
+    {
+      "id": "L2-F081-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Bankai"
+        },
+        {
+          "id": "B",
+          "text": "Shikai"
+        },
+        {
+          "id": "C",
+          "text": "Resurrección"
+        },
+        {
+          "id": "D",
+          "text": "Vollständig"
+        }
+      ]
+    },
+    {
+      "id": "L2-F093-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Kakushi"
+        },
+        {
+          "id": "B",
+          "text": "Mizunoto"
+        },
+        {
+          "id": "C",
+          "text": "Tsuguko"
+        },
+        {
+          "id": "D",
+          "text": "Hashira"
+        }
+      ]
+    },
+    {
+      "id": "L2-F107-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Pinturas da Morte"
+        },
+        {
+          "id": "B",
+          "text": "Maldições de Grau Especial"
+        },
+        {
+          "id": "C",
+          "text": "Shikigamis"
+        },
+        {
+          "id": "D",
+          "text": "Objetos Amaldiçoados"
+        }
+      ]
+    },
+    {
+      "id": "L2-F115-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "All Might"
+        },
+        {
+          "id": "B",
+          "text": "Hawks"
+        },
+        {
+          "id": "C",
+          "text": "Endeavor"
+        },
+        {
+          "id": "D",
+          "text": "Best Jeanist"
+        }
+      ]
+    },
+    {
+      "id": "L2-F116-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "High-End"
+        },
+        {
+          "id": "B",
+          "text": "Vilões humanos"
+        },
+        {
+          "id": "C",
+          "text": "Heróis artificiais"
+        },
+        {
+          "id": "D",
+          "text": "Nomu"
+        }
+      ]
+    },
+    {
+      "id": "L2-F127-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Sangue de Titã"
+        },
+        {
+          "id": "B",
+          "text": "Soro de endurecimento"
+        },
+        {
+          "id": "C",
+          "text": "Líquido de cristalização"
+        },
+        {
+          "id": "D",
+          "text": "Fluido espinhal de Titã"
+        }
+      ]
+    },
+    {
+      "id": "L2-F129-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Ar comprimido"
+        },
+        {
+          "id": "B",
+          "text": "Gás comprimido"
+        },
+        {
+          "id": "C",
+          "text": "Vapor pressurizado"
+        },
+        {
+          "id": "D",
+          "text": "Combustível líquido"
+        }
+      ]
+    },
+    {
+      "id": "L2-F131-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Ten"
+        },
+        {
+          "id": "B",
+          "text": "Zetsu"
+        },
+        {
+          "id": "C",
+          "text": "Ren"
+        },
+        {
+          "id": "D",
+          "text": "Gyo"
+        }
+      ]
+    },
+    {
+      "id": "L2-F132-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Ren"
+        },
+        {
+          "id": "B",
+          "text": "Ten"
+        },
+        {
+          "id": "C",
+          "text": "Zetsu"
+        },
+        {
+          "id": "D",
+          "text": "Hatsu"
+        }
+      ]
+    },
+    {
+      "id": "L2-F136-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Ten"
+        },
+        {
+          "id": "B",
+          "text": "Gyo"
+        },
+        {
+          "id": "C",
+          "text": "Ko"
+        },
+        {
+          "id": "D",
+          "text": "En"
+        }
+      ]
+    },
+    {
+      "id": "L2-F137-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Ren"
+        },
+        {
+          "id": "B",
+          "text": "Gyo"
+        },
+        {
+          "id": "C",
+          "text": "Ko"
+        },
+        {
+          "id": "D",
+          "text": "Ryu"
+        }
+      ]
+    },
+    {
+      "id": "L2-F145-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Quatro elementos clássicos"
+        },
+        {
+          "id": "B",
+          "text": "Sete pecados capitais"
+        },
+        {
+          "id": "C",
+          "text": "Sete virtudes"
+        },
+        {
+          "id": "D",
+          "text": "Doze signos do zodíaco"
+        }
+      ]
+    },
+    {
+      "id": "L2-F151-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Spin"
+        },
+        {
+          "id": "B",
+          "text": "Hamon"
+        },
+        {
+          "id": "C",
+          "text": "Stands"
+        },
+        {
+          "id": "D",
+          "text": "Vampirismo"
+        }
+      ]
+    },
+    {
+      "id": "L2-F170-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Euphemia li Britannia"
+        },
+        {
+          "id": "B",
+          "text": "Cornelia li Britannia"
+        },
+        {
+          "id": "C",
+          "text": "Kallen Kozuki"
+        },
+        {
+          "id": "D",
+          "text": "Nunnally"
+        }
+      ]
+    },
+    {
+      "id": "L2-F173-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Time Leap"
+        },
+        {
+          "id": "B",
+          "text": "D-Mail"
+        },
+        {
+          "id": "C",
+          "text": "Divergence Shift"
+        },
+        {
+          "id": "D",
+          "text": "Reading Steiner"
+        }
+      ]
+    },
+    {
+      "id": "L2-F187-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Ritsu Kageyama"
+        },
+        {
+          "id": "B",
+          "text": "Teruki Hanazawa"
+        },
+        {
+          "id": "C",
+          "text": "Shigeo Kageyama"
+        },
+        {
+          "id": "D",
+          "text": "Reigen Arataka"
+        }
+      ]
+    },
+    {
+      "id": "L2-F202-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Baba Yaga Castle"
+        },
+        {
+          "id": "B",
+          "text": "EAT"
+        },
+        {
+          "id": "C",
+          "text": "NOT"
+        },
+        {
+          "id": "D",
+          "text": "DWMA"
+        }
+      ]
+    },
+    {
+      "id": "L2-F210-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "50 almas e 1 alma de bruxa"
+        },
+        {
+          "id": "B",
+          "text": "99 almas e 2 almas de bruxa"
+        },
+        {
+          "id": "C",
+          "text": "99 almas e 1 alma de bruxa"
+        },
+        {
+          "id": "D",
+          "text": "100 almas e nenhuma alma de bruxa"
+        }
+      ]
+    },
+    {
+      "id": "L2-F220-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Far Shore"
+        },
+        {
+          "id": "B",
+          "text": "Near Shore"
+        },
+        {
+          "id": "C",
+          "text": "Yomi"
+        },
+        {
+          "id": "D",
+          "text": "Takama-ga-hara"
+        }
+      ]
+    },
+    {
+      "id": "L2-F244-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Mestres de Guilda"
+        },
+        {
+          "id": "B",
+          "text": "Cavaleiros Rúnicos"
+        },
+        {
+          "id": "C",
+          "text": "Dez Grandes Magos"
+        },
+        {
+          "id": "D",
+          "text": "Dez Santos Magos"
+        }
+      ]
+    },
+    {
+      "id": "L3-F055-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Avalon"
+        },
+        {
+          "id": "B",
+          "text": "Ikaruga"
+        },
+        {
+          "id": "C",
+          "text": "Damocles"
+        },
+        {
+          "id": "D",
+          "text": "Pendragon"
+        }
+      ]
+    },
+    {
+      "id": "L3-F079-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Sovereign of Annihilation"
+        },
+        {
+          "id": "B",
+          "text": "Sovereign of Dawn"
+        },
+        {
+          "id": "C",
+          "text": "The Immovable"
+        },
+        {
+          "id": "D",
+          "text": "Sovereign of Mystery"
+        }
+      ]
+    },
+    {
+      "id": "L3-F085-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Shinji Ikari"
+        },
+        {
+          "id": "B",
+          "text": "Asuka Langley Soryu"
+        },
+        {
+          "id": "C",
+          "text": "Rei Ayanami"
+        },
+        {
+          "id": "D",
+          "text": "Kaworu Nagisa"
+        }
+      ]
+    },
+    {
+      "id": "L3-F086-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Rei Ayanami"
+        },
+        {
+          "id": "B",
+          "text": "Shinji Ikari"
+        },
+        {
+          "id": "C",
+          "text": "Asuka Langley Soryu"
+        },
+        {
+          "id": "D",
+          "text": "Kaworu Nagisa"
+        }
+      ]
+    },
+    {
+      "id": "L3-F087-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Asuka Langley Soryu"
+        },
+        {
+          "id": "B",
+          "text": "Rei Ayanami"
+        },
+        {
+          "id": "C",
+          "text": "Shinji Ikari"
+        },
+        {
+          "id": "D",
+          "text": "Kaworu Nagisa"
+        }
+      ]
+    },
+    {
+      "id": "L3-F094-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Gurren Lagann"
+        },
+        {
+          "id": "B",
+          "text": "Gurren"
+        },
+        {
+          "id": "C",
+          "text": "Lagann"
+        },
+        {
+          "id": "D",
+          "text": "Arc-Gurren"
+        }
+      ]
+    },
+    {
+      "id": "L3-F096-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Lordgenome"
+        },
+        {
+          "id": "B",
+          "text": "Viral"
+        },
+        {
+          "id": "C",
+          "text": "Anti-Spiral"
+        },
+        {
+          "id": "D",
+          "text": "Nia Teppelin"
+        }
+      ]
+    },
+    {
+      "id": "L3-F100-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Dai-Gurren"
+        },
+        {
+          "id": "B",
+          "text": "Cathedral Terra"
+        },
+        {
+          "id": "C",
+          "text": "Arc-Gurren"
+        },
+        {
+          "id": "D",
+          "text": "Super Galaxy Dai-Gurren"
+        }
+      ]
+    },
+    {
+      "id": "L3-F102-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Eight Fingers"
+        },
+        {
+          "id": "B",
+          "text": "Ainz Ooal Gown"
+        },
+        {
+          "id": "C",
+          "text": "Blue Roses"
+        },
+        {
+          "id": "D",
+          "text": "Black Scripture"
+        }
+      ]
+    },
+    {
+      "id": "L3-F117-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Counter Arrow"
+        },
+        {
+          "id": "B",
+          "text": "Stepped Leader"
+        },
+        {
+          "id": "C",
+          "text": "Fangs of the Black Wolf"
+        },
+        {
+          "id": "D",
+          "text": "Dead End"
+        }
+      ]
+    },
+    {
+      "id": "L3-F123-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Crusader"
+        },
+        {
+          "id": "B",
+          "text": "Archpriest"
+        },
+        {
+          "id": "C",
+          "text": "Wizard"
+        },
+        {
+          "id": "D",
+          "text": "Thief"
+        }
+      ]
+    },
+    {
+      "id": "L3-F126-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Eris"
+        },
+        {
+          "id": "B",
+          "text": "Aqua"
+        },
+        {
+          "id": "C",
+          "text": "Wolbach"
+        },
+        {
+          "id": "D",
+          "text": "Zenarith"
+        }
+      ]
+    },
+    {
+      "id": "L3-F127-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Aqua"
+        },
+        {
+          "id": "B",
+          "text": "Wolbach"
+        },
+        {
+          "id": "C",
+          "text": "Eris"
+        },
+        {
+          "id": "D",
+          "text": "Zenarith"
+        }
+      ]
+    },
+    {
+      "id": "L3-F130-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Demon King's Castle"
+        },
+        {
+          "id": "B",
+          "text": "Destroyer"
+        },
+        {
+          "id": "C",
+          "text": "Crimson Demon Fortress"
+        },
+        {
+          "id": "D",
+          "text": "Ancient Golem"
+        }
+      ]
+    },
+    {
+      "id": "L3-F131-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Espada"
+        },
+        {
+          "id": "B",
+          "text": "Lança"
+        },
+        {
+          "id": "C",
+          "text": "Arco"
+        },
+        {
+          "id": "D",
+          "text": "Escudo"
+        }
+      ]
+    },
+    {
+      "id": "L3-F135-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Naofumi Iwatani"
+        },
+        {
+          "id": "B",
+          "text": "Ren Amaki"
+        },
+        {
+          "id": "C",
+          "text": "Motoyasu Kitamura"
+        },
+        {
+          "id": "D",
+          "text": "Itsuki Kawasumi"
+        }
+      ]
+    },
+    {
+      "id": "L3-F136-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Naofumi Iwatani"
+        },
+        {
+          "id": "B",
+          "text": "Ren Amaki"
+        },
+        {
+          "id": "C",
+          "text": "Motoyasu Kitamura"
+        },
+        {
+          "id": "D",
+          "text": "Itsuki Kawasumi"
+        }
+      ]
+    },
+    {
+      "id": "L3-F137-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Naofumi Iwatani"
+        },
+        {
+          "id": "B",
+          "text": "Motoyasu Kitamura"
+        },
+        {
+          "id": "C",
+          "text": "Itsuki Kawasumi"
+        },
+        {
+          "id": "D",
+          "text": "Ren Amaki"
+        }
+      ]
+    },
+    {
+      "id": "L3-F150-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Ele possui capacidades de Segunda e Terceira Geração"
+        },
+        {
+          "id": "B",
+          "text": "Porque domina apenas a Segunda Geração"
+        },
+        {
+          "id": "C",
+          "text": "Porque domina apenas a Terceira Geração"
+        },
+        {
+          "id": "D",
+          "text": "Porque não possui ignição própria"
+        }
+      ]
+    },
+    {
+      "id": "L3-F153-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Demon Weapons"
+        },
+        {
+          "id": "B",
+          "text": "Weapon Partners"
+        },
+        {
+          "id": "C",
+          "text": "Meisters"
+        },
+        {
+          "id": "D",
+          "text": "Death Scythes"
+        }
+      ]
+    },
+    {
+      "id": "L3-F165-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Zodd, Grunbeld, Irvine e Locus"
+        },
+        {
+          "id": "B",
+          "text": "Skull Knight, Zodd, Guts e Casca"
+        },
+        {
+          "id": "C",
+          "text": "Void, Slan, Ubik e Conrad"
+        },
+        {
+          "id": "D",
+          "text": "Griffith, Casca, Judeau e Pippin"
+        }
+      ]
+    },
+    {
+      "id": "L3-F188-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Thorkell the Tall"
+        },
+        {
+          "id": "B",
+          "text": "Troll of Jom"
+        },
+        {
+          "id": "C",
+          "text": "Askeladd"
+        },
+        {
+          "id": "D",
+          "text": "Thorfinn Karlsefni"
+        }
+      ]
+    },
+    {
+      "id": "L4-F074-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Bort"
+        },
+        {
+          "id": "B",
+          "text": "Diamond"
+        },
+        {
+          "id": "C",
+          "text": "Rutile"
+        },
+        {
+          "id": "D",
+          "text": "Cinnabar"
+        }
+      ]
+    },
+    {
+      "id": "L4-F083-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Firo Prochainezo"
+        },
+        {
+          "id": "B",
+          "text": "Ladd Russo"
+        },
+        {
+          "id": "C",
+          "text": "Claire Stanfield"
+        },
+        {
+          "id": "D",
+          "text": "Isaac Dian"
+        }
+      ]
+    },
+    {
+      "id": "L4-F087-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Anri Sonohara"
+        },
+        {
+          "id": "B",
+          "text": "Masaomi Kida"
+        },
+        {
+          "id": "C",
+          "text": "Mikado Ryugamine"
+        },
+        {
+          "id": "D",
+          "text": "Shizuo Heiwajima"
+        }
+      ]
+    },
+    {
+      "id": "L4-F090-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Corretor de informações"
+        },
+        {
+          "id": "B",
+          "text": "Detetive particular"
+        },
+        {
+          "id": "C",
+          "text": "Jornalista"
+        },
+        {
+          "id": "D",
+          "text": "Advogado"
+        }
+      ]
+    },
+    {
+      "id": "L4-F093-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Seu corpo atrai mushi em excesso"
+        },
+        {
+          "id": "B",
+          "text": "Porque é perseguido por autoridades"
+        },
+        {
+          "id": "C",
+          "text": "Porque precisa renovar sua licença"
+        },
+        {
+          "id": "D",
+          "text": "Porque não consegue dormir duas noites no mesmo lugar"
+        }
+      ]
+    },
+    {
+      "id": "L4-F104-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Tuuli"
+        },
+        {
+          "id": "B",
+          "text": "Effa"
+        },
+        {
+          "id": "C",
+          "text": "Freida"
+        },
+        {
+          "id": "D",
+          "text": "Delia"
+        }
+      ]
+    },
+    {
+      "id": "L4-F106-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Viktoriya Ivanovna Serebryakov"
+        },
+        {
+          "id": "B",
+          "text": "Tanya von Degurechaff"
+        },
+        {
+          "id": "C",
+          "text": "Erich von Rerugen"
+        },
+        {
+          "id": "D",
+          "text": "Kurt von Rudersdorf"
+        }
+      ]
+    },
+    {
+      "id": "L4-F115-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Crescent Moon Alliance"
+        },
+        {
+          "id": "B",
+          "text": "D.D.D."
+        },
+        {
+          "id": "C",
+          "text": "West Wind Brigade"
+        },
+        {
+          "id": "D",
+          "text": "Debauchery Tea Party"
+        }
+      ]
+    },
+    {
+      "id": "L4-F124-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Elias Ainsworth"
+        },
+        {
+          "id": "B",
+          "text": "Cartaphilus"
+        },
+        {
+          "id": "C",
+          "text": "Lindel"
+        },
+        {
+          "id": "D",
+          "text": "Angelica Barley"
+        }
+      ]
+    },
+    {
+      "id": "L4-F126-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Black Dog"
+        },
+        {
+          "id": "B",
+          "text": "Cyclops"
+        },
+        {
+          "id": "C",
+          "text": "Laughing Fox"
+        },
+        {
+          "id": "D",
+          "text": "Undertaker"
+        }
+      ]
+    },
+    {
+      "id": "L4-F127-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Handler One"
+        },
+        {
+          "id": "B",
+          "text": "Handler Two"
+        },
+        {
+          "id": "C",
+          "text": "Bloody Reina"
+        },
+        {
+          "id": "D",
+          "text": "Major Milizé"
+        }
+      ]
+    },
+    {
+      "id": "L4-F142-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Cardiologia"
+        },
+        {
+          "id": "B",
+          "text": "Cirurgia geral"
+        },
+        {
+          "id": "C",
+          "text": "Neurocirurgia"
+        },
+        {
+          "id": "D",
+          "text": "Neurologia"
+        }
+      ]
+    },
+    {
+      "id": "L4-F146-V01",
+      "new_options": [
+        {
+          "id": "A",
+          "text": "Porque vive no braço esquerdo"
+        },
+        {
+          "id": "B",
+          "text": "Porque assumiu o cérebro de Shinichi"
+        },
+        {
+          "id": "C",
+          "text": "Porque vive na mão direita"
+        },
+        {
+          "id": "D",
+          "text": "Porque foi nomeado por outro parasita"
+        }
+      ]
+    }
+  ]
+}
