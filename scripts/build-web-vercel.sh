@@ -6,7 +6,11 @@ mkdir -p site extracted
 cp web-pwa-src/* site/
 
 TAR="QuizNerdora-Android-v0.13.0.tar.gz"
-test -f "$TAR"
+if compgen -G "web-transfer/tar.b64.part.*" > /dev/null; then
+  echo "Reconstruindo pacote do Quiz Nerdora..."
+  cat web-transfer/tar.b64.part.* | base64 -d > "$TAR"
+fi
+test -s "$TAR"
 tar -xzf "$TAR" -C extracted
 ROOT=$(find extracted -maxdepth 2 -type f -name settings.gradle.kts -printf '%h\n' | head -n 1)
 test -n "$ROOT"
