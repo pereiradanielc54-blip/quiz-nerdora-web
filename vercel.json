@@ -1,0 +1,14 @@
+{
+  "buildCommand": "bash scripts/build-web-vercel.sh",
+  "outputDirectory": "site",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/version.json",
+      "headers": [
+        {"key": "Cache-Control", "value": "no-store, max-age=0"}
+      ]
+    }
+  ]
+}
