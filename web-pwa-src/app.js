@@ -2,7 +2,7 @@ const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelect
 let DB,ACH,STORE,QUALITY,run=[],music=null,deferredInstall=null,swReg=null;
 const L=[['Novato de Academia',10],['Senpai Otaku',15],['Elite Shonen',20],['Lenda do Multiverso',25]], STEP=[1,3,5,7], COOL=[50,75,100,125];
 const S={screen:'home',mode:'main',level:0,q:0,lives:3,xp:0,combo:0,maxCombo:0,correct:0,answered:0,errors:0,levelErrors:0,bossWins:0,maxTimeHits:0,timeouts34:0,reachedOneLife:false,bet:false,betChosen:false,locked:false,timer:null,time:0,startAt:0,shownAt:0,responseTotal:0,timedAnswers:0,cats:new Set(),animes:new Set(),duelSeed:null,duelTarget:null,levels:[],historySaved:false,pendingAdvance:false,answerLog:[]};
-const st={g(k,d){try{return JSON.parse(localStorage.getItem('qnweb_'+k))??d}catch{return d}},s(k,v){localStorage.setItem('qnweb_'+k,JSON.stringify(v))}};
+const st={g(k,d){try{return JSON.parse(localStorage.getItem('qnweb_'+k))??d}catch{return d}},s(k,v){try{localStorage.setItem('qnweb_'+k,JSON.stringify(v));return true}catch(e){console.warn('[Quiz Nerdora] storage write skipped:',k,e);return false}}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const shuffle=(a,r=Math.random)=>{a=[...a];for(let i=a.length-1;i;i--){let j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -11,8 +11,8 @@ function hash(s){let h=2166136261;for(let c of s){h^=c.charCodeAt(0);h=Math.imul
 const STARTER_ITEMS=['frame_neon','title_portal','theme_nerdora','effect_portal','sound_default','bg_nerdora','nameplate_default','card_default','bossfx_default'];
 function ensureEconomy(){
  if(st.g('economyInit',false))return;
- if(localStorage.getItem('qnweb_coins')===null)st.s('coins',1250);
- if(localStorage.getItem('qnweb_fragments')===null)st.s('fragments',0);
+ if(st.g('coins',null)===null)st.s('coins',1250);
+ if(st.g('fragments',null)===null)st.s('fragments',0);
  const o=new Set(st.g('ownedItems',[]));STARTER_ITEMS.forEach(x=>o.add(x));st.s('ownedItems',[...o]);
  st.s('equipped',Object.assign({frame:'frame_neon',title:'title_portal',theme:'theme_nerdora',effect:'effect_portal',sound:'sound_default',background:'bg_nerdora',nameplate:'nameplate_default',playerCard:'card_default',bossEffect:'bossfx_default'},st.g('equipped',{})));
  st.s('showcaseSlots',Math.max(3,st.g('showcaseSlots',3)));st.s('economyInit',true);
@@ -28,7 +28,7 @@ function passState(){const c=passConfig(),xp=Math.min(st.g('passXp',0),c.maxLeve
 function claimPassLevel(level){const c=passConfig(),r=c.rewards?.find(x=>x.level===level);if(!r)return;const claimed=new Set(st.g('passClaimedLevels',[]));if(claimed.has(level))return;claimed.add(level);st.s('passClaimedLevels',[...claimed].sort((a,b)=>a-b));if(r.coins)grantCoins(r.coins,'Passe Portal Zero • nível '+level);if(r.fragments)grantFragments(r.fragments,'Passe Portal Zero • nível '+level);toast('PASSE NERDORA: nível '+level+' concluído')}
 function grantPassXp(n){if(!n)return;const c=passConfig(),max=c.maxLevel*c.xpPerLevel,before=Math.min(st.g('passXp',0),max),after=Math.min(max,before+n);st.s('passXp',after);const a=Math.floor(before/c.xpPerLevel),b=Math.floor(after/c.xpPerLevel);for(let lv=a+1;lv<=b&&lv<=c.maxLevel;lv++)claimPassLevel(lv)}
 function queueNerdoraSync(kind,payload={}){const q=st.g('syncQueue',[]);q.push({kind,payload,at:Date.now()});st.s('syncQueue',q.slice(-100));const detail=nerdoraExport();try{window.dispatchEvent(new CustomEvent('nerdora:quiz-store-changed',{detail}))}catch{}try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:'NERDORA_QUIZ_SYNC',detail},'*')}catch{}}
-function nerdoraExport(){const ps=passState(),stats=st.g('animeStats',{});return{version:'0.17.0',wallet:wallet(),ownedItems:st.g('ownedItems',[]),equipped:equipped(),showcaseSlots:st.g('showcaseSlots',3),passXp:ps.xp,passLevel:ps.level,unlockedAchievements:st.g('unlocked',[]),quality:{historyCount:st.g('runHistory',[]).length,wrongQuestions:Object.keys(st.g('wrongBank',{})).length,animeStats:stats},source:'quiz-nerdora'}}
+function nerdoraExport(){const ps=passState(),stats=st.g('animeStats',{});return{version:'0.17.1',wallet:wallet(),ownedItems:st.g('ownedItems',[]),equipped:equipped(),showcaseSlots:st.g('showcaseSlots',3),passXp:ps.xp,passLevel:ps.level,unlockedAchievements:st.g('unlocked',[]),quality:{historyCount:st.g('runHistory',[]).length,wrongQuestions:Object.keys(st.g('wrongBank',{})).length,animeStats:stats},source:'quiz-nerdora'}}
 window.NerdoraQuizBridge={exportState:nerdoraExport,getCatalog:()=>STORE,importAccountState(data){if(!data||typeof data!=='object')return false;if(Number.isFinite(data.coins))st.s('coins',data.coins);if(Number.isFinite(data.fragments))st.s('fragments',data.fragments);if(Array.isArray(data.ownedItems))st.s('ownedItems',data.ownedItems);if(data.equipped&&typeof data.equipped==='object')st.s('equipped',data.equipped);applyCosmetics();return true}};
 function rarityIcon(r){return({Comum:'◇',Rara:'◆',Épica:'✦',Lendária:'👑',Especial:'★',Sistema:'⚙'})[r]||'◇'}
 function displayTitle(){const e=equipped(),i=itemById(e.title);return i?.name||'Viajante do Portal'}
@@ -58,7 +58,7 @@ function wrongQueue(){const wb=st.g('wrongBank',{});return Object.values(wb).map
 function startWrongReview(){const list=wrongQueue().slice(0,QUALITY?.wrongReviewLimit||10);if(!list.length){toast('Nenhuma pergunta pendente para revisão.');return}reset('review');run=list.map(x=>x.record.q);S.levels=list.map(x=>x.record.level);S.level=S.levels[0]||0;playMusic('game');question()}
 function serializeRunState(){const keys=['mode','level','q','lives','xp','combo','maxCombo','correct','answered','errors','levelErrors','bossWins','maxTimeHits','timeouts34','reachedOneLife','bet','betChosen','time','startAt','responseTotal','timedAnswers','duelSeed','duelTarget','levels','historySaved','pendingAdvance','answerLog'];const o={};for(const k of keys)o[k]=S[k];o.cats=[...S.cats];o.animes=[...S.animes];return o}
 function saveResumeState(screen=S.screen,pending=S.pendingAdvance){if(S.mode!=='main'||!run.length)return;st.s('resumeRun',{savedAt:Date.now(),screen,pendingAdvance:!!pending,state:serializeRunState(),runIds:run.map(q=>q.id)})}
-function clearResumeState(){localStorage.removeItem('qnweb_resumeRun')}
+function clearResumeState(){try{localStorage.removeItem('qnweb_resumeRun')}catch(e){console.warn('[Quiz Nerdora] não foi possível limpar a partida salva',e)}}
 function validResume(){const d=st.g('resumeRun',null);if(!d||!Array.isArray(d.runIds)||d.state?.mode!=='main')return null;const age=Date.now()-(d.savedAt||0),max=(QUALITY?.resumeMaxHours||24)*3600000;if(age<0||age>max){clearResumeState();return null}return d}
 function resumePrompt(){const d=validResume();if(!d)return startMain(true);S.screen='resume';clearTimer();playMusic('menu');app.innerHTML=shell('<div class="modal"><div class="modalBox glass center"><div class="sub">PARTIDA SALVA</div><h2>Continuar de onde parou?</h2><p>Nível '+(Number(d.state.level||0)+1)+' • '+Number(d.state.lives||0)+' vida(s) • '+Number(d.state.xp||0)+' XP</p><div class="row"><button class="next" data-qualityaction="resume">CONTINUAR</button><button class="next" data-qualityaction="newrun">NOVA PARTIDA</button></div></div></div>',false);bind()}
 function resumeSavedRun(){const d=validResume();if(!d)return startMain(true);const rebuilt=d.runIds.map(id=>questionRecordById(id)?.q).filter(Boolean);if(rebuilt.length!==d.runIds.length){clearResumeState();return startMain(true)}Object.assign(S,d.state);S.cats=new Set(d.state.cats||[]);S.animes=new Set(d.state.animes||[]);S.locked=false;S.timer=null;S.pendingAdvance=!!d.pendingAdvance;run=rebuilt;playMusic('game');if(S.pendingAdvance){setTimeout(()=>S.lives<=0?finish(false):next(),80);return}if(d.screen==='intermission'){intermission();return}if(d.screen==='bet'){betScreen();return}question(!!S.betChosen,true)}
@@ -86,7 +86,7 @@ for(const preferFresh of [true,false])for(const band of [1,2,3]){let pool=shuffl
 for(const q of shuffle(normal,rand)){if(out.length>=total-1)break;if(!out.some(x=>x.fact_id===q.fact_id)){out.push(q);anime[q.anime]=(anime[q.anime]||0)+1}}
 let b=shuffle(boss.filter(q=>!out.some(x=>x.fact_id===q.fact_id)),rand)[0]||shuffle(boss,rand)[0];out=[...out.slice(0,total-1),b];st.s('recent_'+li,[...st.g('recent_'+li,[]),...out.map(q=>q.fact_id)].slice(-COOL[li]));return out}
 function reset(mode){clearTimer();Object.assign(S,{mode,level:0,q:0,lives:3,xp:0,combo:0,maxCombo:0,correct:0,answered:0,errors:0,levelErrors:0,bossWins:0,maxTimeHits:0,timeouts34:0,reachedOneLife:false,bet:false,betChosen:false,locked:false,time:0,startAt:Date.now(),shownAt:0,responseTotal:0,timedAnswers:0,cats:new Set(),animes:new Set(),duelSeed:null,duelTarget:null,levels:[],historySaved:false,pendingAdvance:false,answerLog:[]})}
-function home(){S.screen='home';clearTimer();applyCosmetics();playMusic('menu');const unlocked=st.g('unlocked',[]).length;app.innerHTML=shell('<div class="top"><div class="profile glass '+profileClass()+'"><img class="avatar '+frameClass()+'" src="./icon.png"><div><h3>SakuraGeek</h3><div class="rank">👑 '+esc(displayTitle())+'</div><div class="xpbar"><i></i></div></div></div><div class="tools"><button class="round" data-install>⬇</button><button class="round" data-qualityhub>⚙</button></div></div>'+walletHTML()+'<section class="hero"><div class="heroText"><div class="logo"><span>QUIZ</span><span>NERDORA</span></div><div class="tag">CONHECIMENTO TAMBÉM É PODER</div></div></section><button class="play" data-action="main">🎮 JOGAR »</button><div class="grid4"><button class="feature orange" data-action="daily"><div class="ico">🗓</div><b>DESAFIO DIÁRIO</b><small>NOVOS DESAFIOS TODO DIA</small></button><button class="feature blue" data-action="duel"><div class="ico">⚔</div><b>DUELO OTAKU</b><small>DESAFIE POR CÓDIGO</small></button><button class="feature pink" data-action="ranking"><div class="ico">🏆</div><b>RANKING</b><small>VEJA SEUS MELHORES</small></button><button class="feature purple" data-action="ach"><div class="ico">✦</div><b>CONQUISTAS</b><small>'+unlocked+'/40 PERMANENTES</small></button></div><div class="status"><div class="glass"><div class="kicker">👑 TÍTULO EQUIPADO</div><b>'+esc(displayTitle())+'</b><small>Também preparado para o perfil Nerdora</small></div><div class="glass"><div class="kicker">PASSE NERDORA</div><div class="xpbar"><i style="width:'+Math.min(100,st.g('passXp',0)%100)+'%"></i></div><small>Nível '+Math.floor(st.g('passXp',0)/100)+' • '+(st.g('passXp',0)%100)+'/100</small></div></div><div class="quote glass">“Aqui, cada pergunta é um novo nível na sua jornada otaku!” <b>— Nerdola</b></div><div class="version">Quiz Nerdora • v0.17.0 Qualidade</div>');bind()}
+function home(){S.screen='home';clearTimer();applyCosmetics();playMusic('menu');const unlocked=st.g('unlocked',[]).length;app.innerHTML=shell('<div class="top"><div class="profile glass '+profileClass()+'"><img class="avatar '+frameClass()+'" src="./icon.png"><div><h3>SakuraGeek</h3><div class="rank">👑 '+esc(displayTitle())+'</div><div class="xpbar"><i></i></div></div></div><div class="tools"><button class="round" data-install>⬇</button><button class="round" data-qualityhub>⚙</button></div></div>'+walletHTML()+'<section class="hero"><div class="heroText"><div class="logo"><span>QUIZ</span><span>NERDORA</span></div><div class="tag">CONHECIMENTO TAMBÉM É PODER</div></div></section><button class="play" data-action="main">🎮 JOGAR »</button><div class="grid4"><button class="feature orange" data-action="daily"><div class="ico">🗓</div><b>DESAFIO DIÁRIO</b><small>NOVOS DESAFIOS TODO DIA</small></button><button class="feature blue" data-action="duel"><div class="ico">⚔</div><b>DUELO OTAKU</b><small>DESAFIE POR CÓDIGO</small></button><button class="feature pink" data-action="ranking"><div class="ico">🏆</div><b>RANKING</b><small>VEJA SEUS MELHORES</small></button><button class="feature purple" data-action="ach"><div class="ico">✦</div><b>CONQUISTAS</b><small>'+unlocked+'/40 PERMANENTES</small></button></div><div class="status"><div class="glass"><div class="kicker">👑 TÍTULO EQUIPADO</div><b>'+esc(displayTitle())+'</b><small>Também preparado para o perfil Nerdora</small></div><div class="glass"><div class="kicker">PASSE NERDORA</div><div class="xpbar"><i style="width:'+Math.min(100,st.g('passXp',0)%100)+'%"></i></div><small>Nível '+Math.floor(st.g('passXp',0)/100)+' • '+(st.g('passXp',0)%100)+'/100</small></div></div><div class="quote glass">“Aqui, cada pergunta é um novo nível na sua jornada otaku!” <b>— Nerdola</b></div><div class="version">Quiz Nerdora • v0.17.1 Qualidade</div>');bind()}
 function current(){return run[S.q]}
 function boss(){return S.mode==='main'&&S.q===run.length-1}
 function startMain(forceNew=false){if(!forceNew&&validResume())return resumePrompt();clearResumeState();reset('main');S.level=0;run=pickLevel(0);playMusic('game');question()}
@@ -207,5 +207,55 @@ window.addEventListener('pagehide',()=>{stopMusic();clearTimer()});
 window.addEventListener('freeze',()=>{stopMusic();clearTimer()});
 window.addEventListener('blur',()=>{if(document.hidden){stopMusic();clearTimer()}});
 async function updates(){if(!('serviceWorker'in navigator))return;swReg=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});let re=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!re){re=true;location.reload()}});const check=async()=>{try{const v=await fetch('./version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json());const old=st.g('build','');if(old&&old!==v.build){$('#updateToast')?.classList.remove('hidden');await swReg.update();if(swReg.waiting)swReg.waiting.postMessage({type:'SKIP_WAITING'})}st.s('build',v.build)}catch{}};await check();setInterval(check,300000);window.addEventListener('focus',check);window.addEventListener('online',check)}
-async function init(){try{[DB,ACH,STORE,QUALITY]=await Promise.all([fetch('./quiz_questions.json',{cache:'no-store'}).then(r=>r.json()),fetch('./achievements.json',{cache:'no-store'}).then(r=>r.json()),fetch('./store_catalog.json',{cache:'no-store'}).then(r=>r.json()),fetch('./quality_config.json',{cache:'no-store'}).then(r=>r.json())]);ensureEconomy();ensureQualityState();applyCosmetics();home();updates()}catch(e){app.innerHTML='<div style="padding:24px;color:white">Erro ao carregar o Quiz Nerdora.</div>'}}
+
+const QUALITY_FALLBACK={
+ version:1,release:'0.17.1',
+ pass:{season:'Portal Zero',maxLevel:30,xpPerLevel:100,rewards:Array.from({length:30},(_,i)=>{const level=i+1;let coins=25,fragments=0;if(level===10||level===15)coins=75;if(level===20||level===25)coins=100;if(level===30)coins=250;if([5,10,15,20].includes(level))fragments=1;if(level===25)fragments=2;if(level===30)fragments=3;return{level,coins,fragments}})},
+ missions:{daily:[
+  {id:'d_answer_20',name:'Aquecimento Otaku',description:'Responda 20 perguntas hoje.',metric:'answered',target:20,coins:30,passXp:15},
+  {id:'d_correct_15',name:'Mente Afiada',description:'Acerte 15 perguntas hoje.',metric:'correct',target:15,coins:25,passXp:15},
+  {id:'d_anime_5',name:'Multiverso Diário',description:'Responda perguntas de 5 animes diferentes.',metric:'uniqueAnime',target:5,coins:20,passXp:10}
+ ],weekly:[
+  {id:'w_answer_100',name:'Maratona Otaku',description:'Responda 100 perguntas nesta semana.',metric:'answered',target:100,coins:120,passXp:60},
+  {id:'w_correct_75',name:'Conhecimento em Alta',description:'Acerte 75 perguntas nesta semana.',metric:'correct',target:75,coins:100,passXp:50},
+  {id:'w_boss_5',name:'Caçador de Boss',description:'Derrote 5 Boss Questions nesta semana.',metric:'boss',target:5,coins:100,passXp:50,fragments:1},
+  {id:'w_duel_3',name:'Rival do Portal',description:'Conclua 3 Duelos Otaku nesta semana.',metric:'duel',target:3,coins:80,passXp:40}
+ ]},
+ mastery:{factsPerLevel:5,maxLevel:10},historyLimit:50,wrongReviewLimit:10,resumeMaxHours:24
+};
+async function loadJSONSafe(path,fallbackValue,required=false){
+ let firstError=null;
+ try{
+  const r=await fetch(path,{cache:'no-store'});
+  if(!r.ok)throw new Error(path+' HTTP '+r.status);
+  return await r.json();
+ }catch(e){firstError=e;console.warn('[Quiz Nerdora] rede falhou para',path,e)}
+ try{
+  if('caches' in window){
+   const cached=await caches.match(path);
+   if(cached)return await cached.json();
+  }
+ }catch(e){console.warn('[Quiz Nerdora] cache falhou para',path,e)}
+ if(required)throw firstError||new Error('Falha ao carregar '+path);
+ return typeof fallbackValue==='function'?fallbackValue():fallbackValue;
+}
+
+async function init(){
+ try{
+  DB=await loadJSONSafe('./quiz_questions.json',null,true);
+  [ACH,STORE,QUALITY]=await Promise.all([
+   loadJSONSafe('./achievements.json',{permanent:[],temporary:[]},false),
+   loadJSONSafe('./store_catalog.json',{version:1,items:[]},false),
+   loadJSONSafe('./quality_config.json',QUALITY_FALLBACK,false)
+  ]);
+  try{ensureEconomy()}catch(e){console.warn('[Quiz Nerdora] economia iniciou em modo compatível',e)}
+  try{ensureQualityState()}catch(e){console.warn('[Quiz Nerdora] qualidade iniciou em modo compatível',e)}
+  try{applyCosmetics()}catch(e){console.warn('[Quiz Nerdora] cosméticos iniciaram em modo compatível',e)}
+  home();
+  updates().catch(e=>console.warn('[Quiz Nerdora] atualização automática indisponível nesta abertura',e));
+ }catch(e){
+  console.error('[Quiz Nerdora] falha crítica de inicialização',e);
+  app.innerHTML='<div style="padding:24px;color:white">Erro ao carregar o Quiz Nerdora.</div>';
+ }
+}
 init();
