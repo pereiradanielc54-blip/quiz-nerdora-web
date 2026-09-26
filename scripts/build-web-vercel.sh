@@ -21,21 +21,8 @@ cp "$ROOT/app/src/main/res/drawable-nodpi/quiz_nerdora_cover.png" site/icon.png
 cp "$ROOT/app/src/main/assets/music/portal_nerdora.mp3" site/portal_nerdora.mp3
 cp "$ROOT/app/src/main/assets/music/primeiro_desafio.mp3" site/primeiro_desafio.mp3
 
-# Restaura a interface/lógica completa aprovada e injeta o catálogo atual no build.
-python3 - <<'PY'
-from pathlib import Path
-tpl = Path('web-pwa-src/full-index-template.html').read_text(encoding='utf-8')
-data = Path('site/quiz_questions.json').read_text(encoding='utf-8')
-assert '__QUIZ_DATA__' in tpl
-html = tpl.replace('__QUIZ_DATA__', data)
-assert '__QUIZ_DATA__' not in html
-Path('site/index.html').write_text(html, encoding='utf-8')
-try:
-    Path('site/full-index-template.html').unlink()
-except FileNotFoundError:
-    pass
-PY
-
+# A fonte oficial da interface e lógica Web é web-pwa-src/.
+# Não sobrescrever site/index.html com templates antigos.
 BUILD_ID="${VERCEL_GIT_COMMIT_SHA:-local}"
 sed -i "s/__BUILD__/${BUILD_ID}/g" site/sw.js site/version.json
 
