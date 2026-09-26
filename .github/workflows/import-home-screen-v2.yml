@@ -1,0 +1,38 @@
+name: Import Official Home Screen v2
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - ".github/workflows/import-home-screen-v2.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  import-home:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Import exact user-provided Home image
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 --retry-delay 2 'https://d2jqrm6oza8nb6.cloudfront.net/datasets/95cd1d55-8bd4-495d-8b6d-7d5de0f92557.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiOTIzMzRkNGU3Y2M0M2RhZCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDU3OTY2Mn0.ewiuDa8cXqcxTT2zSkHF1H9gIKqdpYXS-Pkr3aRCtEA' -o web-pwa-src/home_screen_v2.jpg
+          test -s web-pwa-src/home_screen_v2.jpg
+          echo 'ecb71fe05133dd53329282c25858bb1ce367089a3aca99351d5c60f28b9a4b57  web-pwa-src/home_screen_v2.jpg' | sha256sum -c -
+
+      - name: Commit Home asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web-pwa-src/home_screen_v2.jpg
+          if git diff --cached --quiet; then
+            echo "Home image already imported."
+            exit 0
+          fi
+          git commit -m "asset: adiciona Home oficial enviada pelo usuário"
+          git push
