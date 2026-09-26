@@ -76,7 +76,7 @@ python3 -m json.tool site/store_catalog.json >/dev/null
 python3 -m json.tool site/quality_config.json >/dev/null
 python3 -m json.tool site/question_semantic_audit.json >/dev/null
 python3 -m json.tool site/similar_questions_report.json >/dev/null
-grep -q "40 PERMANENTES" site/app.js
+grep -q "function achievements(" site/app.js
 grep -q "function startDaily()" site/app.js
 grep -q "function createDuel()" site/app.js
 grep -q "function betScreen()" site/app.js

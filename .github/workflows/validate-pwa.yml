@@ -35,11 +35,12 @@ jobs:
           python3 -m json.tool site/version.json >/dev/null
           test -s site/sw.js
           test -s site/home_art.png
+          test -s site/home_screen_v2.jpg
           test -s site/icon.png
           test -s site/portal_nerdora.mp3
           test -s site/primeiro_desafio.mp3
           test -s site/achievements.json
-          grep -q "40 permanentes" site/app.js
+          grep -q "function achievements(" site/app.js
           grep -q "function startDaily()" site/app.js
           grep -q "function createDuel()" site/app.js
           grep -q "function betScreen()" site/app.js
