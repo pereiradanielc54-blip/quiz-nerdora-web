@@ -37,9 +37,10 @@ PY
 
 node --check site/app.js
 python3 -m json.tool site/manifest.webmanifest >/dev/null
-grep -q "Primeiro Salto no Portal" site/index.html
-grep -q "weekly_unshakable" site/index.html
-grep -q "function startDaily()" site/index.html
-grep -q "function createDuel()" site/index.html
-grep -q "function chooseBet(" site/index.html
-grep -q "pauseAllGameAudio" site/index.html
+python3 -m json.tool site/achievements.json >/dev/null
+grep -q "40 PERMANENTES" site/app.js
+grep -q "function startDaily()" site/app.js
+grep -q "function createDuel()" site/app.js
+grep -q "function betScreen()" site/app.js
+grep -q "visibilitychange" site/app.js
+grep -q "pagehide" site/app.js
