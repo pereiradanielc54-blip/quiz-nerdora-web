@@ -1,4 +1,23 @@
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+
+function syncViewport(){
+ const vv=window.visualViewport;
+ const w=Math.max(1,Math.round(vv?.width||window.innerWidth||document.documentElement.clientWidth||360));
+ const h=Math.max(1,Math.round(vv?.height||window.innerHeight||document.documentElement.clientHeight||640));
+ const root=document.documentElement;
+ root.style.setProperty('--app-vw',w+'px');
+ root.style.setProperty('--app-vh',h+'px');
+ root.style.setProperty('--app-ratio',(w/h).toFixed(5));
+ root.style.setProperty('--app-dpr',String(Math.min(4,window.devicePixelRatio||1)));
+}
+syncViewport();
+window.addEventListener('resize',syncViewport,{passive:true});
+window.addEventListener('orientationchange',()=>setTimeout(syncViewport,80),{passive:true});
+if(window.visualViewport){
+ visualViewport.addEventListener('resize',syncViewport,{passive:true});
+ visualViewport.addEventListener('scroll',syncViewport,{passive:true});
+}
+
 let DB,ACH,STORE,QUALITY,run=[],music=null,deferredInstall=null,swReg=null;
 const L=[['Novato de Academia',10],['Senpai Otaku',15],['Elite Shonen',20],['Lenda do Multiverso',25]], STEP=[1,3,5,7], COOL=[50,75,100,125];
 const S={screen:'home',mode:'main',level:0,q:0,lives:3,xp:0,combo:0,maxCombo:0,correct:0,answered:0,errors:0,levelErrors:0,bossWins:0,maxTimeHits:0,timeouts34:0,reachedOneLife:false,bet:false,betChosen:false,locked:false,timer:null,time:0,startAt:0,shownAt:0,responseTotal:0,timedAnswers:0,cats:new Set(),animes:new Set(),duelSeed:null,duelTarget:null,levels:[],historySaved:false,pendingAdvance:false,answerLog:[]};
@@ -28,7 +47,7 @@ function passState(){const c=passConfig(),xp=Math.min(st.g('passXp',0),c.maxLeve
 function claimPassLevel(level){const c=passConfig(),r=c.rewards?.find(x=>x.level===level);if(!r)return;const claimed=new Set(st.g('passClaimedLevels',[]));if(claimed.has(level))return;claimed.add(level);st.s('passClaimedLevels',[...claimed].sort((a,b)=>a-b));if(r.coins)grantCoins(r.coins,'Passe Portal Zero • nível '+level);if(r.fragments)grantFragments(r.fragments,'Passe Portal Zero • nível '+level);toast('PASSE NERDORA: nível '+level+' concluído')}
 function grantPassXp(n){if(!n)return;const c=passConfig(),max=c.maxLevel*c.xpPerLevel,before=Math.min(st.g('passXp',0),max),after=Math.min(max,before+n);st.s('passXp',after);const a=Math.floor(before/c.xpPerLevel),b=Math.floor(after/c.xpPerLevel);for(let lv=a+1;lv<=b&&lv<=c.maxLevel;lv++)claimPassLevel(lv)}
 function queueNerdoraSync(kind,payload={}){const q=st.g('syncQueue',[]);q.push({kind,payload,at:Date.now()});st.s('syncQueue',q.slice(-100));const detail=nerdoraExport();try{window.dispatchEvent(new CustomEvent('nerdora:quiz-store-changed',{detail}))}catch{}try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:'NERDORA_QUIZ_SYNC',detail},'*')}catch{}}
-function nerdoraExport(){const ps=passState(),stats=st.g('animeStats',{});return{version:'0.17.3',wallet:wallet(),ownedItems:st.g('ownedItems',[]),equipped:equipped(),showcaseSlots:st.g('showcaseSlots',3),passXp:ps.xp,passLevel:ps.level,unlockedAchievements:st.g('unlocked',[]),quality:{historyCount:st.g('runHistory',[]).length,wrongQuestions:Object.keys(st.g('wrongBank',{})).length,animeStats:stats},source:'quiz-nerdora'}}
+function nerdoraExport(){const ps=passState(),stats=st.g('animeStats',{});return{version:'0.17.4',wallet:wallet(),ownedItems:st.g('ownedItems',[]),equipped:equipped(),showcaseSlots:st.g('showcaseSlots',3),passXp:ps.xp,passLevel:ps.level,unlockedAchievements:st.g('unlocked',[]),quality:{historyCount:st.g('runHistory',[]).length,wrongQuestions:Object.keys(st.g('wrongBank',{})).length,animeStats:stats},source:'quiz-nerdora'}}
 window.NerdoraQuizBridge={exportState:nerdoraExport,getCatalog:()=>STORE,importAccountState(data){if(!data||typeof data!=='object')return false;if(Number.isFinite(data.coins))st.s('coins',data.coins);if(Number.isFinite(data.fragments))st.s('fragments',data.fragments);if(Array.isArray(data.ownedItems))st.s('ownedItems',data.ownedItems);if(data.equipped&&typeof data.equipped==='object')st.s('equipped',data.equipped);applyCosmetics();return true}};
 function rarityIcon(r){return({Comum:'◇',Rara:'◆',Épica:'✦',Lendária:'👑',Especial:'★',Sistema:'⚙'})[r]||'◇'}
 function displayTitle(){const e=equipped(),i=itemById(e.title);return i?.name||'Viajante do Portal'}
@@ -234,7 +253,7 @@ window.addEventListener('blur',()=>{if(document.hidden){stopMusic();clearTimer()
 async function updates(){if(!('serviceWorker'in navigator))return;swReg=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});let re=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!re){re=true;location.reload()}});const check=async()=>{try{const v=await fetch('./version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json());const old=st.g('build','');if(old&&old!==v.build){$('#updateToast')?.classList.remove('hidden');await swReg.update();if(swReg.waiting)swReg.waiting.postMessage({type:'SKIP_WAITING'})}st.s('build',v.build)}catch{}};await check();setInterval(check,300000);window.addEventListener('focus',check);window.addEventListener('online',check)}
 
 const QUALITY_FALLBACK={
- version:1,release:'0.17.3',
+ version:1,release:'0.17.4',
  pass:{season:'Portal Zero',maxLevel:30,xpPerLevel:100,rewards:Array.from({length:30},(_,i)=>{const level=i+1;let coins=25,fragments=0;if(level===10||level===15)coins=75;if(level===20||level===25)coins=100;if(level===30)coins=250;if([5,10,15,20].includes(level))fragments=1;if(level===25)fragments=2;if(level===30)fragments=3;return{level,coins,fragments}})},
  missions:{daily:[
   {id:'d_answer_20',name:'Aquecimento Otaku',description:'Responda 20 perguntas hoje.',metric:'answered',target:20,coins:30,passXp:15},
@@ -276,7 +295,9 @@ async function init(){
   try{ensureEconomy()}catch(e){console.warn('[Quiz Nerdora] economia iniciou em modo compatível',e)}
   try{ensureQualityState()}catch(e){console.warn('[Quiz Nerdora] qualidade iniciou em modo compatível',e)}
   try{applyCosmetics()}catch(e){console.warn('[Quiz Nerdora] cosméticos iniciaram em modo compatível',e)}
+  syncViewport();
   home();
+  requestAnimationFrame(syncViewport);
   updates().catch(e=>console.warn('[Quiz Nerdora] atualização automática indisponível nesta abertura',e));
  }catch(e){
   console.error('[Quiz Nerdora] falha crítica de inicialização',e);

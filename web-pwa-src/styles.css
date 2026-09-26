@@ -77,3 +77,138 @@ body[data-background="castle"] .bg:after{background:linear-gradient(145deg,rgba(
 .hs-nav-collection-v2{left:39.8%;top:89.9%;width:19.2%;height:7.7%}
 .hs-nav-shop-v2{left:59%;top:89.9%;width:19.2%;height:7.7%}
 .hs-nav-community-v2{left:78.2%;top:89.9%;width:19.5%;height:7.7%}
+
+
+/* v0.17.4 — viewport responsivo global. Não altera lógica do jogo. */
+:root{
+ --app-vw:100vw;
+ --app-vh:100dvh;
+ --content-max:720px;
+ --edge-gap:clamp(8px,2.8vw,18px);
+}
+html,body{
+ width:100%;
+ min-width:0;
+ min-height:var(--app-vh);
+ overflow-x:hidden;
+ overscroll-behavior:none;
+}
+body,#app,.app{min-height:var(--app-vh)}
+#app{width:100%;max-width:100%}
+.app{width:100%;overflow-x:hidden}
+.bg{
+ width:var(--app-vw);
+ height:var(--app-vh);
+ inset:0 auto auto 0;
+}
+.shell{
+ width:min(100%,var(--content-max));
+ max-width:100%;
+ min-height:var(--app-vh);
+ padding-top:max(10px,env(safe-area-inset-top));
+ padding-left:var(--edge-gap);
+ padding-right:var(--edge-gap);
+ padding-bottom:max(calc(92px + env(safe-area-inset-bottom)),calc(82px + env(safe-area-inset-bottom)));
+}
+.navWrap{
+ width:min(100%,var(--content-max));
+ max-width:100%;
+ padding-left:var(--edge-gap);
+ padding-right:var(--edge-gap);
+}
+.modal{
+ width:var(--app-vw);
+ min-height:var(--app-vh);
+ padding:max(14px,env(safe-area-inset-top)) var(--edge-gap) max(14px,env(safe-area-inset-bottom));
+}
+.modalBox{
+ width:min(100%,440px);
+ max-height:calc(var(--app-vh) - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+ overflow:auto;
+}
+.question{font-size:clamp(17px,4.8vw,21px)}
+.qcard{padding:clamp(12px,3.8vw,18px)}
+.answer{
+ min-width:0;
+ padding:clamp(10px,3.2vw,13px);
+ font-size:clamp(14px,4vw,17px);
+}
+.head h1{font-size:clamp(19px,5.6vw,24px)}
+.storeGrid,.achgrid,.qualityGrid,.stats{min-width:0}
+.storeCard,.ach,.qualityMetric,.stat{min-width:0}
+.rankrow,.rankrow>*{min-width:0}
+.walletbar{flex-wrap:wrap}
+.tabs,.storeTabs,.qualityTabs{max-width:100%}
+.row,.row>*{min-width:0}
+
+/* Home ocupa exatamente a área útil real do aparelho. */
+.homePosterPage{
+ position:fixed;
+ left:0;
+ top:0;
+ width:var(--app-vw);
+ height:var(--app-vh);
+ min-height:0;
+ z-index:300;
+ display:block;
+ overflow:hidden;
+ background:#030006;
+}
+.homePosterStage{
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ max-width:none;
+ max-height:none;
+ aspect-ratio:auto;
+ overflow:hidden;
+ transform:none;
+ border-radius:0;
+}
+.homePosterArt{
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ object-fit:fill;
+ object-position:center center;
+ display:block;
+}
+.homeHit{touch-action:manipulation}
+
+@media (max-width:380px){
+ :root{--edge-gap:8px}
+ .shell{padding-bottom:max(calc(84px + env(safe-area-inset-bottom)),78px)}
+ .navWrap{padding-top:5px}
+ .nav{padding:5px 2px}
+ .nav button{font-size:8px;padding:3px 1px}
+ .nav button span{font-size:18px}
+ .hud{gap:5px}
+ .hud>div{padding:8px 5px;font-size:10px}
+ .storeGrid,.achgrid{gap:6px}
+ .storeCard,.ach{padding:10px}
+ .missionFoot{align-items:flex-start;flex-direction:column}
+ .missionFoot button{width:100%}
+}
+@media (max-height:700px){
+ .shell{padding-top:max(7px,env(safe-area-inset-top))}
+ .head{margin-bottom:8px}
+ .hud{margin-bottom:6px}
+ .qcard{padding-top:11px;padding-bottom:11px}
+ .answers{gap:6px}
+ .answer{padding-top:9px;padding-bottom:9px}
+ .panel{padding:13px;margin-bottom:7px}
+}
+@media (min-width:700px){
+ :root{--content-max:760px;--edge-gap:18px}
+ .shell,.navWrap{width:min(94vw,var(--content-max))}
+ .question{font-size:22px}
+ .answer{font-size:17px}
+ .storeGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .achgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .qualityGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@supports not (height:100dvh){
+ :root{--app-vh:100vh}
+}
