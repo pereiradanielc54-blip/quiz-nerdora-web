@@ -89,3 +89,15 @@ grep -q "function qualityHub(" site/app.js
 grep -q "function startWrongReview(" site/app.js
 grep -q "function saveResumeState(" site/app.js
 grep -q "function recordAnswerQuality(" site/app.js
+
+# bind selector runtime guard
+python3 - <<'PY'
+from pathlib import Path
+s=Path("site/app.js").read_text(encoding="utf-8")
+a=s.find("function bind()")
+b=s.find("window.addEventListener('beforeinstallprompt'", a)
+block=s[a:b]
+bad=[line for line in block.splitlines() if line.lstrip().startswith("$('[data-") and ".forEach" in line]
+assert not bad, "Seletores singulares usados com .forEach: " + " | ".join(bad)
+print("Bind selector guard OK")
+PY
