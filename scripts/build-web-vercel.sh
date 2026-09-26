@@ -28,17 +28,19 @@ by={x['id']:x for x in ov['questions']}
 seen=set()
 for level in d['levels']:
     for q in level['questions']:
+        q.setdefault('question_version',1)
         x=by.get(q['id'])
         if not x: continue
         old_correct=next(o['text'] for o in q['options'] if o['id']==q['correct_option'])
         q['options']=x['new_options']
+        q['question_version']=2
         new_correct=next(o['text'] for o in q['options'] if o['id']==q['correct_option'])
         assert old_correct==new_correct, q['id']
         seen.add(q['id'])
 assert seen==set(by), (len(seen),len(by))
 d['total_questions']=sum(len(l['questions']) for l in d['levels'])
-d['version']='0.4.0'
-d.setdefault('design_notes',{})['semantic_option_revision']='Revisão de alternativas v0.16.1: tipos semânticos coerentes, sem alterar respostas corretas.'
+d['version']='0.5.0'
+d.setdefault('design_notes',{})['semantic_option_revision']='Revisão v0.17: alternativas coerentes + versionamento por pergunta + auditoria automática.'
 json.dump(d,open(bank_path,'w',encoding='utf-8'),ensure_ascii=False,indent=2)
 print('Question overrides applied:',len(seen))
 
@@ -63,10 +65,17 @@ print('Quiz Nerdora Web: catálogo OK — 900 perguntas únicas')
 PY
 
 python3 scripts/audit_questions.py site/quiz_questions.json
+python3 scripts/semantic_audit.py site/quiz_questions.json site/question_semantic_audit.json
+python3 scripts/similar_questions.py site/quiz_questions.json site/similar_questions_report.json
+test -s site/question_semantic_audit.json
+test -s site/similar_questions_report.json
 node --check site/app.js
 python3 -m json.tool site/manifest.webmanifest >/dev/null
 python3 -m json.tool site/achievements.json >/dev/null
 python3 -m json.tool site/store_catalog.json >/dev/null
+python3 -m json.tool site/quality_config.json >/dev/null
+python3 -m json.tool site/question_semantic_audit.json >/dev/null
+python3 -m json.tool site/similar_questions_report.json >/dev/null
 grep -q "40 PERMANENTES" site/app.js
 grep -q "function startDaily()" site/app.js
 grep -q "function createDuel()" site/app.js
@@ -75,3 +84,8 @@ grep -q "visibilitychange" site/app.js
 grep -q "pagehide" site/app.js
 grep -q "function shop(" site/app.js
 grep -q "NerdoraQuizBridge" site/app.js
+
+grep -q "function qualityHub(" site/app.js
+grep -q "function startWrongReview(" site/app.js
+grep -q "function saveResumeState(" site/app.js
+grep -q "function recordAnswerQuality(" site/app.js

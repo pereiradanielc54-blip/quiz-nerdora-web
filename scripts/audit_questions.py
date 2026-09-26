@@ -13,6 +13,7 @@ for q in qs:
     if len(set(texts))!=len(texts): errors.append((q["id"],"duplicate_option_texts"))
     if q.get("correct_option") not in ids: errors.append((q["id"],"missing_correct_option"))
     if any(not t for t in texts): errors.append((q["id"],"empty_option"))
+    if not isinstance(q.get("question_version"),int) or q.get("question_version",0)<1: errors.append((q["id"],"question_version"))
 if len(qs)!=900: errors.append(("bank","question_count",len(qs)))
 if len({q["fact_id"] for q in qs})!=900: errors.append(("bank","fact_id_unique"))
 if errors:
