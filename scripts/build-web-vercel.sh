@@ -38,9 +38,12 @@ PY
 node --check site/app.js
 python3 -m json.tool site/manifest.webmanifest >/dev/null
 python3 -m json.tool site/achievements.json >/dev/null
+python3 -m json.tool site/store_catalog.json >/dev/null
 grep -q "40 PERMANENTES" site/app.js
 grep -q "function startDaily()" site/app.js
 grep -q "function createDuel()" site/app.js
 grep -q "function betScreen()" site/app.js
 grep -q "visibilitychange" site/app.js
 grep -q "pagehide" site/app.js
+grep -q "function shop(" site/app.js
+grep -q "NerdoraQuizBridge" site/app.js
