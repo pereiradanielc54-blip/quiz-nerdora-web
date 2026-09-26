@@ -1,27 +1,33 @@
 # Quiz Nerdora Web
 
-PWA oficial do Quiz Nerdora.
+PWA oficial do Quiz Nerdora, publicado automaticamente pelo Vercel.
 
-## Publicação oficial
+## Produção
 
-- **GitHub:** `pereiradanielc54-blip/quiz-nerdora-web`
-- **Branch de produção:** `main`
-- **Vercel:** conectado diretamente a este repositório.
-- **URL de produção:** `https://quiz-nerdora-web.vercel.app`
+- GitHub: `pereiradanielc54-blip/quiz-nerdora-web`
+- Branch: `main`
+- Vercel: `https://quiz-nerdora-web.vercel.app`
+- Versão atual: **0.15.0**
 
-## Fluxo de atualização
+## Base recuperada
 
-1. Toda alteração da versão Web/PWA é feita neste repositório.
-2. A versão pública é registrada em `web-pwa-src/version.json`.
-3. Um commit em `main` dispara automaticamente um novo deployment de produção no Vercel.
-4. O build gera o site final e injeta o SHA do commit em `version.json` e `sw.js`.
-5. O aplicativo instalado consulta a versão ao abrir, voltar ao app, recuperar a internet e a cada 5 minutos.
-6. Quando um novo build é encontrado, o Service Worker assume a nova versão e o PWA recarrega sem precisar ser desinstalado.
+A v0.15.0 volta a usar a lógica completa consolidada antes da migração simplificada do PWA:
 
-## Regra para próximas versões
+- quatro níveis: Novato de Academia, Senpai Otaku, Elite Shonen e Lenda do Multiverso;
+- 10 / 15 / 20 / 25 perguntas;
+- 3 vidas, recuperação de vida entre níveis, XP e combo;
+- timers de Elite e Lenda;
+- Boss Questions e Aposta Otaku final;
+- seleção anti-repetição por `fact_id` e cooldown local;
+- Desafio Diário;
+- Duelo Otaku por seed/código;
+- Ranking local;
+- **40 conquistas permanentes + 20 temporárias**;
+- estatísticas de run, recordes e progressão local;
+- Portal Nerdora no menu e Primeiro Desafio durante a run.
 
-As próximas versões Web devem seguir `web-pwa-X.Y.Z`. Mudanças devem ser publicadas em um único commit sempre que possível, evitando deployments intermediários desnecessários.
+O áudio agora pausa quando o PWA perde visibilidade ou vai para segundo plano e retoma a trilha adequada ao retornar.
 
-## Banco e assets
+## Atualizações
 
-O build reconstrói o pacote de assets a partir de `web-transfer/tar.b64.part.*`, extrai o banco de perguntas, arte da Home, ícone e músicas e valida o catálogo antes da publicação.
+Todo commit em `main` gera um deployment de produção no Vercel. O `version.json` e o Service Worker são atualizados por build, permitindo atualizar o aplicativo instalado sem reinstalação.
