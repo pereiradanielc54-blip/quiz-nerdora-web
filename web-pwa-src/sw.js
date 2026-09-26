@@ -1,51 +1,6 @@
-const BUILD = '__BUILD__';
-const CACHE = `quiz-nerdora-${BUILD}`;
-const CORE = ['./','./index.html','./manifest.webmanifest','./icon.png','./home_art.png','./version.json'];
-
-self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k.startsWith('quiz-nerdora-') && k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-
-  if (url.pathname.endsWith('/version.json') || url.pathname.endsWith('version.json') || url.pathname.endsWith('/sw.js')) {
-    event.respondWith(fetch(req, {cache:'no-store'}).catch(() => caches.match(req)));
-    return;
-  }
-
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req).then(res => {
-        const copy=res.clone();
-        caches.open(CACHE).then(c=>c.put('./index.html',copy));
-        return res;
-      }).catch(()=>caches.match('./index.html'))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(req).then(hit => hit || fetch(req).then(res => {
-      if (res && res.ok && url.origin === self.location.origin) {
-        const copy=res.clone();
-        caches.open(CACHE).then(c=>c.put(req,copy));
-      }
-      return res;
-    }))
-  );
-});
-
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
-});
+const BUILD='__BUILD__',CACHE='quiz-nerdora-'+BUILD;
+const CORE=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icon.png','./home_art.png','./quiz_questions.json','./achievements.json','./version.json'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('quiz-nerdora-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.pathname.endsWith('/version.json')||u.pathname.endsWith('/sw.js')){e.respondWith(fetch(e.request,{cache:'no-store'}).catch(()=>caches.match(e.request)));return}if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).then(r=>{const x=r.clone();caches.open(CACHE).then(c=>c.put('./index.html',x));return r}).catch(()=>caches.match('./index.html')));return}e.respondWith(caches.match(e.request).then(h=>h||fetch(e.request).then(r=>{if(r&&r.ok&&u.origin===self.location.origin){const x=r.clone();caches.open(CACHE).then(c=>c.put(e.request,x))}return r})))});
+self.addEventListener('message',e=>{if(e.data?.type==='SKIP_WAITING')self.skipWaiting()});
