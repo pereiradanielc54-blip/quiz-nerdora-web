@@ -66,8 +66,29 @@ function parseCode(c){const p=c.trim().toUpperCase().split('-');if(p.length!==4|
 function acceptDuel(){const p=parseCode($('#duelInput').value);if(!p)return toast('Código inválido.');reset('duel');S.duelSeed=p.seed;S.duelTarget=p.xp;const d=duelSet(p.seed);run=d.out;S.levels=d.lv;S.level=S.levels[0];playMusic('game');question()}
 function question(skipBet=false){clearTimer();if(S.mode!=='main')S.level=S.levels[S.q]??S.level;if(S.mode==='main'&&S.level===3&&boss()&&!S.bet&&!skipBet)return betScreen();S.screen='play';S.locked=false;const q=current(),lim=limit();app.innerHTML=shell('<div class="head"><div><div class="sub">'+(S.mode==='daily'?'DESAFIO DIÁRIO':S.mode==='duel'?'DUELO OTAKU':L[S.level][0])+'</div><h1>'+(boss()?'BOSS QUESTION':'QUIZ NERDORA')+'</h1><small>Pergunta '+(S.q+1)+'/'+run.length+'</small></div><button class="back" data-nav="home">←</button></div><div class="hud"><div class="glass hearts" id="lives"></div><div class="glass">COMBO <b id="combo"></b></div><div class="glass"><b id="xp"></b> • <span id="timer"></span></div></div><div class="qcard glass '+(boss()?'boss '+bossEffectClass():'')+'">'+(boss()?'<div class="bossbar">⚠ BOSS • +50 XP</div>':'')+'<div class="meta">'+esc(q.anime)+' • '+esc(q.category)+'</div><div class="question">'+esc(q.question||q.text)+'</div><div class="answers">'+shuffle(q.options).map(o=>'<button class="answer" data-answer="'+o.id+'"><strong>'+o.id+'</strong><span>'+esc(o.text)+'</span></button>').join('')+'</div><div id="feedback"></div></div>');bind();renderHud();S.shownAt=Date.now();startClock(true)}
 function renderHud(){if(!$('#lives'))return;$('#lives').textContent='♥'.repeat(S.lives)+'♡'.repeat(3-S.lives);$('#combo').textContent='x'+S.combo;$('#xp').textContent=S.xp+' XP';$('#timer').textContent=limit()==null?'∞':S.time+'s'}
-function answer(id,timeout=false){if(S.locked)return;S.locked=true;clearTimer();const q=current(),ok=id===q.correct_option,isBoss=boss();S.answered++;S.responseTotal+=Math.max(0,Date.now()-S.shownAt);S.timedAnswers++;$$('.answer').forEach(b=>{b.disabled=true;if(b.dataset.answer===q.correct_option)b.classList.add('correct');else if(b.dataset.answer===id)b.classList.add('wrong')});let msg='';
-if(ok){let gain=10+S.combo*STEP[S.level]+timeBonus()+(isBoss?50:0)+(isBoss&&S.bet?100:0);S.xp+=gain;S.correct++;S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.cats.add(q.category);S.animes.add(q.anime);if(isBoss){S.bossWins++;let totalBoss=st.g('bossWinsTotal',0)+1;st.s('bossWinsTotal',totalBoss);if(totalBoss>=100)unlock('boss_executioner_100')}if(timeBonus()===4)S.maxTimeHits++;msg='<div class="feedback good"><b>'+(isBoss?(S.bet?'APOSTA VENCIDA!':'BOSS DERROTADO!'):'ACERTOU!')+'</b> +'+gain+' XP</div>';playCosmeticEffect();cosmeticSfx(true);checkAch(q,isBoss)}else{S.errors++;S.levelErrors++;S.combo=0;if(S.level>=2&&timeout)S.timeouts34++;if(S.bet&&isBoss)S.lives=0;else S.lives=Math.max(0,S.lives-1);if(S.lives===1)S.reachedOneLife=true;msg='<div class="feedback bad"><b>'+(timeout?'TEMPO ESGOTADO':'ERROU')+'</b> '+(S.bet&&isBoss?'RUN ENCERRADA':'-1 VIDA • COMBO ZERADO')+'</div>';cosmeticSfx(false)$('#feedback').outerHTML=msg;renderHud();setTimeout(()=>S.lives<=0?finish(false):next(),1150)}
+function answer(id,timeout=false){
+ if(S.locked)return;
+ S.locked=true;clearTimer();
+ const q=current(),ok=id===q.correct_option,isBoss=boss();
+ S.answered++;S.responseTotal+=Math.max(0,Date.now()-S.shownAt);S.timedAnswers++;
+ $$('.answer').forEach(b=>{b.disabled=true;if(b.dataset.answer===q.correct_option)b.classList.add('correct');else if(b.dataset.answer===id)b.classList.add('wrong')});
+ let msg='';
+ if(ok){
+   let gain=10+S.combo*STEP[S.level]+timeBonus()+(isBoss?50:0)+(isBoss&&S.bet?100:0);
+   S.xp+=gain;S.correct++;S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.cats.add(q.category);S.animes.add(q.anime);
+   if(isBoss){S.bossWins++;let totalBoss=st.g('bossWinsTotal',0)+1;st.s('bossWinsTotal',totalBoss);if(totalBoss>=100)unlock('boss_executioner_100')}
+   if(timeBonus()===4)S.maxTimeHits++;
+   msg='<div class="feedback good"><b>'+(isBoss?(S.bet?'APOSTA VENCIDA!':'BOSS DERROTADO!'):'ACERTOU!')+'</b> +'+gain+' XP</div>';
+   playCosmeticEffect();cosmeticSfx(true);checkAch(q,isBoss);
+ }else{
+   S.errors++;S.levelErrors++;S.combo=0;if(S.level>=2&&timeout)S.timeouts34++;
+   if(S.bet&&isBoss)S.lives=0;else S.lives=Math.max(0,S.lives-1);
+   if(S.lives===1)S.reachedOneLife=true;
+   msg='<div class="feedback bad"><b>'+(timeout?'TEMPO ESGOTADO':'ERROU')+'</b> '+(S.bet&&isBoss?'RUN ENCERRADA':'-1 VIDA • COMBO ZERADO')+'</div>';
+   cosmeticSfx(false);
+ }
+ $('#feedback').outerHTML=msg;renderHud();setTimeout(()=>S.lives<=0?finish(false):next(),1150);
+}
 function next(){if(S.mode==='main'){if(S.q>=run.length-1)return finishLevel();S.q++;question()}else{if(S.q>=run.length-1)return finish(false);S.q++;question()}}
 function finishLevel(){if(S.levelErrors===0){unlock('no_room_for_error');let p=new Set(st.g('perfectLevels',[]));p.add(S.level);st.s('perfectLevels',[...p]);if(p.size>=4)unlock('four_perfect_domains')}if(S.level===3)return finish(true);S.lives=Math.min(3,S.lives+1);S.level++;S.q=0;S.levelErrors=0;run=pickLevel(S.level);intermission()}
 function intermission(){S.screen='intermission';clearTimer();app.innerHTML=shell('<div class="modal"><div class="modalBox glass center"><div class="big">'+(S.level+1)+'</div><div class="sub">PORTAL LIBERADO</div><h2>'+L[S.level][0]+'</h2><p>+1 vida recuperada, até o máximo de 3.</p><button class="next" data-action="continue">ESTOU PRONTO</button></div></div>',false);bind()}
@@ -108,7 +129,17 @@ function purchaseItem(id){const i=itemById(id);if(!i||!canBuy(i))return;const o=
 function equipItem(id){const i=itemById(id);if(!i||!i.equipSlot||!owned().has(id))return;const e=equipped();e[i.equipSlot]=id;st.s('equipped',e);applyCosmetics();queueNerdoraSync('equip',{slot:i.equipSlot,itemId:id});toast('EQUIPADO: '+i.name);shop(S.storeTab||'inventory')}
 
 async function install(){if(matchMedia('(display-mode:standalone)').matches)return;if(deferredInstall){deferredInstall.prompt();await deferredInstall.userChoice.catch(()=>{});deferredInstall=null}else toast('No Chrome, use ⋮ → Instalar app.')}
-function bind(){$('[data-nav]').forEach(b=>b.onclick=()=>{const n=b.dataset.nav;if(n==='home')home();if(n==='play')startMain();if(n==='ach')achievements();if(n==='shop')shop();if(n==='community')toast('Comunidade será aberta pelo Nerdora principal.')} );$$('[data-action]').forEach(b=>b.onclick=()=>{const a=b.dataset.action;if(a==='main')startMain();if(a==='daily')startDaily();if(a==='duel')duel();if(a==='ranking')ranking();if(a==='ach')achievements();if(a==='continue')question();if(a==='normal'){S.bet=false;question(true)}if(a==='bet'){S.bet=true;question(true)}if(a==='createDuel')createDuel();if(a==='acceptDuel')acceptDuel()});$$('[data-answer]').forEach(b=>b.onclick=()=>answer(b.dataset.answer));$$('[data-tab]').forEach(b=>b.onclick=()=>achievements(b.dataset.tab));$('[data-install]').forEach(b=>b.onclick=install);$('[data-storetab]').forEach(b=>b.onclick=()=>{S.storeTab=b.dataset.storetab;shop(S.storeTab)});$('[data-buy]').forEach(b=>b.onclick=()=>purchaseItem(b.dataset.buy));$('[data-equip]').forEach(b=>b.onclick=()=>equipItem(b.dataset.equip));$('[data-crate]').forEach(b=>b.onclick=claimDailyCrate)}
+function bind(){
+ $$('[data-nav]').forEach(b=>b.onclick=()=>{const n=b.dataset.nav;if(n==='home')home();if(n==='play')startMain();if(n==='ach')achievements();if(n==='shop')shop();if(n==='community')toast('Comunidade será aberta pelo Nerdora principal.')});
+ $$('[data-action]').forEach(b=>b.onclick=()=>{const a=b.dataset.action;if(a==='main')startMain();if(a==='daily')startDaily();if(a==='duel')duel();if(a==='ranking')ranking();if(a==='ach')achievements();if(a==='continue')question();if(a==='normal'){S.bet=false;question(true)}if(a==='bet'){S.bet=true;question(true)}if(a==='createDuel')createDuel();if(a==='acceptDuel')acceptDuel()});
+ $$('[data-answer]').forEach(b=>b.onclick=()=>answer(b.dataset.answer));
+ $$('[data-tab]').forEach(b=>b.onclick=()=>achievements(b.dataset.tab));
+ $$('[data-install]').forEach(b=>b.onclick=install);
+ $$('[data-storetab]').forEach(b=>b.onclick=()=>{S.storeTab=b.dataset.storetab;shop(S.storeTab)});
+ $$('[data-buy]').forEach(b=>b.onclick=()=>purchaseItem(b.dataset.buy));
+ $$('[data-equip]').forEach(b=>b.onclick=()=>equipItem(b.dataset.equip));
+ $$('[data-crate]').forEach(b=>b.onclick=claimDailyCrate);
+}
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopMusic();clearTimer()}else{if(S.screen==='play'){playMusic('game');if(!S.locked&&limit()!=null)startClock(false)}else playMusic('menu')}});
 window.addEventListener('pagehide',()=>{stopMusic();clearTimer()});
