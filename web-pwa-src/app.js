@@ -32,6 +32,55 @@ async function installPwa(){if(matchMedia('(display-mode: standalone)').matches|
 function updateInstallUI(){const installed=matchMedia('(display-mode: standalone)').matches||navigator.standalone;document.querySelectorAll('[data-install]').forEach(b=>{if(installed){b.textContent='✓';b.disabled=true}});const box=$('#install-box');if(installed&&box)box.classList.add('hidden')}
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;updateInstallUI()});window.addEventListener('appinstalled',()=>{deferredInstall=null;updateInstallUI()});
 async function loadVersionLabel(){try{const v=await fetch(`./version.json?t=${Date.now()}`,{cache:'no-store'}).then(r=>r.json());const el=$('#version-label');if(el)el.textContent=`Web PWA • ${v.version} • ${String(v.build).slice(0,8)}`;}catch{}}
-async function setupUpdates(){if(!('serviceWorker'in navigator))return;const reg=await navigator.serviceWorker.register('./sw.js');await reg.update().catch(()=>{});if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){$('#update-toast')?.classList.remove('hidden');w.postMessage({type:'SKIP_WAITING'})}})});let reloading=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;reloading=true;location.reload()});try{const v=await fetch(`./version.json?t=${Date.now()}`,{cache:'no-store'}).then(r=>r.json());const prev=localStorage.getItem('qn-build');if(prev&&prev!==v.build){$('#update-toast')?.classList.remove('hidden');for(const k of await caches.keys())if(k.startsWith('quiz-nerdora-'))await caches.delete(k);localStorage.setItem('qn-build',v.build);location.reload();return}localStorage.setItem('qn-build',v.build)}catch{}}
+async function setupUpdates(){
+ if(!('serviceWorker'in navigator))return;
+ const reg=await navigator.serviceWorker.register('./sw.js');
+ let checking=false,reloading=false;
+
+ const applyWaiting=()=>{if(reg.waiting){$('#update-toast')?.classList.remove('hidden');reg.waiting.postMessage({type:'SKIP_WAITING'})}};
+ const check=async()=>{
+   if(checking||!navigator.onLine)return;
+   checking=true;
+   try{
+     const v=await fetch(`./version.json?t=${Date.now()}`,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('version');return r.json()});
+     const current=localStorage.getItem('qn-build');
+     if(!current){localStorage.setItem('qn-build',v.build)}
+     else if(current!==v.build){
+       localStorage.setItem('qn-target-build',v.build);
+       $('#update-toast')?.classList.remove('hidden');
+       await reg.update().catch(()=>{});
+       applyWaiting();
+     }else{
+       await reg.update().catch(()=>{});
+       applyWaiting();
+     }
+   }catch{}finally{checking=false}
+ };
+
+ reg.addEventListener('updatefound',()=>{
+   const w=reg.installing;
+   if(!w)return;
+   w.addEventListener('statechange',()=>{
+     if(w.state==='installed'&&navigator.serviceWorker.controller){
+       $('#update-toast')?.classList.remove('hidden');
+       w.postMessage({type:'SKIP_WAITING'});
+     }
+   });
+ });
+
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{
+   if(reloading)return;
+   reloading=true;
+   const target=localStorage.getItem('qn-target-build');
+   if(target){localStorage.setItem('qn-build',target);localStorage.removeItem('qn-target-build')}
+   location.reload();
+ });
+
+ await check();
+ setInterval(check,5*60*1000);
+ window.addEventListener('focus',check);
+ window.addEventListener('online',check);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
+}
 async function init(){try{db=await fetch('./quiz_questions.json').then(r=>r.json())}catch(e){app.innerHTML='<p style="padding:20px">Não foi possível carregar o banco de perguntas.</p>';return}home();setupUpdates()}
 init();

@@ -1,0 +1,52 @@
+name: Validate Quiz Nerdora PWA
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Reconstruct assets package
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$(find web-transfer -maxdepth 1 -name 'tar.b64.part.*' -print -quit)"
+          cat web-transfer/tar.b64.part.* | base64 -d > QuizNerdora-Android-v0.13.0.tar.gz
+          test -s QuizNerdora-Android-v0.13.0.tar.gz
+          tar -tzf QuizNerdora-Android-v0.13.0.tar.gz >/dev/null
+
+      - name: Validate web build
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/build-web-vercel.sh
+          node --check site/app.js
+          python3 -m json.tool site/manifest.webmanifest >/dev/null
+          python3 -m json.tool site/version.json >/dev/null
+          test -s site/sw.js
+          test -s site/home_art.png
+          test -s site/icon.png
+          test -s site/portal_nerdora.mp3
+          test -s site/primeiro_desafio.mp3
+
+      - name: Validate question catalog
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          d=json.load(open('site/quiz_questions.json',encoding='utf-8'))
+          qs=[q for level in d['levels'] for q in level['questions']]
+          assert len(qs)==900, len(qs)
+          assert len({q['fact_id'] for q in qs})==900
+          print('Quiz Nerdora: 900 fatos únicos validados')
+          PY
