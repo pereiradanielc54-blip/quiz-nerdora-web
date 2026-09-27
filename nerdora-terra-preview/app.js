@@ -42,6 +42,6 @@ document.querySelectorAll('[data-action]').forEach(btn=>btn.onclick=async()=>{
  if(a==='ocean'){random(spots.filter(x=>x.kind==='OCEANOS'));return}
  if(a==='terra'){closeSheet();map?.flyTo({center:[-35,8],zoom:1.15,duration:1100});return}
  if(a==='discover'){showSpot(spots[0]);return}
- if(a==='time'){showSpot({name:'Terra através do tempo',icon:'🦖',kind:'TEMPO',center:[-35,8],zoom:1.2,text:'Uma linha do tempo de 4,54 bilhões de anos será aberta aqui.'});return}
+ if(a==='time'){location.href='./tempo.html?v=1';return}
  if(a==='universe'){toast('Integração com Nerdora Universe reservada ✨')}
 });
