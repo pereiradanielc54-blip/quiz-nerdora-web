@@ -6,13 +6,14 @@
   <meta name="theme-color" content="#00040a">
   <title>Nerdora Terra — Preview</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="./styles.css?v=9">
+  <link rel="stylesheet" href="./styles.css?v=12">
 </head>
 <body>
   <main class="screen">
     <section class="globe-zone">
       <div id="earthMap"></div>
       <div class="globe-mask"></div>
+      <button id="geoDivisionsBtn" class="geo-divisions-btn panel" type="button" aria-pressed="false" title="Mostrar divisões geográficas"><span>🗺️</span><b>Divisões</b></button>
       <div class="credit">EOX Sentinel-2 • Relevo 3D</div>
       <div class="loading" id="loading">Carregando Terra 3D...</div>
     </section>
@@ -89,6 +90,6 @@
 
     <div class="toast" id="toast"></div>
   </main>
-  <script type="module" src="./app.js?v=11"></script>
+  <script type="module" src="./app.js?v=12"></script>
 </body>
 </html>
