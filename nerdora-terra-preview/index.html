@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#00040a">
+  <title>Nerdora Terra — Preview limpa</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="./styles.css?v=5">
+</head>
+<body>
+  <main class="screen">
+    <section class="globe-zone">
+      <div id="earthMap"></div>
+      <div class="globe-mask"></div>
+      <div class="credit">World Imagery • MapLibre</div>
+      <div class="loading" id="loading">Carregando Terra 3D...</div>
+    </section>
+
+    <section class="ui-layer top-ui">
+      <header class="panel header">
+        <div class="logo">N</div>
+        <div class="brand">
+          <div><b>Nerdora</b> <span>Terra</span></div>
+          <i></i>
+        </div>
+        <button data-action="sound" aria-label="Som">◉</button>
+        <button data-action="fullscreen" aria-label="Tela cheia">⌗</button>
+      </header>
+
+      <div class="mini panel">EXPLORE <em>•</em> DESCUBRA <em>•</em> COMPARE</div>
+
+      <h1>Nosso mundo é<br><span>absurdamente incrível.</span></h1>
+
+      <div class="subtitle panel">
+        Gire a Terra, toque nos pontos de interesse e viaje por<br>bilhões de anos de história.
+      </div>
+
+      <div class="main-actions">
+        <button class="action explore" data-action="explore"><span>🌍</span><b>Explorar agora</b><strong>›</strong></button>
+        <button class="action random" data-action="random"><span>🎲</span><b>Me surpreenda</b><strong>›</strong></button>
+      </div>
+    </section>
+
+    <div class="hint panel ui-layer">☝️ <span>Arraste para girar • belisque para zoom</span></div>
+
+    <section class="ui-layer bottom-ui">
+      <div class="shortcuts panel">
+        <h2>Atalhos de exploração</h2>
+        <div>
+          <button data-action="nature"><span>🏔️</span><b>Natureza</b><strong>›</strong></button>
+          <button data-action="ocean"><span>🌊</span><b>Oceanos</b><strong>›</strong></button>
+        </div>
+      </div>
+
+      <nav class="nav panel">
+        <button class="active" data-action="terra"><span>🌍</span><b>Terra</b></button>
+        <button data-action="discover"><span>🧭</span><b>Descobrir</b></button>
+        <button data-action="time"><span>🦖</span><b>Tempo</b></button>
+        <button data-action="universe"><span>✨</span><b>Universe</b></button>
+      </nav>
+    </section>
+
+    <aside class="sheet" id="sheet">
+      <button class="close" id="closeSheet">×</button>
+      <div id="sheetIcon" class="sheet-icon">🌍</div>
+      <small id="sheetKind">NERDORA TERRA</small>
+      <h3 id="sheetTitle">Terra</h3>
+      <p id="sheetText"></p>
+      <button class="locate" id="locate">Localizar no globo</button>
+    </aside>
+
+    <div class="toast" id="toast"></div>
+  </main>
+  <script type="module" src="./app.js?v=5"></script>
+</body>
+</html>
