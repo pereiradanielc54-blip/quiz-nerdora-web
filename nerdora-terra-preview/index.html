@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#00040a">
-  <title>Nerdora Terra — Preview limpa</title>
+  <title>Nerdora Terra — Preview</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="./styles.css?v=8">
+  <link rel="stylesheet" href="./styles.css?v=9">
 </head>
 <body>
   <main class="screen">
@@ -33,7 +33,7 @@
       <h1>Nosso mundo é<br><span>absurdamente incrível.</span></h1>
 
       <div class="subtitle panel">
-        Gire a Terra, toque nos pontos de interesse e viaje por<br>bilhões de anos de história.
+        Gire a Terra, toque nos pontos de interesse e viaje por bilhões de anos de história.
       </div>
 
       <div class="main-actions">
@@ -61,8 +61,8 @@
       </nav>
     </section>
 
-    <aside class="sheet" id="sheet">
-      <button class="close" id="closeSheet">×</button>
+    <aside class="sheet" id="sheet" aria-hidden="true">
+      <button class="close" id="closeSheet" aria-label="Fechar">×</button>
       <div id="sheetIcon" class="sheet-icon">🌍</div>
       <small id="sheetKind">NERDORA TERRA</small>
       <h3 id="sheetTitle">Terra</h3>
@@ -70,8 +70,25 @@
       <button class="locate" id="locate">Localizar no globo</button>
     </aside>
 
+    <aside class="discover-sheet" id="discoverSheet" aria-hidden="true">
+      <div class="discover-backdrop" id="discoverBackdrop"></div>
+      <section class="discover-card panel">
+        <div class="discover-head">
+          <div>
+            <small id="discoverStep">BIOMAS</small>
+            <h3 id="discoverTitle">Escolha um bioma</h3>
+          </div>
+          <button id="discoverClose" class="discover-close" aria-label="Fechar">×</button>
+        </div>
+        <div class="discover-actions">
+          <button id="discoverBack" class="discover-back-btn">← Voltar aos biomas</button>
+        </div>
+        <div id="discoverList" class="discover-list"></div>
+      </section>
+    </aside>
+
     <div class="toast" id="toast"></div>
   </main>
-  <script type="module" src="./app.js?v=8"></script>
+  <script type="module" src="./app.js?v=9"></script>
 </body>
 </html>
