@@ -5,39 +5,67 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#000000">
   <meta name="description" content="Nerdora Terra — explore a Terra real em um globo 3D interativo.">
-  <title>Nerdora Terra v0.3</title>
+  <title>Nerdora Terra v0.4</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main id="app" class="app-shell">
-    <section class="main-screen" aria-label="Tela principal do Nerdora Terra">
-      <div class="earth-window" id="earthWindow">
-        <div id="earthMap" aria-label="Globo 3D interativo da Terra"></div>
-        <div class="space-vignette"></div>
-        <div class="earth-loading" id="earthLoading"><span></span><b>Carregando Terra real...</b></div>
-        <div class="data-credit">NASA GIBS • MapLibre</div>
+<main id="app" class="app-shell">
+  <section class="main-screen">
+
+    <div class="earth-window" id="earthWindow">
+      <div id="earthMap" aria-label="Globo 3D interativo da Terra"></div>
+      <div class="space-vignette"></div>
+      <div class="earth-loading" id="earthLoading"><span></span><b>Carregando Terra real...</b></div>
+      <div class="data-credit">NASA GIBS • MapLibre</div>
+    </div>
+
+    <div class="ui-top">
+      <header class="neo-frame header-frame">
+        <div class="brand-icon">N</div>
+        <div class="brand-copy">
+          <div class="brand-title"><span>Nerdora</span> Terra</div>
+          <div class="brand-line"></div>
+        </div>
+        <button class="header-btn sound-btn" data-action="sound" aria-label="Som">◉</button>
+        <button class="header-btn full-btn" data-action="fullscreen" aria-label="Tela cheia">⌗</button>
+      </header>
+
+      <div class="tagline neo-frame">EXPLORE <i>•</i> DESCUBRA <i>•</i> COMPARE</div>
+
+      <div class="hero-title">Nosso mundo é<br><span>absurdamente incrível.</span></div>
+
+      <div class="subtitle neo-frame">
+        Gire a Terra, toque nos pontos de interesse e viaje por<br>
+        bilhões de anos de história.
       </div>
 
-      <div class="ui-slices" aria-hidden="true">
-        <img class="ui-slice ui-slice-top" src="ui-overlay.webp" alt="" draggable="false">
-        <img class="ui-slice ui-slice-hint" src="ui-overlay.webp" alt="" draggable="false">
-        <img class="ui-slice ui-slice-bottom" src="ui-overlay.webp" alt="" draggable="false">
+      <div class="hero-buttons">
+        <button class="hero-btn primary-btn" data-action="explore"><span class="emoji">🌍</span><b>Explorar agora</b><span class="arrow">›</span></button>
+        <button class="hero-btn dark-btn" data-action="random"><span class="emoji">🎲</span><b>Me surpreenda</b><span class="arrow">›</span></button>
       </div>
+    </div>
 
-      <button class="hit hit-sound" data-action="sound" aria-label="Som"></button>
-      <button class="hit hit-fullscreen" data-action="fullscreen" aria-label="Tela cheia"></button>
-      <button class="hit hit-explore" data-action="explore" aria-label="Explorar agora"></button>
-      <button class="hit hit-random" data-action="random" aria-label="Me surpreenda"></button>
-      <button class="hit hit-nature" data-action="nature" aria-label="Natureza"></button>
-      <button class="hit hit-ocean" data-action="ocean" aria-label="Oceanos"></button>
-      <button class="hit hit-terra" data-action="terra" aria-label="Terra"></button>
-      <button class="hit hit-discover" data-action="discover" aria-label="Descobrir"></button>
-      <button class="hit hit-time" data-action="time" aria-label="Tempo"></button>
-      <button class="hit hit-universe" data-action="universe" aria-label="Universe"></button>
-    </section>
+    <div class="drag-hint neo-frame">☝️ <span>Arraste para girar • belisque para zoom</span></div>
+
+    <div class="ui-bottom">
+      <section class="shortcut-panel neo-frame">
+        <h3>Atalhos de exploração</h3>
+        <div class="shortcut-row">
+          <button class="shortcut-btn" data-action="nature"><span>🏔️</span><b>Natureza</b><strong>›</strong></button>
+          <button class="shortcut-btn" data-action="ocean"><span>🌊</span><b>Oceanos</b><strong>›</strong></button>
+        </div>
+      </section>
+
+      <nav class="bottom-nav neo-frame">
+        <button class="nav-btn active" data-action="terra"><span>🌍</span><b>Terra</b></button>
+        <button class="nav-btn" data-action="discover"><span>🧭</span><b>Descobrir</b></button>
+        <button class="nav-btn" data-action="time"><span>🦖</span><b>Tempo</b></button>
+        <button class="nav-btn" data-action="universe"><span>✨</span><b>Universe</b></button>
+      </nav>
+    </div>
 
     <aside class="info-panel" id="infoPanel" aria-hidden="true">
       <button class="info-close" id="infoClose" aria-label="Fechar">×</button>
@@ -50,7 +78,8 @@
     </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  </main>
-  <script type="module" src="app.js"></script>
+  </section>
+</main>
+<script type="module" src="app.js"></script>
 </body>
 </html>
