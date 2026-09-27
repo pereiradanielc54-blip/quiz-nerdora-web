@@ -5,6 +5,49 @@ const MAPTERHORN_TILEJSON='https://tiles.mapterhorn.com/tilejson.json';
 const MAPTERHORN_DIRECT='https://tiles.mapterhorn.com/{z}/{x}/{y}.webp';
 const AWS_TERRAIN='https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png';
 
+const BRAZIL_STAC='https://data.inpe.br/bdc/stac/v1/search';
+const BRAZIL_COLLECTION='CB4A-WPM-PCA-FUSED-1';
+const BRAZIL_TMS='https://data.inpe.br/bdc/tms/tiles/WebMercatorQuad/{z}/{x}/{y}?url=';
+
+const REGIONAL_IMAGERY=[
+ {
+  id:'japan-gsi',name:'Japão • GSI Aerial',bounds:[122.0,20.0,154.5,46.5],minzoom:13,maxzoom:18,
+  tiles:['https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg'],tileSize:256
+ },
+ {
+  id:'swissimage',name:'Suíça • SWISSIMAGE',bounds:[5.75,45.65,10.75,47.95],minzoom:10,maxzoom:19,
+  tiles:['https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg'],tileSize:256
+ },
+ {
+  id:'netherlands-pdok',name:'Países Baixos • PDOK HR',bounds:[3.15,50.65,7.35,53.75],minzoom:11,maxzoom:21,
+  tiles:['https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=Actueel_orthoHR&STYLE=&FORMAT=image/jpeg&tileMatrixSet=OGC:1.0:GoogleMapsCompatible&tileMatrix={z}&tileRow={y}&tileCol={x}'],tileSize:256
+ },
+ {
+  id:'france-ign',name:'França • IGN Ortho HR',bounds:[-5.8,41.0,10.0,51.25],minzoom:10,maxzoom:19,
+  tiles:['https://data.geopf.fr/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=HR.ORTHOIMAGERY.ORTHOPHOTOS&format=image/jpeg&style=normal'],tileSize:256
+ },
+ {
+  id:'spain-pnoa',name:'Espanha • PNOA',bounds:[-9.7,35.5,4.6,43.95],minzoom:10,maxzoom:20,
+  tiles:['https://www.ign.es/wmts/pnoa-ma?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=OI.OrthoimageCoverage&STYLE=default&FORMAT=image/jpeg&TileMatrixSet=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}'],tileSize:256
+ },
+ {
+  id:'usa-usgs',name:'Estados Unidos • USGS Imagery',bounds:[-125.1,24.1,-66.2,49.7],minzoom:9,maxzoom:20,
+  tiles:['https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}'],tileSize:256
+ },
+ {
+  id:'estonia-ortho',name:'Estônia • Ortofoto nacional',bounds:[21.5,57.2,28.3,59.85],minzoom:11,maxzoom:20,
+  tiles:['https://kaart.maaamet.ee/wms/alus-geo?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=of10000&STYLES=&FORMAT=image/jpeg&TRANSPARENT=false&SRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=256&HEIGHT=256'],tileSize:256
+ },
+ {
+  id:'uruguay-ortho',name:'Uruguai • IDE.uy Ortofoto',bounds:[-58.55,-35.1,-53.05,-30.0],minzoom:10,maxzoom:20,
+  tiles:['https://mapas.ide.uy/geoserver-raster/ortofotos/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/jpeg&TRANSPARENT=false&LAYERS=ortofotos:ortofoto_nacional&STYLES=&SRS=EPSG:3857&WIDTH=256&HEIGHT=256&BBOX={bbox-epsg-3857}'],tileSize:256
+ },
+ {
+  id:'wallonia-ortho',name:'Bélgica/Valônia • SPW Ortho',bounds:[2.8,49.45,6.55,50.85],minzoom:11,maxzoom:20,
+  tiles:['https://geoservices.wallonie.be/arcgis/services/IMAGERIE/ORTHO_LAST/MapServer/WMSServer?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=0&STYLES=&FORMAT=image/jpeg&TRANSPARENT=false&SRS=EPSG:3857&WIDTH=256&HEIGHT=256&BBOX={bbox-epsg-3857}'],tileSize:256
+ }
+];
+
 const spots=[
  {name:'Amazônia',icon:'🌳',kind:'NATUREZA',center:[-61.5,-4.5],zoom:3.4,text:'A maior floresta tropical do planeta ocupa uma enorme área da América do Sul.'},
  {name:'Monte Everest',icon:'🏔️',kind:'NATUREZA',center:[86.925,27.988],zoom:5.6,text:'O ponto mais alto da superfície terrestre acima do nível do mar.'},
@@ -91,6 +134,146 @@ async function fetchWithTimeout(url,ms=4500){
  finally{clearTimeout(id)}
 }
 
+let activeImagery='EOX Sentinel-2';
+let brazilSceneKey='';
+let brazilRequestSeq=0;
+let regionalRefreshTimer=null;
+
+function pointInBounds(lon,lat,b){
+ return lon>=b[0]&&lon<=b[2]&&lat>=b[1]&&lat<=b[3];
+}
+
+function updateCredit(){
+ const credit=document.querySelector('.credit');
+ if(credit)credit.textContent=activeImagery+' • '+terrainProvider+' • MapLibre';
+}
+
+function addRegionalImageryLayers(){
+ for(const cfg of REGIONAL_IMAGERY){
+  try{
+   const sourceId='regional-source-'+cfg.id;
+   const layerId='regional-layer-'+cfg.id;
+   if(!map.getSource(sourceId)){
+    map.addSource(sourceId,{
+     type:'raster',
+     tiles:cfg.tiles,
+     tileSize:cfg.tileSize||256,
+     bounds:cfg.bounds,
+     minzoom:cfg.minzoom,
+     maxzoom:cfg.maxzoom,
+     attribution:cfg.name
+    });
+   }
+   if(!map.getLayer(layerId)){
+    map.addLayer({
+     id:layerId,
+     type:'raster',
+     source:sourceId,
+     minzoom:cfg.minzoom,
+     maxzoom:cfg.maxzoom+1,
+     paint:{
+      'raster-opacity':1,
+      'raster-fade-duration':180,
+      'raster-saturation':0.02,
+      'raster-contrast':0.03
+     }
+    });
+   }
+  }catch(e){}
+ }
+}
+
+function bestStaticRegionalLayer(){
+ if(!map)return null;
+ const c=map.getCenter(),z=map.getZoom();
+ const matches=REGIONAL_IMAGERY.filter(r=>z>=r.minzoom&&pointInBounds(c.lng,c.lat,r.bounds));
+ if(!matches.length)return null;
+ matches.sort((a,b)=>b.minzoom-a.minzoom);
+ return matches[0];
+}
+
+function removeBrazilLayer(){
+ try{if(map.getLayer('brazil-cbers-layer'))map.removeLayer('brazil-cbers-layer')}catch(e){}
+ try{if(map.getSource('brazil-cbers-source'))map.removeSource('brazil-cbers-source')}catch(e){}
+ brazilSceneKey='';
+}
+
+async function refreshBrazilImagery(){
+ if(!map)return false;
+ const c=map.getCenter(),z=map.getZoom();
+ const brazilBounds=[-74.1,-34.0,-34.7,5.5];
+ if(z<9||!pointInBounds(c.lng,c.lat,brazilBounds)){
+  if(map.getLayer('brazil-cbers-layer'))removeBrazilLayer();
+  return false;
+ }
+ const seq=++brazilRequestSeq;
+ const span=Math.max(.035,Math.min(.22,2.8/Math.pow(2,Math.max(0,z-8))));
+ const bbox=[c.lng-span,c.lat-span,c.lng+span,c.lat+span].join(',');
+ const url=BRAZIL_STAC+'?collections='+encodeURIComponent(BRAZIL_COLLECTION)+'&bbox='+bbox+'&limit=12';
+ try{
+  const res=await fetchWithTimeout(url,7000);
+  if(!res.ok)throw new Error('STAC '+res.status);
+  const data=await res.json();
+  if(seq!==brazilRequestSeq)return false;
+  const features=(data.features||[]).slice().sort((a,b)=>{
+   const da=Date.parse(a.properties?.datetime||a.properties?.start_datetime||0)||0;
+   const db=Date.parse(b.properties?.datetime||b.properties?.start_datetime||0)||0;
+   return db-da;
+  });
+  const item=features.find(f=>{
+   const a=f.assets||{};
+   return a.tci?.href||Object.values(a).some(v=>v?.href&&/\.tif(f)?($|\?)/i.test(v.href));
+  });
+  if(!item)return false;
+  const assets=item.assets||{};
+  const asset=assets.tci||Object.values(assets).find(v=>v?.href&&/\.tif(f)?($|\?)/i.test(v.href));
+  if(!asset?.href)return false;
+  const sceneKey=item.id||asset.href;
+  if(sceneKey===brazilSceneKey&&map.getLayer('brazil-cbers-layer'))return true;
+  removeBrazilLayer();
+  if(seq!==brazilRequestSeq)return false;
+  const tileUrl=BRAZIL_TMS+encodeURIComponent(asset.href)+'&color_formula=gamma%20rg%201.15';
+  map.addSource('brazil-cbers-source',{
+   type:'raster',
+   tiles:[tileUrl],
+   tileSize:256,
+   bounds:Array.isArray(item.bbox)&&item.bbox.length>=4?item.bbox:brazilBounds,
+   minzoom:8,
+   maxzoom:21,
+   attribution:'CBERS-4A/WPM • INPE'
+  });
+  map.addLayer({
+   id:'brazil-cbers-layer',
+   type:'raster',
+   source:'brazil-cbers-source',
+   minzoom:9,
+   maxzoom:22,
+   paint:{'raster-opacity':1,'raster-fade-duration':220,'raster-contrast':0.03}
+  });
+  brazilSceneKey=sceneKey;
+  return true;
+ }catch(e){
+  return false;
+ }
+}
+
+async function refreshRegionalImagery(){
+ if(!map)return;
+ const brazil=await refreshBrazilImagery();
+ if(brazil){
+  activeImagery='Brasil • CBERS-4A/WPM 2 m (INPE)';
+ }else{
+  const region=bestStaticRegionalLayer();
+  activeImagery=region?region.name:'EOX Sentinel-2';
+ }
+ updateCredit();
+}
+
+function scheduleRegionalRefresh(){
+ clearTimeout(regionalRefreshTimer);
+ regionalRefreshTimer=setTimeout(()=>refreshRegionalImagery(),260);
+}
+
 async function configureTerrain(){
  const loading=document.querySelector('#loading');
  try{
@@ -127,8 +310,7 @@ async function configureTerrain(){
      terrainProvider='sem relevo';
    }
  }
- const credit=document.querySelector('.credit');
- if(credit)credit.textContent='EOX Sentinel-2 • '+terrainProvider+' • MapLibre';
+ updateCredit();
  if(loading)loading.textContent='Finalizando Terra 3D...';
 }
 
@@ -171,7 +353,13 @@ try{
  map.dragRotate.enable();
  map.touchZoomRotate.enableRotation();
  if(map.touchPitch?.enable)map.touchPitch.enable();
- map.on('style.load',async()=>{await configureTerrain()});
+ map.on('style.load',async()=>{
+  addRegionalImageryLayers();
+  await configureTerrain();
+  await refreshRegionalImagery();
+ });
+ map.on('moveend',scheduleRegionalRefresh);
+ map.on('zoomend',scheduleRegionalRefresh);
  map.once('idle',()=>document.querySelector('#loading').classList.add('hide'));
 }catch(e){
  document.querySelector('#loading').textContent='Globo indisponível neste navegador';
