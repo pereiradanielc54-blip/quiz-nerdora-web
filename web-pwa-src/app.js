@@ -21,8 +21,34 @@ if(window.visualViewport){
 let DB,ACH,STORE,QUALITY,run=[],music=null,deferredInstall=null,swReg=null;
 const L=[['Novato de Academia',10],['Senpai Otaku',15],['Elite Shonen',20],['Lenda do Multiverso',25]], STEP=[1,3,5,7], COOL=[50,75,100,125];
 const S={screen:'home',mode:'main',level:0,q:0,lives:3,xp:0,combo:0,maxCombo:0,correct:0,answered:0,errors:0,levelErrors:0,bossWins:0,maxTimeHits:0,timeouts34:0,reachedOneLife:false,bet:false,betChosen:false,locked:false,timer:null,time:0,startAt:0,shownAt:0,responseTotal:0,timedAnswers:0,cats:new Set(),animes:new Set(),duelSeed:null,duelTarget:null,levels:[],historySaved:false,pendingAdvance:false,answerLog:[]};
+let nerdoraContext=null;
 const st={g(k,d){try{return JSON.parse(localStorage.getItem('qnweb_'+k))??d}catch{return d}},s(k,v){try{localStorage.setItem('qnweb_'+k,JSON.stringify(v));return true}catch(e){console.warn('[Quiz Nerdora] storage write skipped:',k,e);return false}}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function importNerdoraContext(data){
+ const p=data&&typeof data==='object'&&data.profile&&typeof data.profile==='object'?data.profile:null;
+ if(!p)return false;
+ nerdoraContext={profile:{
+  userId:String(p.userId||'').slice(0,128),
+  username:String(p.username||'').replace(/^@/,'').slice(0,32),
+  publicName:String(p.publicName||'Jogador Nerdora').slice(0,60),
+  photoUrl:String(p.photoUrl||'').slice(0,500),
+  featuredAchievement:typeof p.featuredAchievement==='string'?p.featuredAchievement.slice(0,80):null
+ }};
+ return true;
+}
+function nerdoraPlayerLabel(){
+ const p=nerdoraContext?.profile;
+ return p?.username?'@'+p.username:(p?.publicName||'@você');
+}
+function announceNerdoraReady(){
+ try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:'NERDORA_QUIZ_READY',detail:nerdoraExport()},'*')}catch{}
+}
+window.addEventListener('message',event=>{
+ if(event.source!==window.parent||!event.data||typeof event.data!=='object')return;
+ if(event.data.type==='NERDORA_QUIZ_CONTEXT'&&importNerdoraContext(event.data)){
+  queueNerdoraSync('profile-connected',{userId:nerdoraContext?.profile?.userId||''});
+ }
+});
 const shuffle=(a,r=Math.random)=>{a=[...a];for(let i=a.length-1;i;i--){let j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function hash(s){let h=2166136261;for(let c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
@@ -47,8 +73,8 @@ function passState(){const c=passConfig(),xp=Math.min(st.g('passXp',0),c.maxLeve
 function claimPassLevel(level){const c=passConfig(),r=c.rewards?.find(x=>x.level===level);if(!r)return;const claimed=new Set(st.g('passClaimedLevels',[]));if(claimed.has(level))return;claimed.add(level);st.s('passClaimedLevels',[...claimed].sort((a,b)=>a-b));if(r.coins)grantCoins(r.coins,'Passe Portal Zero • nível '+level);if(r.fragments)grantFragments(r.fragments,'Passe Portal Zero • nível '+level);toast('PASSE NERDORA: nível '+level+' concluído')}
 function grantPassXp(n){if(!n)return;const c=passConfig(),max=c.maxLevel*c.xpPerLevel,before=Math.min(st.g('passXp',0),max),after=Math.min(max,before+n);st.s('passXp',after);const a=Math.floor(before/c.xpPerLevel),b=Math.floor(after/c.xpPerLevel);for(let lv=a+1;lv<=b&&lv<=c.maxLevel;lv++)claimPassLevel(lv)}
 function queueNerdoraSync(kind,payload={}){const q=st.g('syncQueue',[]);q.push({kind,payload,at:Date.now()});st.s('syncQueue',q.slice(-100));const detail=nerdoraExport();try{window.dispatchEvent(new CustomEvent('nerdora:quiz-store-changed',{detail}))}catch{}try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:'NERDORA_QUIZ_SYNC',detail},'*')}catch{}}
-function nerdoraExport(){const ps=passState(),stats=st.g('animeStats',{});return{version:'0.17.4',wallet:wallet(),ownedItems:st.g('ownedItems',[]),equipped:equipped(),showcaseSlots:st.g('showcaseSlots',3),passXp:ps.xp,passLevel:ps.level,unlockedAchievements:st.g('unlocked',[]),quality:{historyCount:st.g('runHistory',[]).length,wrongQuestions:Object.keys(st.g('wrongBank',{})).length,animeStats:stats},source:'quiz-nerdora'}}
-window.NerdoraQuizBridge={exportState:nerdoraExport,getCatalog:()=>STORE,importAccountState(data){if(!data||typeof data!=='object')return false;if(Number.isFinite(data.coins))st.s('coins',data.coins);if(Number.isFinite(data.fragments))st.s('fragments',data.fragments);if(Array.isArray(data.ownedItems))st.s('ownedItems',data.ownedItems);if(data.equipped&&typeof data.equipped==='object')st.s('equipped',data.equipped);applyCosmetics();return true}};
+function nerdoraExport(){const ps=passState(),stats=st.g('animeStats',{});return{version:'0.17.5',wallet:wallet(),ownedItems:st.g('ownedItems',[]),equipped:equipped(),showcaseSlots:st.g('showcaseSlots',3),passXp:ps.xp,passLevel:ps.level,unlockedAchievements:st.g('unlocked',[]),profile:nerdoraContext?.profile||null,quality:{historyCount:st.g('runHistory',[]).length,wrongQuestions:Object.keys(st.g('wrongBank',{})).length,animeStats:stats},source:'quiz-nerdora'}}
+window.NerdoraQuizBridge={exportState:nerdoraExport,getCatalog:()=>STORE,importNerdoraContext,importAccountState(data){if(!data||typeof data!=='object')return false;if(Number.isFinite(data.coins))st.s('coins',data.coins);if(Number.isFinite(data.fragments))st.s('fragments',data.fragments);if(Array.isArray(data.ownedItems))st.s('ownedItems',data.ownedItems);if(data.equipped&&typeof data.equipped==='object')st.s('equipped',data.equipped);applyCosmetics();return true}};
 function rarityIcon(r){return({Comum:'◇',Rara:'◆',Épica:'✦',Lendária:'👑',Especial:'★',Sistema:'⚙'})[r]||'◇'}
 function displayTitle(){const e=equipped(),i=itemById(e.title);return i?.name||'Viajante do Portal'}
 function frameClass(){return 'frame-'+String(equipped().frame||'frame_neon').replace(/^frame_/,'')}
@@ -199,7 +225,7 @@ function finish(victory){
  result(victory?'VITÓRIA NO MULTIVERSO!':'RUN ENCERRADA');
 }
 function result(title,code=null){S.screen='result';recordRunHistory(title);playMusic('menu');const acc=Math.round(S.correct/Math.max(1,S.answered)*100);let best=st.g('bestXp',0);if(S.mode==='main'&&S.xp>best){if(best>0){let rb=st.g('recordBreaks',0)+1;st.s('recordBreaks',rb);if(rb>=10)unlock('record_hunter');if(rb>=25)unlock('yesterday_limit')}st.s('bestXp',S.xp);}app.innerHTML=shell('<div class="head"><div><div class="sub">RESULTADO</div><h1>'+title+'</h1></div><button class="back" data-nav="home">←</button></div><div class="panel glass center"><div class="big">'+S.xp+' XP</div></div><div class="stats"><div class="stat glass"><small>ACERTOS</small><b>'+S.correct+'/'+S.answered+'</b></div><div class="stat glass"><small>PRECISÃO</small><b>'+acc+'%</b></div><div class="stat glass"><small>MAIOR COMBO</small><b>x'+S.maxCombo+'</b></div><div class="stat glass"><small>VIDAS</small><b>'+S.lives+'/3</b></div></div>'+(code?'<div class="panel glass"><h3>Código do Duelo</h3><div class="duelcode">'+code+'</div></div>':'')+'<button class="next" data-nav="home">VOLTAR AO PORTAL</button>');bind()}
-function ranking(daily=false){S.screen='ranking';playMusic('menu');const best=daily?st.g('dailyScore',0):st.g('bestXp',0);app.innerHTML=shell('<div class="head"><div><div class="sub">PRESTÍGIO</div><h1>RANKING OTAKU</h1></div><button class="back" data-nav="home">←</button></div><div class="rankrow glass"><b>#1</b><div><b>@você</b><small style="display:block;color:var(--muted)">Placar local real</small></div><b>'+best+' XP</b></div><div class="panel glass center"><small>Sem jogadores fictícios. O ranking online será conectado ao backend.</small></div>');bind()}
+function ranking(daily=false){S.screen='ranking';playMusic('menu');const best=daily?st.g('dailyScore',0):st.g('bestXp',0),player=esc(nerdoraPlayerLabel());app.innerHTML=shell('<div class="head"><div><div class="sub">PRESTÍGIO</div><h1>RANKING OTAKU</h1></div><button class="back" data-nav="home">←</button></div><div class="rankrow glass"><b>#1</b><div><b>'+player+'</b><small style="display:block;color:var(--muted)">'+(nerdoraContext?'Perfil Nerdora conectado':'Placar local real')+'</small></div><b>'+best+' XP</b></div><div class="panel glass center"><small>Sem jogadores fictícios. O ranking online será conectado ao backend.</small></div>');bind()}
 function achievements(tab='permanent'){S.screen='ach';playMusic('menu');app.innerHTML=shell('<div class="head"><div><div class="sub">COLEÇÃO</div><h1>CONQUISTAS</h1><small>40 permanentes • 20 temporárias</small></div><button class="back" data-nav="home">←</button></div><div class="tabs"><button class="tab '+(tab==='permanent'?'active':'')+'" data-tab="permanent">PERMANENTES</button><button class="tab '+(tab==='temporary'?'active':'')+'" data-tab="temporary">TEMPORÁRIAS</button></div><div id="achgrid" class="achgrid"></div>');renderAchievements(tab);bind()}
 function renderAchievements(tab){const grid=$('#achgrid');if(!grid)return;const u=new Set(st.g('unlocked',[])),list=tab==='temporary'?ACH.temporary:ACH.permanent;grid.innerHTML=list.map(a=>{const on=u.has(a[0]),secret=['impossible_return','last_second_eyes'].includes(a[0]);return '<div class="ach glass '+(on?'unlocked':'')+'"><div class="ico">'+((on||!secret)?a[1]:'❓')+'</div><h4>'+esc((on||!secret)?a[2]:'???')+'</h4><p>'+esc((on||!secret)?a[3]:'Conquista secreta.')+'</p><span class="badge '+(a[4]==='server'||tab==='temporary'?'server':'')+'">'+(tab==='temporary'?'TEMPORÁRIA • SERVIDOR':a[4]==='server'?'VALIDAÇÃO SERVIDOR':on?'DESBLOQUEADA':'BLOQUEADA')+'</span></div>'}).join('')}
 function duel(){S.screen='duel';playMusic('menu');app.innerHTML=shell('<div class="head"><div><div class="sub">CONFRONTO</div><h1>DUELO OTAKU</h1><small>Mesma sequência • código sem respostas</small></div><button class="back" data-nav="home">←</button></div><div class="panel glass"><h3>Criar desafio</h3><p>Jogue 10 perguntas e gere um código com seed e XP-alvo.</p><button class="next" data-action="createDuel">CRIAR E JOGAR</button></div><div class="panel glass"><h3>Aceitar desafio</h3><input id="duelInput" class="input" placeholder="NDR-..."><button class="next" data-action="acceptDuel">ENTRAR NO DUELO</button></div>');bind()}
@@ -253,7 +279,7 @@ window.addEventListener('blur',()=>{if(document.hidden){stopMusic();clearTimer()
 async function updates(){if(!('serviceWorker'in navigator))return;swReg=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});let re=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!re){re=true;location.reload()}});const check=async()=>{try{const v=await fetch('./version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json());const old=st.g('build','');if(old&&old!==v.build){$('#updateToast')?.classList.remove('hidden');await swReg.update();if(swReg.waiting)swReg.waiting.postMessage({type:'SKIP_WAITING'})}st.s('build',v.build)}catch{}};await check();setInterval(check,300000);window.addEventListener('focus',check);window.addEventListener('online',check)}
 
 const QUALITY_FALLBACK={
- version:1,release:'0.17.4',
+ version:1,release:'0.17.5',
  pass:{season:'Portal Zero',maxLevel:30,xpPerLevel:100,rewards:Array.from({length:30},(_,i)=>{const level=i+1;let coins=25,fragments=0;if(level===10||level===15)coins=75;if(level===20||level===25)coins=100;if(level===30)coins=250;if([5,10,15,20].includes(level))fragments=1;if(level===25)fragments=2;if(level===30)fragments=3;return{level,coins,fragments}})},
  missions:{daily:[
   {id:'d_answer_20',name:'Aquecimento Otaku',description:'Responda 20 perguntas hoje.',metric:'answered',target:20,coins:30,passXp:15},
@@ -298,6 +324,8 @@ async function init(){
   syncViewport();
   home();
   requestAnimationFrame(syncViewport);
+  announceNerdoraReady();
+  setTimeout(announceNerdoraReady,350);
   updates().catch(e=>console.warn('[Quiz Nerdora] atualização automática indisponível nesta abertura',e));
  }catch(e){
   console.error('[Quiz Nerdora] falha crítica de inicialização',e);
