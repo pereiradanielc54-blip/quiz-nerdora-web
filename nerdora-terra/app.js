@@ -1,64 +1,55 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.mjs';
 
-const places=[
-{id:'everest',name:'Monte Everest',type:'Natureza',icon:'🏔️',lat:27.9881,lon:86.925,desc:'O ponto mais alto da superfície terrestre acima do nível do mar, no Himalaia.',stats:[['Altitude','8.849 m'],['Região','Himalaia']]},
-{id:'amazon',name:'Amazônia',type:'Bioma',icon:'🌳',lat:-3.1,lon:-60,desc:'A maior floresta tropical do planeta e uma das regiões com maior biodiversidade da Terra.',stats:[['Bioma','Floresta tropical'],['Continente','América do Sul']]},
-{id:'mariana',name:'Fossa das Marianas',type:'Oceanos',icon:'🌊',lat:11.35,lon:142.2,desc:'Região que contém o Challenger Deep, o ponto conhecido mais profundo dos oceanos.',stats:[['Profundidade','~10,9 km'],['Oceano','Pacífico']]},
-{id:'sahara',name:'Deserto do Saara',type:'Natureza',icon:'🏜️',lat:23.4,lon:13,desc:'O maior deserto quente do mundo, cobrindo grande parte do norte da África.',stats:[['Tipo','Deserto quente'],['Continente','África']]},
-{id:'yellowstone',name:'Yellowstone',type:'Terra viva',icon:'🌋',lat:44.6,lon:-110.5,desc:'Uma grande região vulcânica e geotérmica conhecida por gêiseres e fontes termais.',stats:[['Fenômeno','Caldeira vulcânica'],['País','Estados Unidos']]},
-{id:'barrier',name:'Grande Barreira de Coral',type:'Oceanos',icon:'🐠',lat:-18.28,lon:147.7,desc:'O maior sistema de recifes de coral do planeta, ao largo da costa nordeste da Austrália.',stats:[['Ecossistema','Recife de coral'],['País','Austrália']]},
-{id:'andes',name:'Cordilheira dos Andes',type:'Natureza',icon:'⛰️',lat:-15,lon:-72,desc:'A maior cadeia montanhosa continental do planeta, acompanhando a costa oeste sul-americana.',stats:[['Extensão','~7.000 km'],['Continente','América do Sul']]},
-{id:'iceland',name:'Islândia',type:'Terra viva',icon:'♨️',lat:64.96,lon:-19.02,desc:'Ilha vulcânica sobre a Dorsal Mesoatlântica, onde processos geológicos ficam visíveis na superfície.',stats:[['Zona','Dorsal Mesoatlântica'],['Região','Atlântico Norte']]},
-{id:'antarctica',name:'Antártida',type:'Clima',icon:'🧊',lat:-82,lon:15,desc:'O continente mais frio e seco, coberto por uma enorme camada de gelo.',stats:[['Tipo','Continente polar'],['Hemisfério','Sul']]},
-{id:'japan',name:'Japão',type:'País',icon:'🗾',lat:36.2,lon:138.25,desc:'Arquipélago situado em uma das regiões tectonicamente mais ativas do planeta.',stats:[['Continente','Ásia'],['Oceano','Pacífico']]},
-{id:'brazil',name:'Brasil',type:'País',icon:'🇧🇷',lat:-14.2,lon:-51.9,desc:'O maior país da América do Sul, com Amazônia, Cerrado, Pantanal, Caatinga, Mata Atlântica e Pampa.',stats:[['Continente','América do Sul'],['Capital','Brasília']]},
-{id:'galapagos',name:'Galápagos',type:'Vida',icon:'🐢',lat:-0.65,lon:-90.35,desc:'Arquipélago vulcânico famoso por espécies únicas e por sua importância para o estudo da evolução.',stats:[['Tipo','Arquipélago vulcânico'],['Oceano','Pacífico']]}
-];
-const eras=[
-['4,54 bi anos','Hadeano','O planeta nasce','A Terra jovem era extremamente quente. Impactos, vulcanismo e resfriamento gradual preparavam o caminho para oceanos e crosta.','🌋','radial-gradient(circle,#9d431d 0,#3a1711 42%,#0d1218 76%)',0x9c4d2d],
-['3,5 bi anos','Arqueano','Oceanos e vida microscópica','Oceanos já existiam e formas de vida simples começaram a transformar a história do planeta.','🦠','radial-gradient(circle,#24696f 0,#163f44 42%,#0b151a 78%)',0x2f7f75],
-['600 mi anos','Ediacarano','Vida multicelular se diversifica','Organismos multicelulares complexos tornam-se mais comuns nos mares antes da grande diversificação do Cambriano.','🪼','radial-gradient(circle,#277b86 0,#184450 45%,#0a141a 80%)',0x2e8fa2],
-['230 mi anos','Mesozoico','Era dos dinossauros','Dinossauros dominam muitos ecossistemas terrestres enquanto os continentes continuam se separando.','🦖','radial-gradient(circle,#5f8730 0,#263f20 45%,#0a1410 80%)',0x5f8f46],
-['2,6 mi anos','Quaternário','Gelo, megafauna e humanos','Ciclos glaciais remodelam paisagens enquanto o gênero Homo se espalha e desenvolve culturas cada vez mais complexas.','🦣','radial-gradient(circle,#a9d8e9 0,#3d6471 45%,#0a151c 80%)',0x7fc3d0],
-['Hoje','Holoceno','O mundo azul atual','Uma biosfera interligada, bilhões de pessoas e um planeta em constante transformação natural e humana.','🌍','radial-gradient(circle,#2e87aa 0,#184b5f 45%,#07131b 80%)',0x5eafb0]
+const NASA_WMS='https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=BlueMarble_NextGeneration&STYLES=&FORMAT=image/jpeg&TRANSPARENT=false&SRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=512&HEIGHT=512';
+
+const locations=[
+ {id:'amazon',name:'Amazônia',icon:'🌳',kind:'NATUREZA',center:[-61.5,-4.5],zoom:3.4,text:'A maior floresta tropical do planeta ocupa uma enorme área da América do Sul e abriga uma biodiversidade extraordinária.',stats:[['Bioma','Floresta tropical'],['Região','América do Sul']]},
+ {id:'everest',name:'Monte Everest',icon:'🏔️',kind:'NATUREZA',center:[86.925,27.988],zoom:5.6,text:'O ponto mais alto da superfície terrestre acima do nível do mar fica no Himalaia.',stats:[['Altitude','8.849 m'],['Região','Himalaia']]},
+ {id:'mariana',name:'Fossa das Marianas',icon:'🌊',kind:'OCEANOS',center:[142.2,11.35],zoom:4.4,text:'Nesta região do Pacífico fica o Challenger Deep, o ponto conhecido mais profundo dos oceanos.',stats:[['Profundidade','~10,9 km'],['Oceano','Pacífico']]},
+ {id:'reef',name:'Grande Barreira de Coral',icon:'🐠',kind:'OCEANOS',center:[147.7,-18.28],zoom:5,text:'O maior sistema de recifes de coral do planeta se estende ao longo da costa nordeste da Austrália.',stats:[['Ecossistema','Recife de coral'],['País','Austrália']]},
+ {id:'andes',name:'Cordilheira dos Andes',icon:'⛰️',kind:'NATUREZA',center:[-71,-20],zoom:3.5,text:'Uma cadeia montanhosa colossal acompanha a margem oeste da América do Sul.',stats:[['Extensão','~7.000 km'],['Continente','América do Sul']]},
+ {id:'antarctica',name:'Antártida',icon:'🧊',kind:'OCEANOS',center:[0,-76],zoom:2.7,text:'O continente polar guarda a maior massa de gelo da Terra e influencia o clima e os oceanos globais.',stats:[['Tipo','Continente polar'],['Hemisfério','Sul']]}
 ];
 
-const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.1,100),renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
-camera.position.set(0,0,3.35);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.querySelector('#scene').appendChild(renderer.domElement);
-scene.add(new THREE.AmbientLight(0x86b8c8,1.4));const sun=new THREE.DirectionalLight(0xffffff,3);sun.position.set(4,3,5);scene.add(sun);const rim=new THREE.DirectionalLight(0x49e4ff,2);rim.position.set(-4,-1,-3);scene.add(rim);
+let map;
+try{
+  map=new maplibregl.Map({
+    container:'earthMap',
+    style:{version:8,sources:{nasa:{type:'raster',tiles:[NASA_WMS],tileSize:512,attribution:'NASA GIBS'}},layers:[{id:'earth',type:'raster',source:'nasa',paint:{'raster-fade-duration':0,'raster-contrast':.08,'raster-saturation':.08}}]},
+    center:[-45,4],zoom:1.15,bearing:0,pitch:0,maxPitch:0,minZoom:.45,maxZoom:8,attributionControl:false,renderWorldCopies:false
+  });
+  map.dragRotate.disable();
+  map.touchZoomRotate.disableRotation();
+  map.on('style.load',()=>{map.setProjection({type:'globe'});try{map.addSource('terrain',{type:'raster-dem',url:'https://demotiles.maplibre.org/terrain-tiles/tiles.json',tileSize:256});map.setTerrain({source:'terrain',exaggeration:1.15})}catch{}});
+  map.once('idle',()=>document.querySelector('#earthLoading').classList.add('hide'));
+  map.on('error',()=>document.querySelector('#earthLoading').querySelector('b').textContent='Reconectando ao satélite...');
+}catch(e){document.querySelector('#earthLoading').querySelector('b').textContent='Globo indisponível neste navegador';}
 
-function texture(bump=false){const c=document.createElement('canvas');c.width=1024;c.height=512;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,512);g.addColorStop(0,bump?'#222':'#0a4266');g.addColorStop(.55,bump?'#1b1b1b':'#0a5773');g.addColorStop(1,bump?'#202020':'#083d5c');x.fillStyle=g;x.fillRect(0,0,1024,512);const polys=[[[80,110],[135,70],[220,75],[250,120],[220,155],[185,178],[150,160],[120,135]],[[230,190],[275,205],[310,270],[300,335],[270,410],[245,360],[255,300],[225,245]],[[480,100],[535,75],[590,95],[610,130],[560,145],[535,175],[490,155]],[[510,180],[560,165],[615,195],[640,260],[610,330],[560,360],[530,300],[515,240]],[[600,105],[690,75],[785,95],[835,135],[805,175],[735,170],[690,145],[640,160]],[[780,310],[830,295],[885,330],[870,375],[815,385],[790,350]],[[30,430],[180,420],[330,440],[480,425],[620,438],[760,422],[990,440],[990,505],[25,505]]];x.fillStyle=bump?'#8b8b8b':'#3b8153';x.strokeStyle=bump?'#999':'#69a665';x.lineWidth=3;polys.forEach(p=>{x.beginPath();p.forEach((a,i)=>i?x.lineTo(...a):x.moveTo(...a));x.closePath();x.fill();x.stroke()});if(!bump){x.globalAlpha=.2;x.fillStyle='#d7eff8';for(let i=0;i<30;i++){x.beginPath();x.ellipse(Math.random()*1024,Math.random()*512,30+Math.random()*110,3+Math.random()*8,0,0,Math.PI*2);x.fill()}x.globalAlpha=1}const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
-function pos(lat,lon,r=1){const p=(90-lat)*Math.PI/180,t=(lon+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t))}
+const info=document.querySelector('#infoPanel'),infoClose=document.querySelector('#infoClose'),focusButton=document.querySelector('#focusButton');
+let selected=null,toastTimer;
+function toast(msg){const t=document.querySelector('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2300)}
+function resetEarth(){if(!map)return;map.flyTo({center:[-45,4],zoom:1.15,pitch:0,bearing:0,duration:1300});closeInfo()}
+function fly(place){if(!map)return;map.flyTo({center:place.center,zoom:place.zoom,pitch:place.zoom>4?28:0,bearing:0,duration:2200,essential:true})}
+function openInfo(place){selected=place;document.querySelector('#infoKicker').textContent=place.kind;document.querySelector('#infoIcon').textContent=place.icon;document.querySelector('#infoTitle').textContent=place.name;document.querySelector('#infoText').textContent=place.text;document.querySelector('#infoStats').innerHTML=place.stats.map(([a,b])=>`<div class="info-stat"><small>${a}</small><b>${b}</b></div>`).join('');info.classList.add('open');info.setAttribute('aria-hidden','false')}
+function closeInfo(){info.classList.remove('open');info.setAttribute('aria-hidden','true')}
+function surprise(pool=locations){const p=pool[Math.floor(Math.random()*pool.length)];openInfo(p);fly(p)}
+infoClose.onclick=closeInfo;focusButton.onclick=()=>{if(selected){closeInfo();fly(selected)}};
 
-const globe=new THREE.Group();scene.add(globe);const mat=new THREE.MeshPhongMaterial({map:texture(),bumpMap:texture(true),bumpScale:.018,shininess:12,specular:new THREE.Color(0x16394d)}),earth=new THREE.Mesh(new THREE.SphereGeometry(1,96,96),mat);earth.rotation.y=-.35;globe.add(earth);globe.add(new THREE.Mesh(new THREE.SphereGeometry(1.03,64,64),new THREE.MeshBasicMaterial({color:0x54ddff,transparent:true,opacity:.09,side:THREE.BackSide})));
-const markerGroup=new THREE.Group();globe.add(markerGroup);places.forEach(p=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.023,16,16),new THREE.MeshBasicMaterial({color:0x7dffb2}));m.position.copy(pos(p.lat,p.lon,1.03));m.userData.place=p;markerGroup.add(m)});
-const sg=new THREE.BufferGeometry(),sp=[];for(let i=0;i<800;i++){const r=6+Math.random()*9,a=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1);sp.push(r*Math.sin(p)*Math.cos(a),r*Math.cos(p),r*Math.sin(p)*Math.sin(a))}sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xbdeeff,size:.008,transparent:true,opacity:.8})));
+document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',async()=>{
+ const a=btn.dataset.action;
+ if(a==='fullscreen'){try{document.fullscreenElement?await document.exitFullscreen():await document.documentElement.requestFullscreen()}catch{toast('Tela cheia não disponível aqui')}return}
+ if(a==='sound'){toast('Sons do Nerdora Terra ativados 🔊');return}
+ if(a==='explore'){toast('Arraste a Terra e belisque para aproximar 🌍');map?.easeTo({zoom:1.55,duration:900});return}
+ if(a==='random'){surprise();return}
+ if(a==='nature'){surprise(locations.filter(x=>x.kind==='NATUREZA'));return}
+ if(a==='ocean'){surprise(locations.filter(x=>x.kind==='OCEANOS'));return}
+ if(a==='terra'){resetEarth();return}
+ if(a==='discover'){openInfo(locations[0]);return}
+ if(a==='time'){openInfo({name:'Terra através do tempo',icon:'🦖',kind:'LINHA DO TEMPO',center:[-45,4],zoom:1.3,text:'A linha do tempo geológica será expandida nesta interface: formação da Terra, primeiros oceanos, vida, dinossauros, eras glaciais e mundo atual.',stats:[['Origem','~4,54 bilhões de anos'],['Modo','Em evolução']]});return}
+ if(a==='universe'){toast('Ligação com Nerdora Universe reservada para a integração ✨')}
+}));
 
-const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.enablePan=false;controls.minDistance=2;controls.maxDistance=5.4;controls.autoRotate=true;controls.autoRotateSpeed=.33;let timer;controls.addEventListener('start',()=>{controls.autoRotate=false;clearTimeout(timer)});controls.addEventListener('end',()=>timer=setTimeout(()=>controls.autoRotate=true,5000));
-const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();renderer.domElement.addEventListener('pointerup',e=>{pointer.x=e.clientX/innerWidth*2-1;pointer.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(pointer,camera);const h=ray.intersectObjects(markerGroup.children)[0];if(h?.object?.userData?.place)openPlace(h.object.userData.place)});
+let autoTimer;function scheduleSpin(){clearTimeout(autoTimer);autoTimer=setTimeout(()=>{if(!map)return;const c=map.getCenter();map.easeTo({center:[c.lng+18,c.lat],duration:12000,easing:t=>t});scheduleSpin()},2500)}
+map?.on('dragstart',()=>clearTimeout(autoTimer));map?.on('zoomstart',()=>clearTimeout(autoTimer));map?.on('moveend',scheduleSpin);scheduleSpin();
 
-function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-
-const cards=document.querySelector('#cards'),suggestions=document.querySelector('#suggestions'),search=document.querySelector('#searchInput'),sheet=document.querySelector('#detailSheet');
-function render(list=places.slice(0,6)){cards.innerHTML=list.map(p=>`<article class="place-card" data-id="${p.id}"><div class="orb"></div><div class="icon">${p.icon}</div><div class="tag">${p.type.toUpperCase()}</div><h3>${p.name}</h3><p>${p.desc}</p></article>`).join('');cards.querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>openPlace(places.find(p=>p.id===el.dataset.id)))}render();
-function openPlace(p){document.querySelector('#detailIcon').textContent=p.icon;document.querySelector('#detailType').textContent=p.type.toUpperCase();document.querySelector('#detailName').textContent=p.name;document.querySelector('#detailDescription').textContent=p.desc;document.querySelector('#detailStats').innerHTML=p.stats.map(s=>`<div class="stat"><small>${s[0]}</small><b>${s[1]}</b></div>`).join('');sheet.classList.add('open');sheet.setAttribute('aria-hidden','false');document.querySelector('#focusBtn').onclick=()=>{closeSheet();focus(p);scrollTo({top:0,behavior:'smooth'})}}
-function closeSheet(){sheet.classList.remove('open');sheet.setAttribute('aria-hidden','true')}document.querySelectorAll('[data-close-sheet]').forEach(x=>x.onclick=closeSheet);
-function focus(p){controls.autoRotate=false;const start=camera.position.clone(),end=pos(p.lat,p.lon).normalize().multiplyScalar(2.55),t0=performance.now();(function step(now){const t=Math.min(1,(now-t0)/800),e=1-(1-t)**3;camera.position.lerpVectors(start,end,e);camera.lookAt(0,0,0);t<1?requestAnimationFrame(step):setTimeout(()=>controls.autoRotate=true,2500)})(t0);toast(`Localizando ${p.name} no globo`)}
-
-search.oninput=()=>{const q=search.value.trim().toLowerCase();if(!q){suggestions.classList.remove('show');return}const a=places.filter(p=>(p.name+' '+p.type+' '+p.desc).toLowerCase().includes(q)).slice(0,5);suggestions.innerHTML=a.length?a.map(p=>`<button data-id="${p.id}">${p.icon} <b>${p.name}</b><small>${p.type}</small></button>`).join(''):'<button>Nenhum ponto encontrado ainda.</button>';suggestions.classList.add('show');suggestions.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{const p=places.find(x=>x.id===b.dataset.id);search.value=p.name;suggestions.classList.remove('show');openPlace(p)})};
-document.querySelector('#clearSearch').onclick=()=>{search.value='';suggestions.classList.remove('show');search.focus()};
-document.querySelector('#showAllBtn').onclick=e=>{render(places);e.currentTarget.style.display='none'};
-document.querySelector('#exploreBtn').onclick=()=>document.querySelector('#exploreSection').scrollIntoView({behavior:'smooth'});
-document.querySelector('#randomBtn').onclick=()=>openPlace(places[Math.floor(Math.random()*places.length)]);
-document.querySelector('#homeBtn').onclick=()=>scrollTo({top:0,behavior:'smooth'});
-document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>{if(b.dataset.mode==='time')return document.querySelector('#timelineSection').scrollIntoView({behavior:'smooth'});const m={nature:'Natureza',ocean:'Oceanos',volcano:'Terra viva'}[b.dataset.mode],f=places.filter(p=>p.type===m);render(f.length?f:places.slice(0,6));document.querySelector('#exploreSection').scrollIntoView({behavior:'smooth'})});
-
-const range=document.querySelector('#eraRange');function setEra(i){const e=eras[i];document.querySelector('#eraAge').textContent=e[0];document.querySelector('#eraPeriod').textContent=e[1];document.querySelector('#eraTitle').textContent=e[2];document.querySelector('#eraText').textContent=e[3];document.querySelector('#eraIcon').textContent=e[4];document.querySelector('#eraVisual').style.background=e[5];earth.material.color.setHex(e[6])}range.oninput=()=>setEra(+range.value);setEra(0);
-
-document.querySelector('#fullscreenBtn').onclick=async()=>{try{document.fullscreenElement?await document.exitFullscreen():await document.documentElement.requestFullscreen()}catch{toast('Tela cheia não disponível neste navegador')}};
-let muted=false;document.querySelector('#soundBtn').onclick=e=>{muted=!muted;e.currentTarget.textContent=muted?'🔇':'🔊';toast(muted?'Sons desativados':'Sons ativados')};
-document.querySelectorAll('.bottom-nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.bottom-nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');const t=b.dataset.tab;if(t==='globe')scrollTo({top:0,behavior:'smooth'});if(t==='discover')document.querySelector('#exploreSection').scrollIntoView({behavior:'smooth'});if(t==='time')document.querySelector('#timelineSection').scrollIntoView({behavior:'smooth'});if(t==='universe')toast('Integração com o Nerdora Universe preparada para a próxima etapa ✨')});
-let tt;function toast(msg){const t=document.querySelector('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2500)}
-setTimeout(()=>document.querySelector('#globeHint').style.opacity=.25,5000);
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
