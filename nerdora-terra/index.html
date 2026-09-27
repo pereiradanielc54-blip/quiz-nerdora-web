@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#000000">
   <meta name="description" content="Nerdora Terra — explore a Terra real em um globo 3D interativo.">
-  <title>Nerdora Terra v0.2</title>
+  <title>Nerdora Terra v0.3</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
@@ -21,7 +21,11 @@
         <div class="data-credit">NASA GIBS • MapLibre</div>
       </div>
 
-      <img class="ui-overlay" src="ui-overlay.webp" alt="" draggable="false">
+      <div class="ui-slices" aria-hidden="true">
+        <img class="ui-slice ui-slice-top" src="ui-overlay.webp" alt="" draggable="false">
+        <img class="ui-slice ui-slice-hint" src="ui-overlay.webp" alt="" draggable="false">
+        <img class="ui-slice ui-slice-bottom" src="ui-overlay.webp" alt="" draggable="false">
+      </div>
 
       <button class="hit hit-sound" data-action="sound" aria-label="Som"></button>
       <button class="hit hit-fullscreen" data-action="fullscreen" aria-label="Tela cheia"></button>
