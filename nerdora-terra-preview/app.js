@@ -42,6 +42,6 @@ document.querySelectorAll('[data-action]').forEach(btn=>btn.onclick=async()=>{
  if(a==='ocean'){random(spots.filter(x=>x.kind==='OCEANOS'));return}
  if(a==='terra'){closeSheet();map?.flyTo({center:[-35,8],zoom:1.15,duration:1100});return}
  if(a==='discover'){showSpot(spots[0]);return}
- if(a==='time'){location.href='./tempo.html?v=1';return}
+ if(a==='time'){location.href='./tempo.html?v=2';return}
  if(a==='universe'){toast('Integração com Nerdora Universe reservada ✨')}
 });
