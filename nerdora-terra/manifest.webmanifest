@@ -1,0 +1,11 @@
+{
+  "name":"Nerdora Terra",
+  "short_name":"Terra",
+  "start_url":"./index.html",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#050b10",
+  "theme_color":"#07121b",
+  "description":"Explore a Terra em 3D com o ecossistema Nerdora.",
+  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
