@@ -1,6 +1,9 @@
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.mjs';
 
-const IMAGERY='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const IMAGERY='https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg';
+const MAPTERHORN_TILEJSON='https://tiles.mapterhorn.com/tilejson.json';
+const MAPTERHORN_DIRECT='https://tiles.mapterhorn.com/{z}/{x}/{y}.webp';
+const AWS_TERRAIN='https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png';
 
 const spots=[
  {name:'Amazônia',icon:'🌳',kind:'NATUREZA',center:[-61.5,-4.5],zoom:3.4,text:'A maior floresta tropical do planeta ocupa uma enorme área da América do Sul.'},
@@ -79,15 +82,96 @@ const BIOMES=[
 ];
 
 let map,selected=null,timer;
+let terrainProvider='Mapterhorn';
+
+async function fetchWithTimeout(url,ms=4500){
+ const controller=new AbortController();
+ const id=setTimeout(()=>controller.abort(),ms);
+ try{return await fetch(url,{mode:'cors',signal:controller.signal,cache:'force-cache'})}
+ finally{clearTimeout(id)}
+}
+
+async function configureTerrain(){
+ const loading=document.querySelector('#loading');
+ try{
+   const res=await fetchWithTimeout(MAPTERHORN_TILEJSON,4500);
+   if(!res.ok)throw new Error('Mapterhorn HTTP '+res.status);
+   const tj=await res.json();
+   map.addSource('terrainSource',{
+     type:'raster-dem',
+     tiles:Array.isArray(tj.tiles)&&tj.tiles.length?tj.tiles:[MAPTERHORN_DIRECT],
+     tileSize:Number(tj.tileSize||tj.tilesize||512),
+     maxzoom:Number(tj.maxzoom||14),
+     encoding:'terrarium',
+     attribution:'Mapterhorn'
+   });
+   map.setTerrain({source:'terrainSource',exaggeration:1.12});
+   terrainProvider='Mapterhorn';
+ }catch(err){
+   terrainProvider='AWS Terrarium';
+   try{
+     if(map.getSource('terrainSource')){
+       map.setTerrain(null);
+       map.removeSource('terrainSource');
+     }
+     map.addSource('terrainSource',{
+       type:'raster-dem',
+       tiles:[AWS_TERRAIN],
+       tileSize:256,
+       maxzoom:14,
+       encoding:'terrarium',
+       attribution:'AWS Terrain Tiles'
+     });
+     map.setTerrain({source:'terrainSource',exaggeration:1.12});
+   }catch(fallbackErr){
+     terrainProvider='sem relevo';
+   }
+ }
+ const credit=document.querySelector('.credit');
+ if(credit)credit.textContent='EOX Sentinel-2 • '+terrainProvider+' • MapLibre';
+ if(loading)loading.textContent='Finalizando Terra 3D...';
+}
+
 try{
  map=new maplibregl.Map({
    container:'earthMap',
-   style:{version:8,sources:{sat:{type:'raster',tiles:[IMAGERY],tileSize:256}},layers:[{id:'satellite',type:'raster',source:'sat'}]},
-   center:[-35,8],zoom:1.15,minZoom:.45,maxZoom:8,attributionControl:false,renderWorldCopies:false
+   style:{
+     version:8,
+     projection:{type:'globe'},
+     sources:{
+       sat:{
+         type:'raster',
+         tiles:[IMAGERY],
+         tileSize:256,
+         minzoom:0,
+         maxzoom:14,
+         attribution:'EOX Sentinel-2 Cloudless'
+       }
+     },
+     layers:[{
+       id:'satellite',
+       type:'raster',
+       source:'sat',
+       paint:{'raster-fade-duration':120,'raster-saturation':0.05,'raster-contrast':0.06}
+     }],
+     sky:{
+       'atmosphere-blend':['interpolate',['linear'],['zoom'],0,1,5,1,7,0]
+     },
+     light:{anchor:'map',position:[1.5,90,80]}
+   },
+   center:[-35,8],
+   zoom:1.15,
+   minZoom:.45,
+   maxZoom:16,
+   maxPitch:85,
+   pitch:0,
+   attributionControl:false,
+   renderWorldCopies:false
  });
- map.dragRotate.disable();
- map.touchZoomRotate.disableRotation();
- map.on('style.load',()=>map.setProjection({type:'globe'}));
+ map.dragRotate.enable();
+ map.touchZoomRotate.enableRotation();
+ if(map.touchPitch?.enable)map.touchPitch.enable();
+ map.on('style.load',async()=>{await configureTerrain()});
  map.once('idle',()=>document.querySelector('#loading').classList.add('hide'));
 }catch(e){
  document.querySelector('#loading').textContent='Globo indisponível neste navegador';
@@ -125,7 +209,9 @@ function closeSheet(){
  sheet.setAttribute('aria-hidden','true');
 }
 function fly(p){
- map?.flyTo({center:p.center,zoom:p.zoom,duration:2100,essential:true});
+ const targetZoom=Math.min(12,(p.zoom||4)+3.2);
+ const targetPitch=targetZoom>=8?58:(targetZoom>=6?38:0);
+ map?.flyTo({center:p.center,zoom:targetZoom,pitch:targetPitch,bearing:0,duration:2200,essential:true});
 }
 function random(pool=spots){
  const p=pool[Math.floor(Math.random()*pool.length)];
@@ -207,11 +293,11 @@ document.querySelectorAll('[data-action]').forEach(btn=>btn.onclick=async()=>{
   return;
  }
  if(a==='sound'){toast('Som ativado 🔊');return}
- if(a==='explore'){map?.easeTo({zoom:1.55,duration:850});toast('Arraste a Terra e belisque para aproximar 🌍');return}
+ if(a==='explore'){map?.easeTo({zoom:2.4,pitch:20,duration:1000});toast('Aproxime para revelar o relevo 3D 🌍');return}
  if(a==='random'){random();return}
  if(a==='nature'){random(spots.filter(x=>x.kind==='NATUREZA'));return}
  if(a==='ocean'){random(spots.filter(x=>x.kind==='OCEANOS'));return}
- if(a==='terra'){closeDiscoverSheet();closeSheet();map?.flyTo({center:[-35,8],zoom:1.15,duration:1100});return}
+ if(a==='terra'){closeDiscoverSheet();closeSheet();map?.flyTo({center:[-35,8],zoom:1.15,pitch:0,bearing:0,duration:1100});return}
  if(a==='discover'){openDiscoverSheet();return}
  if(a==='universe'){toast('Integração com Nerdora Universe reservada ✨')}
 });
