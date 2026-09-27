@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#00040a">
-  <title>Nerdora Terra — Tempo</title>
+  <title>Nerdora Terra — Tempo 3D</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="./tempo.css?v=1">
+  <link rel="stylesheet" href="./tempo.css?v=2">
 </head>
 <body>
-  <main class="time-screen">
+  <main class="time-screen" id="timeScreen">
     <header class="time-header glass">
       <button id="backBtn" class="back" aria-label="Voltar">‹</button>
-      <div>
+      <div class="header-copy">
         <small>TERRA ATRAVÉS DO TEMPO</small>
         <h1 id="eraTitle">Hoje</h1>
       </div>
@@ -21,7 +21,11 @@
 
     <section class="globe-stage">
       <div id="paleoMap"></div>
+      <div class="planet-atmosphere"></div>
       <div class="planet-glow"></div>
+      <button class="era-arrow era-prev" id="eraPrev" aria-label="Época mais recente">‹</button>
+      <button class="era-arrow era-next" id="eraNext" aria-label="Época mais antiga">›</button>
+      <button class="compare-btn glass" id="compareBtn"><span>◎</span> Comparar com hoje</button>
       <div class="loading" id="timeLoading">Reconstruindo continentes...</div>
       <div class="source-badge">GPlates • EarthByte</div>
     </section>
@@ -29,33 +33,68 @@
     <section class="era-card glass">
       <div class="era-icon" id="eraIcon">🌍</div>
       <div class="era-copy">
-        <div class="era-period" id="eraPeriod">Holoceno</div>
+        <div class="era-line">
+          <div class="era-period" id="eraPeriod">HOLOCENO</div>
+          <div class="event-tag" id="eraEventTag">MUNDO ATUAL</div>
+        </div>
         <h2 id="eraName">O mundo atual</h2>
         <p id="eraText">Continentes e oceanos na configuração moderna.</p>
+        <div class="quick-facts">
+          <span id="climateChip">🌡️ Clima moderno</span>
+          <span id="lifeChip">🧬 Vida moderna</span>
+          <span id="worldChip">🧩 Continentes atuais</span>
+        </div>
       </div>
+      <button class="details-btn" id="detailsBtn" aria-label="Mais informações">i</button>
     </section>
 
     <section class="timeline glass">
       <div class="timeline-top">
-        <span>Viajar no tempo</span>
-        <strong id="timelineAge">0 milhões de anos</strong>
+        <div>
+          <span>Viajar no tempo</span>
+          <strong id="timelineAge">Hoje</strong>
+        </div>
+        <button class="play-btn" id="playBtn"><span id="playIcon">▶</span> Viagem</button>
       </div>
       <input id="timeSlider" type="range" min="0" max="9" step="1" value="0">
       <div class="ticks" id="ticks"></div>
     </section>
 
     <section class="jump-panel">
-      <h3>Pular para uma época</h3>
+      <h3>Pular para uma época <span>10 reconstruções</span></h3>
       <div class="jump-grid" id="jumpGrid"></div>
     </section>
 
     <div class="science-note glass">
       <b>Reconstrução científica</b>
-      <span>O globo mostra a posição reconstruída dos continentes e placas. Não representa com precisão relevo, vegetação ou clima da época.</span>
+      <span>As posições continentais são reconstruções tectônicas. Relevo, vegetação, clima e nível do mar são apresentados apenas como contexto simplificado.</span>
     </div>
+
+    <aside class="details-drawer" id="detailsDrawer" aria-hidden="true">
+      <div class="drawer-backdrop" id="drawerBackdrop"></div>
+      <section class="drawer-card glass">
+        <div class="drawer-head">
+          <div>
+            <small id="drawerPeriod">HOLOCENO</small>
+            <h2 id="drawerTitle">O mundo atual</h2>
+          </div>
+          <button id="drawerClose" aria-label="Fechar">×</button>
+        </div>
+        <div class="fact-grid">
+          <article><span>🌡️</span><small>CLIMA</small><b id="factClimate"></b></article>
+          <article><span>🧬</span><small>VIDA</small><b id="factLife"></b></article>
+          <article><span>🧩</span><small>CONTINENTES</small><b id="factWorld"></b></article>
+          <article><span>⚡</span><small>EVENTO</small><b id="factEvent"></b></article>
+        </div>
+        <div class="curiosity">
+          <span>💡</span>
+          <div><small>CURIOSIDADE NERDORA</small><p id="factCuriosity"></p></div>
+        </div>
+      </section>
+    </aside>
 
     <div class="toast" id="toast"></div>
   </main>
-  <script type="module" src="./tempo.js?v=1"></script>
+  <script type="module" src="./tempo.js?v=2"></script>
 </body>
 </html>
