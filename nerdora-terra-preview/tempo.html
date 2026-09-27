@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#00040a">
+  <title>Nerdora Terra — Tempo</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="./tempo.css?v=1">
+</head>
+<body>
+  <main class="time-screen">
+    <header class="time-header glass">
+      <button id="backBtn" class="back" aria-label="Voltar">‹</button>
+      <div>
+        <small>TERRA ATRAVÉS DO TEMPO</small>
+        <h1 id="eraTitle">Hoje</h1>
+      </div>
+      <div class="age-badge" id="ageBadge">0 Ma</div>
+    </header>
+
+    <section class="globe-stage">
+      <div id="paleoMap"></div>
+      <div class="planet-glow"></div>
+      <div class="loading" id="timeLoading">Reconstruindo continentes...</div>
+      <div class="source-badge">GPlates • EarthByte</div>
+    </section>
+
+    <section class="era-card glass">
+      <div class="era-icon" id="eraIcon">🌍</div>
+      <div class="era-copy">
+        <div class="era-period" id="eraPeriod">Holoceno</div>
+        <h2 id="eraName">O mundo atual</h2>
+        <p id="eraText">Continentes e oceanos na configuração moderna.</p>
+      </div>
+    </section>
+
+    <section class="timeline glass">
+      <div class="timeline-top">
+        <span>Viajar no tempo</span>
+        <strong id="timelineAge">0 milhões de anos</strong>
+      </div>
+      <input id="timeSlider" type="range" min="0" max="9" step="1" value="0">
+      <div class="ticks" id="ticks"></div>
+    </section>
+
+    <section class="jump-panel">
+      <h3>Pular para uma época</h3>
+      <div class="jump-grid" id="jumpGrid"></div>
+    </section>
+
+    <div class="science-note glass">
+      <b>Reconstrução científica</b>
+      <span>O globo mostra a posição reconstruída dos continentes e placas. Não representa com precisão relevo, vegetação ou clima da época.</span>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </main>
+  <script type="module" src="./tempo.js?v=1"></script>
+</body>
+</html>
