@@ -145,7 +145,7 @@ function pointInBounds(lon,lat,b){
 
 function updateCredit(){
  const credit=document.querySelector('.credit');
- if(credit)credit.textContent=activeImagery+' • '+terrainProvider+' • MapLibre';
+ if(credit)credit.textContent=activeImagery+' • '+terrainProvider+' • MapLibre'+(divisionsEnabled?' • OSM/OpenFreeMap':'');
 }
 
 function addRegionalImageryLayers(){
@@ -266,12 +266,206 @@ async function refreshRegionalImagery(){
   const region=bestStaticRegionalLayer();
   activeImagery=region?region.name:'EOX Sentinel-2';
  }
+ if(divisionsEnabled)raiseDivisionLayers();
  updateCredit();
 }
 
 function scheduleRegionalRefresh(){
  clearTimeout(regionalRefreshTimer);
  regionalRefreshTimer=setTimeout(()=>refreshRegionalImagery(),260);
+}
+
+let divisionsEnabled=false;
+let divisionsReady=false;
+const DIVISION_LAYER_IDS=[
+ 'geo-admin-country',
+ 'geo-admin-state',
+ 'geo-admin-local',
+ 'geo-label-country',
+ 'geo-label-state',
+ 'geo-label-city'
+];
+
+function raiseDivisionLayers(){
+ if(!map||!divisionsReady)return;
+ for(const id of DIVISION_LAYER_IDS){
+  try{if(map.getLayer(id))map.moveLayer(id)}catch(e){}
+ }
+}
+
+async function ensureDivisionLayers(){
+ if(divisionsReady)return true;
+ if(!map)return false;
+ if(!map.isStyleLoaded()){
+  await new Promise(resolve=>map.once('load',resolve));
+ }
+ try{
+  if(!map.getSource('geo-divisions')){
+   map.addSource('geo-divisions',{
+    type:'vector',
+    url:'https://tiles.openfreemap.org/planet',
+    attribution:'OpenFreeMap © OpenMapTiles © OpenStreetMap contributors'
+   });
+  }
+
+  map.addLayer({
+   id:'geo-admin-country',
+   type:'line',
+   source:'geo-divisions',
+   'source-layer':'boundary',
+   minzoom:0,
+   filter:['==',['to-number',['get','admin_level']],2],
+   layout:{visibility:'none','line-cap':'round','line-join':'round'},
+   paint:{
+    'line-color':'rgba(111,238,255,.96)',
+    'line-width':['interpolate',['linear'],['zoom'],0,.75,3,1.1,7,1.55,12,2.1],
+    'line-opacity':.94,
+    'line-blur':.15
+   }
+  });
+
+  map.addLayer({
+   id:'geo-admin-state',
+   type:'line',
+   source:'geo-divisions',
+   'source-layer':'boundary',
+   minzoom:3.6,
+   filter:['==',['to-number',['get','admin_level']],4],
+   layout:{visibility:'none','line-cap':'round','line-join':'round'},
+   paint:{
+    'line-color':'rgba(255,255,255,.76)',
+    'line-width':['interpolate',['linear'],['zoom'],4,.5,8,.9,12,1.25],
+    'line-opacity':.76,
+    'line-dasharray':[2,1.4]
+   }
+  });
+
+  map.addLayer({
+   id:'geo-admin-local',
+   type:'line',
+   source:'geo-divisions',
+   'source-layer':'boundary',
+   minzoom:7,
+   filter:['match',['to-number',['get','admin_level']],[6,7],true,false],
+   layout:{visibility:'none','line-cap':'round','line-join':'round'},
+   paint:{
+    'line-color':'rgba(196,235,255,.55)',
+    'line-width':['interpolate',['linear'],['zoom'],7,.35,11,.65,15,1],
+    'line-opacity':.55,
+    'line-dasharray':[1.2,1.8]
+   }
+  });
+
+  map.addLayer({
+   id:'geo-label-country',
+   type:'symbol',
+   source:'geo-divisions',
+   'source-layer':'place',
+   minzoom:1,
+   maxzoom:6.3,
+   filter:['==',['get','class'],'country'],
+   layout:{
+    visibility:'none',
+    'text-field':['coalesce',['get','name:pt'],['get','name']],
+    'text-font':['Noto Sans Regular'],
+    'text-size':['interpolate',['linear'],['zoom'],1,10,3,14,5.8,17],
+    'text-letter-spacing':.05,
+    'text-max-width':8,
+    'text-allow-overlap':false
+   },
+   paint:{
+    'text-color':'#f4feff',
+    'text-halo-color':'rgba(0,16,30,.88)',
+    'text-halo-width':1.5,
+    'text-halo-blur':.5
+   }
+  });
+
+  map.addLayer({
+   id:'geo-label-state',
+   type:'symbol',
+   source:'geo-divisions',
+   'source-layer':'place',
+   minzoom:4,
+   maxzoom:10,
+   filter:['match',['get','class'],['state','province'],true,false],
+   layout:{
+    visibility:'none',
+    'text-field':['coalesce',['get','name:pt'],['get','name']],
+    'text-font':['Noto Sans Regular'],
+    'text-size':['interpolate',['linear'],['zoom'],4,9,7,12,9.5,14],
+    'text-letter-spacing':.025,
+    'text-max-width':9,
+    'text-allow-overlap':false
+   },
+   paint:{
+    'text-color':'#d8fbff',
+    'text-halo-color':'rgba(0,14,27,.88)',
+    'text-halo-width':1.35,
+    'text-halo-blur':.45
+   }
+  });
+
+  map.addLayer({
+   id:'geo-label-city',
+   type:'symbol',
+   source:'geo-divisions',
+   'source-layer':'place',
+   minzoom:6.5,
+   maxzoom:16.5,
+   filter:['match',['get','class'],['city','town'],true,false],
+   layout:{
+    visibility:'none',
+    'text-field':['coalesce',['get','name:pt'],['get','name']],
+    'text-font':['Noto Sans Regular'],
+    'text-size':['interpolate',['linear'],['zoom'],6.5,8,10,11,14,13],
+    'text-max-width':10,
+    'text-allow-overlap':false
+   },
+   paint:{
+    'text-color':'#ffffff',
+    'text-halo-color':'rgba(0,12,24,.92)',
+    'text-halo-width':1.25,
+    'text-halo-blur':.4
+   }
+  });
+
+  divisionsReady=true;
+  raiseDivisionLayers();
+  return true;
+ }catch(e){
+  return false;
+ }
+}
+
+function setDivisionsVisibility(visible){
+ if(!map||!divisionsReady)return;
+ for(const id of DIVISION_LAYER_IDS){
+  try{if(map.getLayer(id))map.setLayoutProperty(id,'visibility',visible?'visible':'none')}catch(e){}
+ }
+ if(visible)raiseDivisionLayers();
+}
+
+async function toggleGeographicDivisions(){
+ const btn=document.querySelector('#geoDivisionsBtn');
+ if(!btn)return;
+ btn.disabled=true;
+ if(!divisionsReady){
+  const ok=await ensureDivisionLayers();
+  if(!ok){
+   btn.disabled=false;
+   toast('Não foi possível carregar as divisões agora.');
+   return;
+  }
+ }
+ divisionsEnabled=!divisionsEnabled;
+ setDivisionsVisibility(divisionsEnabled);
+ btn.classList.toggle('active',divisionsEnabled);
+ btn.setAttribute('aria-pressed',String(divisionsEnabled));
+ btn.title=divisionsEnabled?'Ocultar divisões geográficas':'Mostrar divisões geográficas';
+ updateCredit();
+ toast(divisionsEnabled?'Divisões geográficas ativadas 🗺️':'Divisões geográficas ocultadas');
+ btn.disabled=false;
 }
 
 async function configureTerrain(){
@@ -320,6 +514,7 @@ try{
    style:{
      version:8,
      projection:{type:'globe'},
+     glyphs:'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
      sources:{
        sat:{
          type:'raster',
@@ -467,6 +662,7 @@ function renderPlaceList(biome){
  });
 }
 
+document.querySelector('#geoDivisionsBtn').onclick=toggleGeographicDivisions;
 document.querySelector('#closeSheet').onclick=closeSheet;
 document.querySelector('#locate').onclick=()=>{if(selected){closeSheet();fly(selected)}};
 discoverBackdrop.onclick=closeDiscoverSheet;
