@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#07121b" />
+  <meta name="description" content="Nerdora Terra — explore o planeta em 3D, seus extremos naturais e sua história geológica." />
+  <title>Nerdora Terra v0.1</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar glass">
+      <button class="brand" id="homeBtn" aria-label="Início">
+        <span class="brand-mark">N</span>
+        <span><b>Nerdora Terra</b><small>v0.1 • planeta explorável</small></span>
+      </button>
+      <div class="top-actions">
+        <button class="icon-btn" id="soundBtn" title="Som">🔊</button>
+        <button class="icon-btn" id="fullscreenBtn" title="Tela cheia">⛶</button>
+      </div>
+    </header>
+    <main>
+      <section id="hero" class="hero">
+        <div id="scene"></div><div class="space-haze"></div>
+        <div class="hero-copy">
+          <div class="eyebrow">EXPLORE • DESCUBRA • COMPARE</div>
+          <h1>Nosso mundo é<br><span>absurdamente incrível.</span></h1>
+          <p>Gire a Terra, toque nos pontos de interesse e viaje por bilhões de anos de história.</p>
+          <div class="hero-actions"><button class="primary" id="exploreBtn">🌍 Explorar agora</button><button class="secondary" id="randomBtn">🎲 Me surpreenda</button></div>
+        </div>
+        <div class="globe-hint glass" id="globeHint">☝️ Arraste para girar • belisque para zoom</div>
+        <div class="quick-panel glass" id="quickPanel">
+          <div class="quick-title">Atalhos de exploração</div>
+          <div class="chips"><button data-mode="nature">🏔️ Natureza</button><button data-mode="ocean">🌊 Oceanos</button><button data-mode="volcano">🌋 Terra viva</button><button data-mode="time">🦖 Através do tempo</button></div>
+        </div>
+      </section>
+      <section class="content" id="exploreSection">
+        <div class="search-wrap glass"><span>⌕</span><input id="searchInput" autocomplete="off" placeholder="Busque país, lugar ou fenômeno..." /><button id="clearSearch">×</button><div class="suggestions" id="suggestions"></div></div>
+        <div class="section-head"><div><span class="eyebrow">PONTOS DO PLANETA</span><h2>Escolha uma aventura</h2></div><button class="text-btn" id="showAllBtn">Ver todos</button></div>
+        <div class="cards" id="cards"></div>
+      </section>
+      <section class="timeline-section" id="timelineSection">
+        <div class="section-head"><div><span class="eyebrow">4,54 BILHÕES DE ANOS</span><h2>Terra através do tempo</h2></div></div>
+        <div class="timeline-card glass">
+          <div class="era-visual" id="eraVisual"><span id="eraIcon">🌋</span></div>
+          <div class="era-content">
+            <div class="era-top"><span id="eraAge">4,54 bi anos</span><span id="eraPeriod">Hadeano</span></div>
+            <h3 id="eraTitle">O planeta nasce</h3><p id="eraText">A Terra jovem era quente, vulcânica e muito diferente do mundo azul que conhecemos.</p>
+            <input type="range" id="eraRange" min="0" max="5" value="0" step="1" /><div class="era-labels"><span>Origem</span><span>Hoje</span></div>
+          </div>
+        </div>
+      </section>
+      <section class="compare-section">
+        <div class="section-head"><div><span class="eyebrow">MODO COMPARAÇÃO</span><h2>Extremos da Terra</h2></div></div>
+        <div class="compare-grid">
+          <article class="compare-card glass"><div class="compare-icon">🏔️</div><small>Ponto mais alto</small><h3>Everest</h3><strong>8.849 m</strong><p>Acima do nível do mar.</p></article>
+          <article class="compare-card glass"><div class="compare-icon">🌊</div><small>Ponto oceânico mais profundo</small><h3>Challenger Deep</h3><strong>~10.900 m</strong><p>Abaixo do nível do mar.</p></article>
+        </div>
+      </section>
+    </main>
+    <nav class="bottom-nav glass">
+      <button class="active" data-tab="globe">🌍<span>Terra</span></button><button data-tab="discover">🧭<span>Descobrir</span></button><button data-tab="time">🦖<span>Tempo</span></button><button data-tab="universe">✨<span>Universe</span></button>
+    </nav>
+    <div class="detail-sheet" id="detailSheet" aria-hidden="true">
+      <div class="sheet-backdrop" data-close-sheet></div>
+      <article class="sheet-card glass"><button class="sheet-close" data-close-sheet>×</button><div class="detail-icon" id="detailIcon">🏔️</div><div class="eyebrow" id="detailType">NATUREZA</div><h2 id="detailName">Monte Everest</h2><p id="detailDescription"></p><div class="stat-row" id="detailStats"></div><button class="primary full" id="focusBtn">🎯 Localizar no globo</button></article>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
