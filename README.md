@@ -7,7 +7,7 @@ PWA oficial do Quiz Nerdora, publicado automaticamente pelo Vercel.
 - GitHub: `pereiradanielc54-blip/quiz-nerdora-web`
 - Branch: `main`
 - Vercel: `https://quiz-nerdora-web.vercel.app`
-- Versão atual: **0.17.5**
+- Versão atual: **0.17.6**
 
 ## Base recuperada
 
@@ -32,3 +32,7 @@ O áudio agora pausa quando o PWA perde visibilidade ou vai para segundo plano e
 
 Todo commit em `main` gera um deployment de produção no Vercel. O `version.json` e o Service Worker são atualizados por build, permitindo atualizar o aplicativo instalado sem reinstalação.
 \n\n## Integração Nerdora\n\nA v0.17.5 adiciona a ponte oficial com o Nerdora: quando aberto em Mundo Nerd → Nerdora Games, o Quiz recebe nome, @usuário e foto do perfil e sincroniza as conquistas permanentes desbloqueadas com o perfil principal.\n
+
+### v0.17.6
+
+A área de perfil no topo da Home agora é dinâmica e preparada para receber do Nerdora a foto, nome público e @usuário via ponte de integração. O modo `?profile-preview=1` permite visualizar o cartão de perfil fora do Nerdora sem persistir dados de teste.
