@@ -177,6 +177,102 @@ body,#app,.app{min-height:var(--app-vh)}
 }
 .homeHit{touch-action:manipulation}
 
+/* v0.17.6 — perfil Nerdora dinâmico sobre a área superior da Home */
+.homeProfileLive{
+ position:absolute;
+ z-index:4;
+ left:2.2%;
+ top:1.1%;
+ width:47.5%;
+ height:8.3%;
+ display:flex;
+ align-items:center;
+ gap:3.2%;
+ padding:.65% 2.2%;
+ overflow:hidden;
+ border:1px solid rgba(204,139,255,.42);
+ border-radius:clamp(10px,2.5vw,19px);
+ background:
+  radial-gradient(circle at 12% 20%,rgba(190,61,255,.28),transparent 42%),
+  linear-gradient(110deg,rgba(12,4,26,.96),rgba(27,8,49,.91) 63%,rgba(10,4,21,.88));
+ box-shadow:inset 0 0 0 1px rgba(255,255,255,.035),0 5px 18px rgba(0,0,0,.28);
+ color:#fff;
+ pointer-events:none;
+}
+.homeProfileLive.is-connected{border-color:rgba(149,93,255,.75);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 0 18px rgba(139,64,255,.2)}
+.homeProfileAvatar{
+ height:78%;
+ aspect-ratio:1;
+ flex:0 0 auto;
+ display:grid;
+ place-items:center;
+ overflow:hidden;
+ border-radius:50%;
+ border:2px solid rgba(190,106,255,.88);
+ background:linear-gradient(145deg,#6a23a5,#24113f);
+ box-shadow:0 0 0 2px rgba(255,255,255,.07),0 0 12px rgba(172,70,255,.35);
+ font-weight:1000;
+ font-size:clamp(12px,4.2vw,24px);
+}
+.homeProfileAvatar img{width:100%;height:100%;display:block;object-fit:cover}
+.homeProfileAvatar span{line-height:1}
+.homeProfileCopy{
+ min-width:0;
+ height:74%;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ align-items:flex-start;
+ line-height:1.08;
+ overflow:hidden;
+}
+.homeProfileCopy strong{
+ display:block;
+ width:100%;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ font-size:clamp(10px,3.2vw,18px);
+ font-weight:950;
+ letter-spacing:-.02em;
+ text-shadow:0 1px 8px rgba(0,0,0,.6);
+}
+.homeProfileCopy small{
+ display:block;
+ width:100%;
+ margin-top:3%;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ color:#d5c8e5;
+ font-size:clamp(7px,2vw,11px);
+ font-weight:750;
+}
+.homeProfileCopy em{
+ display:flex;
+ align-items:center;
+ gap:5px;
+ max-width:100%;
+ margin-top:4%;
+ color:#aa9abf;
+ font-size:clamp(6px,1.55vw,9px);
+ font-style:normal;
+ font-weight:850;
+ white-space:nowrap;
+}
+.homeProfileCopy em i{
+ width:clamp(5px,1.25vw,7px);
+ height:clamp(5px,1.25vw,7px);
+ flex:0 0 auto;
+ border-radius:50%;
+ background:#8b789e;
+ box-shadow:0 0 6px currentColor;
+}
+.homeProfileLive.is-connected .homeProfileCopy em{color:#b7ffd9}
+.homeProfileLive.is-connected .homeProfileCopy em i{background:#48e991}
+.homeProfileLive.is-preview .homeProfileCopy em{color:#f0c6ff}
+.homeProfileLive.is-preview .homeProfileCopy em i{background:#c869ff}
+
 @media (max-width:380px){
  :root{--edge-gap:8px}
  .shell{padding-bottom:max(calc(84px + env(safe-area-inset-bottom)),78px)}
