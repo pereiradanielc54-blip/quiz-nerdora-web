@@ -49,6 +49,34 @@ document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('cl
  if(a==='universe'){toast('Ligação com Nerdora Universe reservada para a integração ✨')}
 }));
 
+async function openFaunaObservationFromUrl(){
+  const p=new URLSearchParams(location.search);
+  if(p.get('modo')!=='fauna')return;
+  const lat=Number(p.get('lat')),lng=Number(p.get('lng')),scientific=p.get('scientificName')||'',common=p.get('commonName')||scientific||'Observação do Nerdora Fauna',radius=Math.max(10,Math.min(200,Number(p.get('radius'))||50));
+  if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+  clearTimeout(autoTimer);
+  const place={name:common,icon:'🐾',kind:'NERDORA FAUNA',center:[lng,lat],zoom:6,text:'Observação registrada no Nerdora Fauna. A posição exibida é aproximada para preservar privacidade.',stats:[['Espécie',scientific||'não informada'],['Posição aproximada',lat.toFixed(1)+', '+lng.toFixed(1)],['Fauna próxima','consultando…']]};
+  if(map){
+    try{
+      const markerEl=document.createElement('div');markerEl.style.cssText='width:22px;height:22px;border-radius:50%;background:#55e99b;border:4px solid white;box-shadow:0 0 0 7px #55e99b33,0 0 24px #55e99b';
+      new maplibregl.Marker({element:markerEl}).setLngLat([lng,lat]).addTo(map)
+    }catch{}
+    map.flyTo({center:[lng,lat],zoom:6,pitch:24,bearing:0,duration:2200,essential:true})
+  }
+  openInfo(place);
+  try{
+    const u='https://api.inaturalist.org/v1/observations?lat='+lat+'&lng='+lng+'&radius='+radius+'&iconic_taxa=Animalia&quality_grade=research&photos=true&order_by=observed_on&order=desc&per_page=50';
+    const r=await fetch(u),j=await r.json(),seen=new Set(),names=[];
+    for(const o of j.results||[]){const t=o.taxon;if(!t||seen.has(t.id))continue;seen.add(t.id);const n=t.preferred_common_name||t.name;if(n&&n!==common&&t.name!==scientific)names.push(n);if(names.length>=6)break}
+    place.stats[2]=['Outras espécies próximas',names.length?names.join(' · '):'Nenhuma retornada na amostra'];
+    place.text='Observação do Nerdora Fauna nesta região. O Terra consultou registros reais próximos no iNaturalist para mostrar outras espécies observadas por perto.';
+    openInfo(place)
+  }catch{
+    place.stats[2]=['Outras espécies próximas','consulta indisponível agora'];openInfo(place)
+  }
+}
+if(map)map.once('load',()=>openFaunaObservationFromUrl());else setTimeout(openFaunaObservationFromUrl,300);
+
 let autoTimer;function scheduleSpin(){clearTimeout(autoTimer);autoTimer=setTimeout(()=>{if(!map)return;const c=map.getCenter();map.easeTo({center:[c.lng+18,c.lat],duration:12000,easing:t=>t});scheduleSpin()},2500)}
 map?.on('dragstart',()=>clearTimeout(autoTimer));map?.on('zoomstart',()=>clearTimeout(autoTimer));map?.on('moveend',scheduleSpin);scheduleSpin();
 
