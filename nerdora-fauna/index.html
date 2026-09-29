@@ -125,7 +125,7 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 <div class="foot">Nerdora Fauna · preview online para validação das APIs · dados podem variar entre fontes.</div>
 </div>
 <script>
-const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[],objectDetector:null,visionLocation:null,visionLocationEnabled:false,visionGeoRadius:150,visionPhotos:[],visionPhotoMax:4,visionAnalyzingBatch:false};
+const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[],objectDetector:null,visionLocation:null,visionLocationEnabled:false,visionGeoRadius:150,visionPhotos:[],visionPhotoMax:4,visionAnalyzingBatch:false,visionActivePhotoIndex:-1};
 const SRC={inat:['iNaturalist','https://www.inaturalist.org'],gbif:['GBIF','https://www.gbif.org'],wiki:['Wikipedia/Wikimedia','https://pt.wikipedia.org'],globi:['GloBI','https://www.globalbioticinteractions.org']};
 const randomPool=['Panthera onca','Hydrochoerus hydrochaeris','Harpia harpyja','Balaenoptera musculus','Chrysocyon brachyurus','Myrmecophaga tridactyla','Orcinus orca','Loxodonta africana','Ursus maritimus','Ateles geoffroyi','Panthera leo','Panthera tigris','Gorilla gorilla','Ailuropoda melanoleuca','Giraffa camelopardalis','Crocodylus niloticus','Chelonia mydas','Ara ararauna','Phoenicopterus roseus','Canis lupus'];
 const localCatalog=[
@@ -292,8 +292,8 @@ const GENERAL_TAXA={
   bird:{common:'Ave',scientific:'Aves'}
 };
 function resetVisionPhotoSession(){
-  state.visionPhotos=[];state.visionCandidates=[];state.cameraCapture=null;state.cameraCaptureThumb=null;
-  $('visionResults').hidden=true;$('candidateGrid').innerHTML='';renderVisionPhotoStrip()
+  state.visionPhotos=[];state.visionCandidates=[];state.cameraCapture=null;state.cameraCaptureThumb=null;state.visionActivePhotoIndex=-1;
+  $('visionResults').hidden=true;$('candidateGrid').innerHTML='';$('cropInspector').hidden=true;renderVisionPhotoStrip()
 }
 function renderVisionPhotoStrip(){
   const strip=$('visionPhotoStrip'),photos=state.visionPhotos,max=state.visionPhotoMax;
@@ -302,11 +302,18 @@ function renderVisionPhotoStrip(){
   strip.innerHTML=Array.from({length:max},(_,i)=>{
     const p=photos[i];
     if(!p)return '<div class="photo-slot">＋</div>';
-    return '<div class="photo-slot filled"><img src="'+p.thumb+'" alt="Foto '+(i+1)+'"><span>Foto '+(i+1)+'</span><button data-remove-vision="'+i+'" aria-label="Remover foto">×</button></div>'
+    const preview=p.cropThumb||p.thumb;
+    return '<div class="photo-slot filled" data-show-vision="'+i+'" title="Ver recorte da foto '+(i+1)+'"><img src="'+preview+'" alt="Foto '+(i+1)+'"><span>'+(p.cropThumb?'Recorte '+(i+1):'Foto '+(i+1))+'</span><button data-remove-vision="'+i+'" aria-label="Remover foto">×</button></div>'
   }).join('');
-  strip.querySelectorAll('[data-remove-vision]').forEach(b=>b.onclick=async()=>{
-    state.visionPhotos.splice(Number(b.dataset.removeVision),1);
-    if(state.visionPhotos.length){await combineVisionPhotoResults()}else{state.visionCandidates=[];$('visionResults').hidden=true}
+  strip.querySelectorAll('[data-show-vision]').forEach(el=>el.onclick=e=>{
+    if(e.target.closest('[data-remove-vision]'))return;
+    showVisionCropInspector(Number(el.dataset.showVision))
+  });
+  strip.querySelectorAll('[data-remove-vision]').forEach(b=>b.onclick=async e=>{
+    e.stopPropagation();
+    const removed=Number(b.dataset.removeVision);state.visionPhotos.splice(removed,1);
+    if(state.visionPhotos.length){await combineVisionPhotoResults();showVisionCropInspector(Math.min(removed,state.visionPhotos.length-1))}
+    else{state.visionCandidates=[];$('visionResults').hidden=true;$('cropInspector').hidden=true;state.visionActivePhotoIndex=-1}
     renderVisionPhotoStrip()
   });
   const has=photos.length>0,full=photos.length>=max;
@@ -319,7 +326,7 @@ async function startCamera(keepSession=false){
   try{
     stopCamera();
     if(!keepSession)resetVisionPhotoSession();
-    state.cameraCapture=null;state.cameraCaptureThumb=null;
+    state.cameraCapture=null;state.cameraCaptureThumb=null;$('cropInspector').hidden=true;
     state.cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
     $('cameraVideo').srcObject=state.cameraStream;$('cameraVideo').hidden=false;$('cameraShot').hidden=true;$('takePhoto').disabled=false;$('analyzePhoto').disabled=true;
     ensureVisionModel().catch(()=>{})
@@ -338,10 +345,10 @@ async function setCapture(dataUrl){
 async function addCurrentCaptureToSession(){
   if(!state.cameraCapture||state.visionPhotos.length>=state.visionPhotoMax)return;
   const dataUrl=state.cameraCapture,thumb=state.cameraCaptureThumb||await makeThumb(dataUrl);
-  const photo={dataUrl,thumb,candidates:[],detection:null,done:false};
+  const photo={dataUrl,thumb,cropDataUrl:null,cropThumb:null,annotatedDataUrl:null,cropRect:null,cropMode:null,candidates:[],detection:null,done:false};
   state.visionPhotos.push(photo);renderVisionPhotoStrip();
   await analyzeVisionPhoto(photo,state.visionPhotos.length);
-  await combineVisionPhotoResults();renderVisionPhotoStrip()
+  await combineVisionPhotoResults();renderVisionPhotoStrip();showVisionCropInspector(state.visionPhotos.length-1)
 }
 async function takeCameraPhoto(){
   const v=$('cameraVideo');if(!v.videoWidth)return;const data=makeCaptureFromSource(v);if(!data)return;await setCapture(data);await addCurrentCaptureToSession()
@@ -437,14 +444,54 @@ async function enrichVisionCandidate(cand){
   }catch{}
   return cand
 }
-function makeModelCanvas(img,bbox,targetW=299,targetH=299){
-  const canvas=document.createElement('canvas');canvas.width=targetW;canvas.height=targetH;const iw=img.naturalWidth,ih=img.naturalHeight;
-  let sx=0,sy=0,sw=iw,sh=ih;
+function getAnimalCropRect(img,bbox){
+  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
   if(bbox&&bbox.length===4){
-    const [x,y,w,h]=bbox,pad=Math.max(w,h)*.12;sx=Math.max(0,x-pad);sy=Math.max(0,y-pad);sw=Math.min(iw-sx,w+pad*2);sh=Math.min(ih-sy,h+pad*2)
-  }else{const side=Math.min(iw,ih);sx=(iw-side)/2;sy=(ih-side)/2;sw=sh=side}
-  const side=Math.max(sw,sh),cx=sx+sw/2,cy=sy+sh/2;sx=Math.max(0,cx-side/2);sy=Math.max(0,cy-side/2);sw=Math.min(side,iw-sx);sh=Math.min(side,ih-sy);
-  canvas.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,targetW,targetH);return canvas
+    const [x,y,w,h]=bbox,pad=Math.max(w,h)*.10;
+    let sx=Math.max(0,x-pad),sy=Math.max(0,y-pad),sw=Math.min(iw-sx,w+pad*2),sh=Math.min(ih-sy,h+pad*2);
+    const side=Math.min(Math.max(sw,sh),Math.min(iw,ih)),cx=sx+sw/2,cy=sy+sh/2;
+    sx=Math.max(0,Math.min(iw-side,cx-side/2));sy=Math.max(0,Math.min(ih-side,cy-side/2));
+    return {sx,sy,sw:side,sh:side,mode:'detected'}
+  }
+  const side=Math.min(iw,ih);
+  return {sx:(iw-side)/2,sy:(ih-side)/2,sw:side,sh:side,mode:'center'}
+}
+function canvasFromCrop(img,rect,targetW=299,targetH=299){
+  const canvas=document.createElement('canvas');canvas.width=targetW;canvas.height=targetH;
+  canvas.getContext('2d').drawImage(img,rect.sx,rect.sy,rect.sw,rect.sh,0,0,targetW,targetH);
+  return canvas
+}
+function makeCropPreviewData(img,rect,max=650){
+  const side=Math.min(max,Math.round(rect.sw)),canvas=document.createElement('canvas');canvas.width=side;canvas.height=side;
+  canvas.getContext('2d').drawImage(img,rect.sx,rect.sy,rect.sw,rect.sh,0,0,side,side);
+  return canvas.toDataURL('image/jpeg',.88)
+}
+function makeAnnotatedDetectionData(img,rect,detection){
+  const max=900,iw=img.naturalWidth,ih=img.naturalHeight,scale=Math.min(1,max/Math.max(iw,ih)),w=Math.round(iw*scale),h=Math.round(ih*scale);
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;const ctx=cv.getContext('2d');
+  ctx.drawImage(img,0,0,w,h);
+  const sx=rect.sx*scale,sy=rect.sy*scale,sw=rect.sw*scale,sh=rect.sh*scale;
+  ctx.save();ctx.fillStyle='rgba(0,0,0,.52)';ctx.fillRect(0,0,w,h);ctx.clearRect(sx,sy,sw,sh);ctx.drawImage(img,rect.sx,rect.sy,rect.sw,rect.sh,sx,sy,sw,sh);
+  ctx.strokeStyle='#55e99b';ctx.lineWidth=Math.max(3,w/220);ctx.strokeRect(sx,sy,sw,sh);
+  const label=detection?.class?'Animal detectado: '+detection.class:'Área central usada pela IA';
+  ctx.font=Math.max(14,Math.round(w/35))+'px system-ui';const tw=ctx.measureText(label).width,pad=8;
+  ctx.fillStyle='rgba(4,16,12,.9)';ctx.fillRect(sx,Math.max(0,sy-34),Math.min(w-sx,tw+pad*2),30);
+  ctx.fillStyle='#bff5d5';ctx.fillText(label,sx+pad,Math.max(21,sy-12));ctx.restore();
+  return cv.toDataURL('image/jpeg',.86)
+}
+async function thumbFromData(dataUrl,max=260){
+  return new Promise(resolve=>{const img=new Image();img.onload=()=>{const cv=document.createElement('canvas');cv.width=max;cv.height=max;cv.getContext('2d').drawImage(img,0,0,max,max);resolve(cv.toDataURL('image/jpeg',.72))};img.onerror=()=>resolve(null);img.src=dataUrl})
+}
+function showVisionCropInspector(index){
+  const p=state.visionPhotos[index];if(!p||!p.cropDataUrl||!p.annotatedDataUrl){$('cropInspector').hidden=true;return}
+  state.visionActivePhotoIndex=index;
+  $('cropAnnotatedPreview').src=p.annotatedDataUrl;$('cropOnlyPreview').src=p.cropDataUrl;
+  $('cropInspectorLabel').textContent='Foto '+(index+1)+' de '+state.visionPhotos.length;
+  const mode=$('cropModeLabel'),detected=p.cropMode==='detected';
+  mode.textContent=detected?'✓ Animal isolado automaticamente':'⚠ Detector não isolou o animal · usando recorte central';
+  mode.className='crop-mode'+(detected?'':' fallback');
+  $('cropInspector').hidden=false;
+  $('cameraShot').src=p.annotatedDataUrl;$('cameraShot').hidden=false;$('cameraVideo').hidden=true
 }
 async function loadImageElement(dataUrl){
   return await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=dataUrl})
@@ -463,6 +510,12 @@ async function analyzeVisionPhoto(photo,index=1){
         detection=(det||[]).filter(x=>GENERAL_ANIMAL_CLASSES.has(x.class)).sort((a,b)=>b.score-a.score)[0]||null
       }catch(e){console.warn('object detection failed',e)}
     }
+    const cropRect=getAnimalCropRect(img,detection?.bbox);
+    photo.cropRect=cropRect;photo.cropMode=cropRect.mode;
+    photo.cropDataUrl=makeCropPreviewData(img,cropRect);
+    photo.cropThumb=await thumbFromData(photo.cropDataUrl);
+    photo.annotatedDataUrl=makeAnnotatedDetectionData(img,cropRect,detection);
+    showVisionCropInspector(Math.max(0,state.visionPhotos.indexOf(photo)));
     const candidates=[];
     if(detection){
       const mapped=GENERAL_TAXA[detection.class];
@@ -470,7 +523,7 @@ async function analyzeVisionPhoto(photo,index=1){
     }
     if(state.visionModel&&state.visionTaxonomy?.byLeaf?.size){
       try{
-        const inputInfo=state.visionModel.inputs?.[0],shape=inputInfo?.shape||[1,299,299,3],canvas=makeModelCanvas(img,detection?.bbox,shape[2]||299,shape[1]||299);
+        const inputInfo=state.visionModel.inputs?.[0],shape=inputInfo?.shape||[1,299,299,3],canvas=canvasFromCrop(img,cropRect,shape[2]||299,shape[1]||299);
         let input=tf.browser.fromPixels(canvas).toFloat().expandDims(0);
         const out=state.visionModel.predict(input),tensor=getOutputTensor(out);if(!tensor)throw new Error('Saída do modelo indisponível');
         const scores=Array.from(tensor.dataSync());input.dispose();if(out?.dispose)out.dispose();else Object.values(out||{}).forEach(t=>t?.dispose?.());
@@ -518,7 +571,7 @@ async function runVisionRecognition(){
   if(!state.cameraCapture&&!state.visionPhotos.length)return;
   if(!state.visionPhotos.length&&state.cameraCapture){
     const thumb=state.cameraCaptureThumb||await makeThumb(state.cameraCapture);
-    state.visionPhotos=[{dataUrl:state.cameraCapture,thumb,candidates:[],detection:null,done:false}];renderVisionPhotoStrip()
+    state.visionPhotos=[{dataUrl:state.cameraCapture,thumb,cropDataUrl:null,cropThumb:null,annotatedDataUrl:null,cropRect:null,cropMode:null,candidates:[],detection:null,done:false}];renderVisionPhotoStrip()
   }
   for(let i=0;i<state.visionPhotos.length;i++)if(!state.visionPhotos[i].done)await analyzeVisionPhoto(state.visionPhotos[i],i+1);
   await combineVisionPhotoResults();renderVisionPhotoStrip()
