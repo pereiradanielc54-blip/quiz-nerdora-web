@@ -100,7 +100,7 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 <div class="foot">Nerdora Fauna · preview online para validação das APIs · dados podem variar entre fontes.</div>
 </div>
 <script>
-const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null};
+const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[]};
 const SRC={inat:['iNaturalist','https://www.inaturalist.org'],gbif:['GBIF','https://www.gbif.org'],wiki:['Wikipedia/Wikimedia','https://pt.wikipedia.org'],globi:['GloBI','https://www.globalbioticinteractions.org']};
 const randomPool=['Panthera onca','Hydrochoerus hydrochaeris','Harpia harpyja','Balaenoptera musculus','Chrysocyon brachyurus','Myrmecophaga tridactyla','Orcinus orca','Loxodonta africana','Ursus maritimus','Ateles geoffroyi','Panthera leo','Panthera tigris','Gorilla gorilla','Ailuropoda melanoleuca','Giraffa camelopardalis','Crocodylus niloticus','Chelonia mydas','Ara ararauna','Phoenicopterus roseus','Canis lupus'];
 const localCatalog=[
@@ -151,12 +151,16 @@ const DIARY_KEY='nerdoraFaunaDiaryV1';
 function readDiary(){try{return JSON.parse(localStorage.getItem(DIARY_KEY)||'[]')}catch{return []}}
 function writeDiary(rows){try{localStorage.setItem(DIARY_KEY,JSON.stringify(rows))}catch{}}
 function isSaved(scientific){return readDiary().some(x=>x.scientific===scientific)}
+function saveDiaryData(entry){
+  const rows=readDiary();let row=rows.find(x=>x.scientific===entry.scientific);
+  if(row){row.count=(row.count||1)+1;row.lastSeen=Date.now();row.photo=entry.photo||row.photo||'';row.group=entry.group||row.group||'';if(entry.visionScore!=null)row.visionScore=entry.visionScore}
+  else rows.unshift({...entry,count:1,lastSeen:Date.now()});
+  writeDiary(rows);renderDiary();
+}
 function saveEncounter(){
   const a=state.animal;if(!a)return;
-  const rows=readDiary();let row=rows.find(x=>x.scientific===a.scientific);
-  if(row){row.count=(row.count||1)+1;row.lastSeen=Date.now();row.photo=a.photo||row.photo||'';row.group=a.tax?.class||row.group||''}
-  else rows.unshift({common:a.common,scientific:a.scientific,photo:a.photo||'',group:a.tax?.class||'',count:1,lastSeen:Date.now()});
-  writeDiary(rows);updateFoundButton();renderDiary();
+  saveDiaryData({common:a.common,scientific:a.scientific,photo:a.photo||'',group:a.tax?.class||''});
+  updateFoundButton();
 }
 function updateFoundButton(){const b=$('found');if(!b||!state.animal)return;const saved=isSaved(state.animal.scientific);b.classList.toggle('saved',saved);b.textContent=saved?'✓ Encontrado novamente':'✓ Eu encontrei este animal'}
 function renderDiary(){
@@ -180,12 +184,111 @@ function renderBadges(rows){
 function closeFeatures(){['cameraPanel','nearbyPanel','diaryPanel'].forEach(id=>$(id).hidden=true);stopCamera()}
 function openFeature(id){closeFeatures();$(id).hidden=false;$(id).scrollIntoView({behavior:'smooth',block:'start'});if(id==='diaryPanel')renderDiary()}
 function stopCamera(){if(state.cameraStream){state.cameraStream.getTracks().forEach(t=>t.stop());state.cameraStream=null}}
+function setVisionStatus(text,type=''){const el=$('visionModelStatus');el.textContent=text;el.className='vision-status'+(type?' '+type:'')}
+function loadExternalScript(src,id){
+  return new Promise((resolve,reject)=>{if(id&&document.getElementById(id))return resolve();const s=document.createElement('script');if(id)s.id=id;s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error('Falha ao carregar '+src));document.head.appendChild(s)})
+}
+function parseCSVLine(line){
+  const out=[];let cur='',quoted=false;
+  for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(quoted&&line[i+1]==='"'){cur+='"';i++}else quoted=!quoted}else if(ch===','&&!quoted){out.push(cur);cur=''}else cur+=ch}
+  out.push(cur);return out
+}
+function parseVisionTaxonomy(text){
+  const lines=text.replace(/\r/g,'').split('\n').filter(Boolean);if(!lines.length)throw new Error('Taxonomia vazia');
+  const headers=parseCSVLine(lines[0]);const byLeaf=new Map();
+  for(const line of lines.slice(1)){const vals=parseCSVLine(line),row={};headers.forEach((h,i)=>row[h]=vals[i]??'');if(row.leaf_class_id!==''&&row.leaf_class_id!=null){const id=parseInt(row.leaf_class_id,10);if(Number.isFinite(id))byLeaf.set(id,{taxonId:parseInt(row.taxon_id,10),name:row.name,rankLevel:Number(row.rank_level)})}}
+  return byLeaf
+}
+async function fetchFirst(urls,asText=false){
+  let last;for(const url of urls){try{const r=await fetch(url,{cache:'force-cache'});if(!r.ok)throw new Error('HTTP '+r.status);return asText?await r.text():await r.arrayBuffer()}catch(e){last=e}}
+  throw last||new Error('Arquivo indisponível')
+}
+async function ensureVisionModel(){
+  if(state.visionModel&&state.visionTaxonomy)return;
+  if(state.visionLoading)return state.visionLoading;
+  state.visionLoading=(async()=>{
+    try{
+      setVisionStatus('Carregando motor de visão e modelo público (~22 MB)…');
+      await loadExternalScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js','tfjs-runtime');
+      await loadExternalScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/tf-tflite.min.js','tflite-runtime');
+      if(window.tf?.setBackend){await tf.setBackend('cpu');await tf.ready()}
+      if(window.tflite?.setWasmPath)tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/');
+      const localModel='./model/INatVision_Small_2_fact256_8bit.tflite';
+      const releaseModel='https://github.com/inaturalist/model-files/releases/download/v25.01.15/INatVision_Small_2_fact256_8bit.tflite';
+      const localTax='./model/taxonomy.csv';
+      const releaseTax='https://github.com/inaturalist/model-files/releases/download/v25.01.15/taxonomy.csv';
+      const taxText=await fetchFirst([localTax,releaseTax],true);
+      state.visionTaxonomy=parseVisionTaxonomy(taxText);
+      let modelBuffer;
+      try{modelBuffer=await fetchFirst([localModel],false)}catch{modelBuffer=await fetchFirst([releaseModel],false)}
+      state.visionModel=await tflite.loadTFLiteModel(modelBuffer,{numThreads:Math.max(1,Math.min(2,Math.floor((navigator.hardwareConcurrency||2)/2)))});
+      setVisionStatus('Modelo visual pronto · '+state.visionTaxonomy.size+' classes mapeadas','ok');
+    }catch(e){
+      console.error('Vision model load failed',e);setVisionStatus('Não consegui carregar o modelo visual neste navegador. A busca manual continua disponível.','error');throw e
+    }finally{state.visionLoading=null}
+  })();
+  return state.visionLoading
+}
 async function startCamera(){
-  try{stopCamera();state.cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});$('cameraVideo').srcObject=state.cameraStream;$('cameraVideo').hidden=false;$('cameraShot').hidden=true;$('takePhoto').disabled=false}
+  try{stopCamera();$('visionResults').hidden=true;state.visionCandidates=[];state.cameraCapture=null;state.cameraCaptureThumb=null;state.cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});$('cameraVideo').srcObject=state.cameraStream;$('cameraVideo').hidden=false;$('cameraShot').hidden=true;$('takePhoto').disabled=false;$('analyzePhoto').disabled=true;ensureVisionModel().catch(()=>{})}
   catch(e){alert('Não consegui abrir a câmera. Verifique a permissão do navegador.')}
 }
-function takeCameraPhoto(){
-  const v=$('cameraVideo');if(!v.videoWidth)return;const canvas=document.createElement('canvas');canvas.width=v.videoWidth;canvas.height=v.videoHeight;canvas.getContext('2d').drawImage(v,0,0);state.cameraCapture=canvas.toDataURL('image/jpeg',.82);$('cameraShot').src=state.cameraCapture;$('cameraShot').hidden=false;v.hidden=true;stopCamera()
+function makeCaptureFromSource(source,max=900,quality=.84){
+  const sw=source.videoWidth||source.naturalWidth||source.width,sh=source.videoHeight||source.naturalHeight||source.height;if(!sw||!sh)return null;
+  const scale=Math.min(1,max/Math.max(sw,sh)),w=Math.round(sw*scale),h=Math.round(sh*scale);const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(source,0,0,w,h);return canvas.toDataURL('image/jpeg',quality)
+}
+function makeThumb(dataUrl){
+  return new Promise(resolve=>{const img=new Image();img.onload=()=>{const max=360,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*scale),h=Math.round(img.naturalHeight*scale),cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);resolve(cv.toDataURL('image/jpeg',.68))};img.onerror=()=>resolve(null);img.src=dataUrl})
+}
+async function setCapture(dataUrl){
+  state.cameraCapture=dataUrl;state.cameraCaptureThumb=await makeThumb(dataUrl);$('cameraShot').src=dataUrl;try{await $('cameraShot').decode()}catch{}$('cameraShot').hidden=false;$('cameraVideo').hidden=true;$('analyzePhoto').disabled=false;stopCamera()
+}
+async function takeCameraPhoto(){
+  const v=$('cameraVideo');if(!v.videoWidth)return;const data=makeCaptureFromSource(v);if(!data)return;await setCapture(data);await runVisionRecognition()
+}
+async function loadVisionFile(file){
+  if(!file)return;const reader=new FileReader();const data=await new Promise((resolve,reject)=>{reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});const img=new Image();img.onload=async()=>{const scaled=makeCaptureFromSource(img);await setCapture(scaled||data);await runVisionRecognition()};img.onerror=()=>setVisionStatus('Não consegui abrir essa imagem.','error');img.src=data
+}
+function confidenceInfo(score,topScore,secondScore){
+  const pct=score*100;let label='Baixa',cls='low';
+  if(pct>=50&&(topScore-secondScore)>=.12){label='Alta';cls='high'}else if(pct>=20){label='Média';cls='medium'}
+  return {label,cls,pct:Math.max(0,Math.min(100,pct))}
+}
+function getOutputTensor(out){if(out?.dataSync)return out;const vals=Object.values(out||{});return vals.find(x=>x?.dataSync)||null}
+async function taxonDetailById(id){try{const j=await json('https://api.inaturalist.org/v1/taxa/'+id+'?locale=pt-BR',{},7000);return j.results?.[0]||null}catch{return null}}
+async function runVisionRecognition(){
+  if(!state.cameraCapture)return;
+  $('visionAnalyzing').hidden=false;$('visionResults').hidden=true;$('candidateGrid').innerHTML='';
+  try{
+    await ensureVisionModel();
+    const img=$('cameraShot');if(img.decode)try{await img.decode()}catch{}
+    const inputInfo=state.visionModel.inputs?.[0];const shape=inputInfo?.shape||[1,299,299,3],targetH=shape[1]||299,targetW=shape[2]||299;
+    const canvas=document.createElement('canvas');canvas.width=targetW;canvas.height=targetH;const iw=img.naturalWidth,ih=img.naturalHeight,side=Math.min(iw,ih),sx=(iw-side)/2,sy=(ih-side)/2;canvas.getContext('2d').drawImage(img,sx,sy,side,side,0,0,targetW,targetH);
+    let input=tf.browser.fromPixels(canvas).toFloat().expandDims(0);
+    const out=state.visionModel.predict(input),tensor=getOutputTensor(out);if(!tensor)throw new Error('Saída do modelo indisponível');
+    const scores=Array.from(tensor.dataSync());input.dispose();if(out?.dispose)out.dispose();else Object.values(out||{}).forEach(t=>t?.dispose?.());
+    const ranked=scores.map((score,index)=>({score,index,row:state.visionTaxonomy.get(index)})).filter(x=>x.row&&Number.isFinite(x.score)).sort((a,b)=>b.score-a.score).slice(0,24);
+    const details=await Promise.all(ranked.slice(0,16).map(async x=>({base:x,taxon:await taxonDetailById(x.row.taxonId)})));
+    let animals=details.filter(x=>x.taxon&&x.taxon.iconic_taxon_name==='Animalia').slice(0,5);
+    if(!animals.length)animals=details.filter(x=>x.taxon).slice(0,5);
+    const topScore=animals[0]?.base.score||0,secondScore=animals[1]?.base.score||0;
+    state.visionCandidates=animals.map((x,i)=>{const t=x.taxon,ci=confidenceInfo(x.base.score,topScore,secondScore);return {taxonId:t.id,common:cap(t.preferred_common_name||t.name),scientific:t.name,rank:t.rank||'',photo:t.default_photo?.medium_url||t.default_photo?.square_url||'',score:x.base.score,confidence:ci,index:i}})
+    renderVisionCandidates();
+  }catch(e){
+    console.error('Vision inference failed',e);$('candidateGrid').innerHTML='<div class="empty-note">Não consegui executar o reconhecimento visual agora. Você ainda pode usar a busca manual abaixo.</div>';$('visionResults').hidden=false;setVisionStatus('O reconhecimento visual falhou nesta tentativa. O restante do Fauna continua funcionando.','warn')
+  }finally{$('visionAnalyzing').hidden=true}
+}
+function renderVisionCandidates(){
+  const g=$('candidateGrid'),items=state.visionCandidates;
+  if(!items.length){g.innerHTML='<div class="empty-note">O modelo não encontrou um candidato confiável entre as classes que conhece. Tente outra foto ou use a busca manual.</div>';$('visionResults').hidden=false;return}
+  g.innerHTML=items.map((x,i)=>'<article class="candidate-card '+(i===0?'top':'')+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="candidate-body"><b>'+x.common+'</b><em>'+x.scientific+'</em><small style="color:#81998c">'+(x.rank||'táxon')+'</small><div class="score-row"><div class="score-bar"><div class="score-fill" style="width:'+x.confidence.pct.toFixed(1)+'%"></div></div><span class="score-value">'+x.confidence.pct.toFixed(1)+'%</span></div><span class="confidence '+x.confidence.cls+'">Confiança '+x.confidence.label+'</span><button data-confirm-vision="'+i+'">Confirmar e registrar</button></div></article>').join('');
+  g.querySelectorAll('[data-confirm-vision]').forEach(b=>b.onclick=()=>confirmVisionCandidate(items[Number(b.dataset.confirmVision)]));
+  $('visionResults').hidden=false
+}
+async function confirmVisionCandidate(cand){
+  if(!cand)return;const detail=await taxonDetailById(cand.taxonId);const group=[...(detail?.ancestors||[]),detail].find(x=>x?.rank==='class')?.name||'';
+  saveDiaryData({common:cand.common,scientific:cand.scientific,photo:state.cameraCaptureThumb||cand.photo||'',group,visionScore:Number((cand.score*100).toFixed(1))});
+  closeFeatures();$('q').value=cand.scientific;await search(cand.scientific);updateFoundButton();$('view').scrollIntoView({behavior:'smooth',block:'start'})
 }
 async function loadNearby(){
   if(!navigator.geolocation){$('nearbyStatus').textContent='Este navegador não oferece localização.';return}
@@ -210,7 +313,7 @@ function renderSimilar(items){
   const g=$('similarGrid');if(!g)return;g.innerHTML=items?.length?items.map(x=>'<div class="similar-card" data-species="'+x.scientific.replace(/"/g,'&quot;')+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div><b>'+x.common+'</b><em>'+x.scientific+'</em></div></div>').join(''):'<div class="empty-note">Não encontrei espécies próximas do mesmo gênero nesta consulta.</div>';
   g.querySelectorAll('.similar-card').forEach(el=>el.onclick=()=>{$('q').value=el.dataset.species;search(el.dataset.species)})
 }
-async function resolve(q){const j=await json('https://api.inaturalist.org/v1/taxa/autocomplete?q='+encodeURIComponent(q)+'&rank=species&per_page=8&locale=pt-BR');const x=(j.results||[]).find(x=>x.rank==='species');if(!x)throw Error('Espécie não encontrada. Tente outro nome comum ou o nome científico.');return x}
+async function resolve(q){const j=await json('https://api.inaturalist.org/v1/taxa/autocomplete?q='+encodeURIComponent(q)+'&per_page=10&locale=pt-BR');const rows=j.results||[],n=norm(q);const x=rows.find(t=>norm(t.name)===n)||rows.find(t=>norm(t.preferred_common_name||'')===n)||rows.find(t=>t.rank==='species')||rows[0];if(!x)throw Error('Táxon não encontrado. Tente outro nome comum ou o nome científico.');return x}
 async function taxon(id){const j=await json('https://api.inaturalist.org/v1/taxa/'+id+'?locale=pt-BR');return j.results?.[0]}
 async function gbif(name){const m=await json('https://api.gbif.org/v1/species/match?name='+encodeURIComponent(name));const k=m.usageKey||m.speciesKey;if(!k)return {match:m,occ:{results:[],count:0}};const o=await json('https://api.gbif.org/v1/occurrence/search?taxon_key='+k+'&has_coordinate=true&has_geospatial_issue=false&limit=100');return {match:m,occ:o}}
 async function wiki(scientific,common){for(const title of [common,scientific].filter(Boolean)){try{const u='https://pt.wikipedia.org/w/api.php?action=query&origin=*&format=json&redirects=1&prop=extracts|pageimages&exintro=1&explaintext=1&piprop=original&titles='+encodeURIComponent(title);const j=await json(u);const p=Object.values(j.query?.pages||{})[0];if(p&&!p.missing&&(p.extract||p.original))return p}catch{}}return null}
@@ -229,8 +332,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))$('su
 document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{$('q').value=b.dataset.q;search(b.dataset.q)});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.tab).classList.add('on')});
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{const p=$(b.dataset.close);if(p)p.hidden=true;if(b.dataset.close==='cameraPanel')stopCamera()});
-$('modeIdentify').onclick=()=>openFeature('cameraPanel');$('modeExplore').onclick=()=>{$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('modeNearby').onclick=()=>openFeature('nearbyPanel');$('modeDiary').onclick=()=>openFeature('diaryPanel');
-$('startCamera').onclick=startCamera;$('takePhoto').onclick=takeCameraPhoto;$('cameraToSearch').onclick=()=>{stopCamera();$('cameraPanel').hidden=true;$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('loadNearby').onclick=loadNearby;$('found').onclick=saveEncounter;
+$('modeIdentify').onclick=()=>{openFeature('cameraPanel');ensureVisionModel().catch(()=>{})};$('modeExplore').onclick=()=>{$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('modeNearby').onclick=()=>openFeature('nearbyPanel');$('modeDiary').onclick=()=>openFeature('diaryPanel');
+$('startCamera').onclick=startCamera;$('takePhoto').onclick=takeCameraPhoto;$('analyzePhoto').onclick=runVisionRecognition;$('visionFile').onchange=e=>loadVisionFile(e.target.files?.[0]);$('cameraToSearch').onclick=()=>{stopCamera();$('cameraPanel').hidden=true;$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('loadNearby').onclick=loadNearby;$('found').onclick=saveEncounter;
 $('again').onclick=()=>{const left=randomPool.filter(x=>!state.seen.has(x));if(!left.length){$('again').disabled=true;$('again').textContent='✓ Todos vistos nesta sessão';return}const q=left[Math.floor(Math.random()*left.length)];$('q').value=q;search(q)};
 $('terra').onclick=()=>{document.querySelector('[data-tab="habitat"]').click();$('view').scrollIntoView({behavior:'smooth',block:'start'})};
 renderDiary();$('q').value='onça-pintada';search('onça-pintada');
