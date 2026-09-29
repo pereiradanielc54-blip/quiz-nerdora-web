@@ -6,6 +6,17 @@ mkdir -p site extracted
 cp web-pwa-src/* site/
 cp -R nerdora-fauna site/nerdora-fauna
 
+# Modelo visual público do iNaturalist usado pelo Nerdora Fauna.
+mkdir -p site/nerdora-fauna/model
+curl -fL --retry 3 --connect-timeout 15 \
+  https://github.com/inaturalist/model-files/releases/download/v25.01.15/INatVision_Small_2_fact256_8bit.tflite \
+  -o site/nerdora-fauna/model/INatVision_Small_2_fact256_8bit.tflite
+curl -fL --retry 3 --connect-timeout 15 \
+  https://github.com/inaturalist/model-files/releases/download/v25.01.15/taxonomy.csv \
+  -o site/nerdora-fauna/model/taxonomy.csv
+test -s site/nerdora-fauna/model/INatVision_Small_2_fact256_8bit.tflite
+test -s site/nerdora-fauna/model/taxonomy.csv
+
 TAR="QuizNerdora-Android-v0.13.0.tar.gz"
 if compgen -G "web-transfer/tar.b64.part.*" > /dev/null; then
   echo "Reconstruindo pacote do Quiz Nerdora..."
