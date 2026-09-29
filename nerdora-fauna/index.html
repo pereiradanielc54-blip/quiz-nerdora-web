@@ -437,12 +437,16 @@ function makeModelCanvas(img,bbox,targetW=299,targetH=299){
   const side=Math.max(sw,sh),cx=sx+sw/2,cy=sy+sh/2;sx=Math.max(0,cx-side/2);sy=Math.max(0,cy-side/2);sw=Math.min(side,iw-sx);sh=Math.min(side,ih-sy);
   canvas.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,targetW,targetH);return canvas
 }
-async function runVisionRecognition(){
-  if(!state.cameraCapture)return;
-  $('visionAnalyzing').hidden=false;$('visionResults').hidden=true;$('candidateGrid').innerHTML='';
+async function loadImageElement(dataUrl){
+  return await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=dataUrl})
+}
+async function analyzeVisionPhoto(photo,index=1){
+  if(!photo?.dataUrl)return photo;
+  state.visionAnalyzingBatch=true;$('visionAnalyzing').hidden=false;
+  const overlay=$('visionAnalyzing').querySelector('div div:last-child');if(overlay)overlay.textContent='Analisando foto '+index+' de '+state.visionPhotos.length;
   try{
     await ensureVisionModel();
-    const img=$('cameraShot');if(img.decode)try{await img.decode()}catch{}
+    const img=await loadImageElement(photo.dataUrl);
     let detection=null;
     if(state.objectDetector){
       try{
@@ -461,24 +465,54 @@ async function runVisionRecognition(){
         let input=tf.browser.fromPixels(canvas).toFloat().expandDims(0);
         const out=state.visionModel.predict(input),tensor=getOutputTensor(out);if(!tensor)throw new Error('Saída do modelo indisponível');
         const scores=Array.from(tensor.dataSync());input.dispose();if(out?.dispose)out.dispose();else Object.values(out||{}).forEach(t=>t?.dispose?.());
-        const ranked=scores.map((score,index)=>({score,index,row:state.visionTaxonomy.byLeaf.get(index)}))
+        const ranked=scores.map((score,i)=>({score,index:i,row:state.visionTaxonomy.byLeaf.get(i)}))
           .filter(x=>x.row&&Number.isFinite(x.score)&&(state.visionTaxonomy.animalLeafs.size===0||state.visionTaxonomy.animalLeafs.has(x.index)))
           .sort((a,b)=>b.score-a.score).slice(0,8);
         const topScore=ranked[0]?.score||0,secondScore=ranked[1]?.score||0;
         for(const x of ranked.slice(0,5)){
-          const ci=confidenceInfo(x.score,topScore,secondScore);
-          candidates.push({taxonId:x.row.taxonId,common:x.row.name,scientific:x.row.name,rank:'',photo:'',score:x.score,confidence:ci,source:'iNaturalist Small',scoreLabel:'Score visual'})
+          candidates.push({taxonId:x.row.taxonId,common:x.row.name,scientific:x.row.name,rank:'',photo:'',score:x.score,confidence:confidenceInfo(x.score,topScore,secondScore),source:'iNaturalist Small',scoreLabel:'Score visual'})
         }
       }catch(e){console.warn('iNaturalist inference failed',e)}
     }
     const dedup=[...new Map(candidates.map(x=>[(x.taxonId||x.scientific),x])).values()]
-      .sort((a,b)=>((b.source==='Detector geral'?1:0)-(a.source==='Detector geral'?1:0))||(b.score-a.score)).slice(0,5);
-    state.visionCandidates=(await Promise.all(dedup.map(enrichVisionCandidate))).map((x,i)=>({...x,originalIndex:i}));
-    if(state.visionLocationEnabled&&state.visionLocation)await applyRegionalEvidence();
-    renderVisionCandidates(detection);
+      .sort((a,b)=>((b.source==='Detector geral'?1:0)-(a.source==='Detector geral'?1:0))||(b.score-a.score)).slice(0,6);
+    photo.candidates=await Promise.all(dedup.map(enrichVisionCandidate));photo.detection=detection;photo.done=true;photo.error=null
   }catch(e){
-    console.error('Vision inference failed',e);$('candidateGrid').innerHTML='<div class="empty-note">Não consegui executar o reconhecimento visual agora. Você ainda pode usar a busca manual.</div>';$('visionResults').hidden=false;setVisionStatus('O reconhecimento visual falhou nesta tentativa. O restante do Fauna continua funcionando.','warn')
-  }finally{$('visionAnalyzing').hidden=true}
+    console.error('Photo analysis failed',e);photo.candidates=[];photo.done=true;photo.error=String(e?.message||e)
+  }finally{state.visionAnalyzingBatch=false;$('visionAnalyzing').hidden=true}
+  return photo
+}
+async function combineVisionPhotoResults(){
+  const photos=state.visionPhotos.filter(p=>p.done),n=photos.length;if(!n)return;
+  const map=new Map();
+  photos.forEach((p,photoIndex)=>{
+    const bestScore=Math.max(...p.candidates.map(x=>Number(x.score)||0),.000001);
+    p.candidates.forEach((x,rank)=>{
+      const key=String(x.taxonId||x.scientific),normScore=Math.max(0,Math.min(1,(Number(x.score)||0)/bestScore));
+      let a=map.get(key);
+      if(!a){a={...x,scoreSum:0,rawScoreSum:0,support:0,bestRank:99,photoHits:[],sources:new Set()};map.set(key,a)}
+      a.scoreSum+=normScore;a.rawScoreSum+=(Number(x.score)||0);a.support++;a.bestRank=Math.min(a.bestRank,rank);a.photoHits.push(photoIndex+1);a.sources.add(x.source)
+    })
+  });
+  let combined=[...map.values()].map(x=>{
+    const avg=x.scoreSum/n,supportRatio=x.support/n,repeatBonus=n>1?supportRatio:.5;
+    const multiScore=Math.max(0,Math.min(1,avg*.72+repeatBonus*.28));
+    return {...x,score:multiScore,visualSingleAverage:x.rawScoreSum/Math.max(1,x.support),multiScore,supportRatio,photoCount:n,confidence:confidenceInfo(multiScore,multiScore,0),source:[...x.sources].join(' + '),scoreLabel:n>1?'Score combinado':'Score visual'}
+  }).sort((a,b)=>b.multiScore-a.multiScore||b.support-a.support||a.bestRank-b.bestRank).slice(0,6);
+  combined=await Promise.all(combined.map(enrichVisionCandidate));
+  state.visionCandidates=combined.map((x,i)=>({...x,originalIndex:i}));
+  if(state.visionLocationEnabled&&state.visionLocation)await applyRegionalEvidence();
+  const detection=photos.map(p=>p.detection).filter(Boolean).sort((a,b)=>b.score-a.score)[0]||null;
+  renderVisionCandidates(detection)
+}
+async function runVisionRecognition(){
+  if(!state.cameraCapture&&!state.visionPhotos.length)return;
+  if(!state.visionPhotos.length&&state.cameraCapture){
+    const thumb=state.cameraCaptureThumb||await makeThumb(state.cameraCapture);
+    state.visionPhotos=[{dataUrl:state.cameraCapture,thumb,candidates:[],detection:null,done:false}];renderVisionPhotoStrip()
+  }
+  for(let i=0;i<state.visionPhotos.length;i++)if(!state.visionPhotos[i].done)await analyzeVisionPhoto(state.visionPhotos[i],i+1);
+  await combineVisionPhotoResults();renderVisionPhotoStrip()
 }
 function renderVisionCandidates(detection=null){
   const g=$('candidateGrid'),items=state.visionCandidates;
