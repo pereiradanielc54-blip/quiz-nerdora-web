@@ -706,10 +706,23 @@ function renderHierarchy(){
 }
 async function confirmSafeHierarchy(){
   const h=state.visionHierarchy;if(!h?.lastSafe)return;
-  const t=h.lastSafe,group=h.path.find(x=>x.rank==='class')?.name||'';
-  saveDiaryData({common:t.common||t.name,scientific:t.name,photo:state.visionPhotos[0]?.cropThumb||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||'',group,visionScore:Number((t.support*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1,identifiedRank:t.rank,partialIdentification:t.rank!=='species'});
+  const t=h.lastSafe,group=h.path.find(x=>x.rank==='class')?.name||'',loc=state.visionLocationEnabled&&state.visionLocation?{lat:state.visionLocation.lat,lng:state.visionLocation.lng,radiusKm:state.visionGeoRadius}:null;
+  const saved=saveDiaryData({common:t.common||t.name,scientific:t.name,photo:state.visionPhotos[0]?.cropThumb||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||'',group,visionScore:Number((t.support*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1,identifiedRank:t.rank,partialIdentification:t.rank!=='species',location:loc,method:'hierarchical-auto',confirmedByUser:true});
+  showFeedbackPrompt(t.name,saved.encounter.id,t.common||t.name);
   closeFeatures();$('q').value=t.name;await search(t.name);updateFoundButton();$('view').scrollIntoView({behavior:'smooth',block:'start'})
 }
+function candidateDifferenceItems(x){
+  const h=state.visionHierarchy,items=[];
+  if(h?.lastSafe){
+    const same=x.lineage?.some(n=>n.id===h.lastSafe.id);
+    items.push(same?'Compatível com o nível seguro: '+rankLabel(h.lastSafe.rank)+' '+h.lastSafe.name:'Diverge antes do nível seguro '+rankLabel(h.lastSafe.rank))
+  }
+  if((x.photoCount||1)>1)items.push((x.support||1)+' de '+x.photoCount+' fotos sustentam este candidato');
+  if(x.region?.count!=null)items.push(x.region.count>0?x.region.count+' registro(s) próximos na amostra regional':'Nenhum registro próximo encontrado na amostra regional');
+  const idx=state.visionCandidates.indexOf(x);if(idx===0)items.push('Maior compatibilidade combinada entre os candidatos atuais');
+  return items.slice(0,3)
+}
+function currentUserComparisonPhoto(){return state.visionPhotos[state.visionActivePhotoIndex]?.cropDataUrl||state.visionPhotos[0]?.cropDataUrl||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||''}
 function renderVisionCandidates(detection=null){
   const g=$('candidateGrid'),items=state.visionCandidates;
   renderHierarchy();
@@ -720,7 +733,8 @@ function renderVisionCandidates(detection=null){
     const geoText=regionCount==null?'Localização não usada':regionCount>0?regionCount.toLocaleString('pt-BR')+' registro(s) em até '+state.visionGeoRadius+' km':'Nenhum registro próximo na amostra';
     const geoClass=regionCount==null?'off':regionCount>0?'hit':'none';
     const multiText=(x.photoCount||1)>1?('📸 '+x.support+' de '+x.photoCount+' fotos sustentam este candidato'):('📸 1 foto analisada');
-    return '<article class="candidate-card '+(i===0?'top ':'')+(i===0&&state.visionLocationEnabled?'geo-top':'')+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="candidate-body"><b>'+x.common+'</b><em>'+x.scientific+'</em><small style="color:#81998c">'+(x.source||'modelo visual')+(x.rank?' · '+x.rank:'')+'</small><div class="candidate-subscore"><span>Visão</span><strong>'+visualPct.toFixed(1)+'%</strong></div><div class="score-row"><div class="score-bar"><div class="score-fill" style="width:'+visualPct.toFixed(1)+'%"></div></div><span class="score-value">'+(combined!=null?(combined*100).toFixed(1)+'%':'')+'</span></div><span class="multi-evidence">'+multiText+'</span><span class="geo-chip '+geoClass+'">📍 '+geoText+'</span>'+(combined!=null?'<div class="candidate-subscore"><span>Compatibilidade visão + região</span><strong>'+(combined*100).toFixed(1)+'%</strong></div>':'')+'<span class="confidence '+x.confidence.cls+'">'+(x.scoreLabel||'Confiança')+' · '+x.confidence.label+'</span><button data-confirm-vision="'+i+'">'+(state.visionHierarchy?.lastSafe?.rank==='species'&&state.visionHierarchy?.lastSafe?.id===x.taxonId?'Confirmar e registrar':'Confirmar manualmente')+'</button></div></article>'
+    const userPhoto=currentUserComparisonPhoto(),diffs=candidateDifferenceItems(x),looksBest=i===0;
+    return '<article class="candidate-card '+(looksBest?'top ':'')+(looksBest&&state.visionLocationEnabled?'geo-top':'')+'"><div class="compare-pair"><div class="compare-shot">'+(userPhoto?'<img src="'+userPhoto+'" alt="Sua foto">':'')+'<span>Sua foto</span></div><div class="compare-shot">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="Foto de referência">':'')+'<span>Referência</span></div></div><div class="candidate-body">'+(looksBest?'<span class="best-match">★ Parece mais com este</span>':'')+'<b>'+x.common+'</b><em>'+x.scientific+'</em><small style="color:#81998c">'+(x.source||'modelo visual')+(x.rank?' · '+x.rank:'')+'</small><div class="difference-box"><b>Diferenças principais para conferir</b><ul>'+diffs.map(d=>'<li>'+d+'</li>').join('')+'</ul></div><div class="candidate-subscore"><span>Score visual</span><strong>'+visualPct.toFixed(1)+'%</strong></div><div class="score-row"><div class="score-bar"><div class="score-fill" style="width:'+visualPct.toFixed(1)+'%"></div></div><span class="score-value">'+(combined!=null?(combined*100).toFixed(1)+'%':'')+'</span></div><span class="multi-evidence">'+multiText+'</span><span class="geo-chip '+geoClass+'">📍 '+geoText+'</span>'+(combined!=null?'<div class="candidate-subscore"><span>Visão + evidência regional</span><strong>'+(combined*100).toFixed(1)+'%</strong></div>':'')+'<span class="confidence '+x.confidence.cls+'">'+(x.scoreLabel||'Confiança')+' · '+x.confidence.label+'</span><button data-confirm-vision="'+i+'">'+(state.visionHierarchy?.lastSafe?.rank==='species'&&state.visionHierarchy?.lastSafe?.id===x.taxonId?'Confirmar e registrar':'Confirmar manualmente')+'</button></div></article>'
   }).join('');
   g.querySelectorAll('[data-confirm-vision]').forEach(b=>b.onclick=()=>confirmVisionCandidate(items[Number(b.dataset.confirmVision)]));
   $('visionResults').hidden=false;
@@ -730,9 +744,10 @@ function renderVisionCandidates(detection=null){
 async function confirmVisionCandidate(cand){
   if(!cand)return;let detail=null;
   try{detail=cand.taxonId?await taxonDetailById(cand.taxonId):null;if(!detail){const r=await resolve(cand.scientific);detail=await taxon(r.id).catch(()=>r)}}catch{}
-  const group=[...(detail?.ancestors||[]),detail].find(x=>x?.rank==='class')?.name||'';
-  saveDiaryData({common:cap(detail?.preferred_common_name||cand.common),scientific:detail?.name||cand.scientific,photo:state.visionPhotos[0]?.cropThumb||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||cand.photo||'',group,visionScore:Number((cand.score*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1,identifiedRank:detail?.rank||cand.rank||'species',partialIdentification:false});
-  closeFeatures();$('q').value=detail?.name||cand.scientific;await search(detail?.name||cand.scientific);updateFoundButton();$('view').scrollIntoView({behavior:'smooth',block:'start'})
+  const group=[...(detail?.ancestors||[]),detail].find(x=>x?.rank==='class')?.name||'',scientific=detail?.name||cand.scientific,common=cap(detail?.preferred_common_name||cand.common),loc=state.visionLocationEnabled&&state.visionLocation?{lat:state.visionLocation.lat,lng:state.visionLocation.lng,radiusKm:state.visionGeoRadius}:null;
+  const saved=saveDiaryData({common,scientific,photo:state.visionPhotos[0]?.cropThumb||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||cand.photo||'',group,visionScore:Number((cand.score*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1,identifiedRank:detail?.rank||cand.rank||'species',partialIdentification:false,location:loc,method:'manual-candidate',confirmedByUser:true});
+  showFeedbackPrompt(scientific,saved.encounter.id,common);
+  closeFeatures();$('q').value=scientific;await search(scientific);updateFoundButton();$('view').scrollIntoView({behavior:'smooth',block:'start'})
 }
 async function loadNearby(){
   if(!navigator.geolocation){$('nearbyStatus').textContent='Este navegador não oferece localização.';return}
