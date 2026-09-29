@@ -117,6 +117,8 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
   <div class="diary-tabs"><button class="on" data-diary-view="diaryListView">Lista</button><button data-diary-view="diaryMapView">Mapa</button></div>
   <div id="diaryListView" class="diary-view"><div id="diaryGrid" class="diary-grid"></div></div>
   <div id="diaryMapView" class="diary-view" hidden><div id="diaryMap" class="diary-map"></div><div id="diaryMapInfo" class="diary-map-info">Os encontros com localização aproximada aparecerão aqui.</div></div>
+  <h3 style="margin-top:18px">🧠 Qualidade da identificação</h3>
+  <div id="aiQualitySummary" class="rows"></div>
   <h3 style="margin-top:18px">🏅 Expedições e conquistas</h3>
   <div id="badgeGrid" class="badge-grid"></div>
 </section>
@@ -250,7 +252,16 @@ function renderDiary(){
   }).join(''):'<div class="empty-note">Seu diário ainda está vazio. Abra uma espécie e toque em “Eu encontrei este animal”.</div>';
   grid.querySelectorAll('[data-open-species]').forEach(b=>b.onclick=()=>{const row=rows[Number(b.dataset.openSpecies)];closeFeatures();$('q').value=row.scientific;search(row.scientific)});
   grid.querySelectorAll('[data-terra-row]').forEach(b=>b.onclick=()=>{const row=rows[Number(b.dataset.terraRow)];openTerraForEncounter(row,latestEncounter(row))});
-  renderDiaryMap(rows);renderBadges(rows)
+  renderDiaryMap(rows);renderAIQuality(rows);renderBadges(rows)
+}
+function renderAIQuality(rows){
+  const box=$('aiQualitySummary');if(!box)return;
+  const stats=rows.map(row=>{
+    const answered=(row.encounters||[]).filter(e=>e.feedback===true||e.feedback===false),yes=answered.filter(e=>e.feedback===true).length,no=answered.filter(e=>e.feedback===false).length;
+    return {row,yes,no,total:answered.length}
+  }).filter(x=>x.total).sort((a,b)=>b.no-a.no||b.total-a.total);
+  if(!stats.length){box.innerHTML='<div class="empty-note">Ainda não há feedback suficiente. Depois de confirmar uma identificação, responda Sim ou Não.</div>';return}
+  box.innerHTML=stats.map(x=>'<div class="row"><span>'+x.row.common+' · '+x.row.scientific+'</span><b>✓ '+x.yes+' &nbsp; ✕ '+x.no+'</b></div>').join('')
 }
 function renderDiaryMap(rows){
   const map=$('diaryMap'),info=$('diaryMapInfo');if(!map||!info)return;
