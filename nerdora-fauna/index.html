@@ -282,9 +282,39 @@ const GENERAL_TAXA={
   bear:{common:'Urso',scientific:'Ursidae'},
   bird:{common:'Ave',scientific:'Aves'}
 };
-async function startCamera(){
-  try{stopCamera();$('visionResults').hidden=true;state.visionCandidates=[];state.cameraCapture=null;state.cameraCaptureThumb=null;state.cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});$('cameraVideo').srcObject=state.cameraStream;$('cameraVideo').hidden=false;$('cameraShot').hidden=true;$('takePhoto').disabled=false;$('analyzePhoto').disabled=true;ensureVisionModel().catch(()=>{})}
-  catch(e){alert('Não consegui abrir a câmera. Verifique a permissão do navegador.')}
+function resetVisionPhotoSession(){
+  state.visionPhotos=[];state.visionCandidates=[];state.cameraCapture=null;state.cameraCaptureThumb=null;
+  $('visionResults').hidden=true;$('candidateGrid').innerHTML='';renderVisionPhotoStrip()
+}
+function renderVisionPhotoStrip(){
+  const strip=$('visionPhotoStrip'),photos=state.visionPhotos,max=state.visionPhotoMax;
+  if(!strip)return;
+  $('visionPhotoCounter').textContent=photos.length+' / '+max;
+  strip.innerHTML=Array.from({length:max},(_,i)=>{
+    const p=photos[i];
+    if(!p)return '<div class="photo-slot">＋</div>';
+    return '<div class="photo-slot filled"><img src="'+p.thumb+'" alt="Foto '+(i+1)+'"><span>Foto '+(i+1)+'</span><button data-remove-vision="'+i+'" aria-label="Remover foto">×</button></div>'
+  }).join('');
+  strip.querySelectorAll('[data-remove-vision]').forEach(b=>b.onclick=async()=>{
+    state.visionPhotos.splice(Number(b.dataset.removeVision),1);
+    if(state.visionPhotos.length){await combineVisionPhotoResults()}else{state.visionCandidates=[];$('visionResults').hidden=true}
+    renderVisionPhotoStrip()
+  });
+  const has=photos.length>0,full=photos.length>=max;
+  $('addVisionPhoto').disabled=!has||full;
+  $('combineVisionPhotos').disabled=!has||state.visionAnalyzingBatch;
+  $('clearVisionPhotos').disabled=!has;
+  $('visionFile').disabled=full
+}
+async function startCamera(keepSession=false){
+  try{
+    stopCamera();
+    if(!keepSession)resetVisionPhotoSession();
+    state.cameraCapture=null;state.cameraCaptureThumb=null;
+    state.cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    $('cameraVideo').srcObject=state.cameraStream;$('cameraVideo').hidden=false;$('cameraShot').hidden=true;$('takePhoto').disabled=false;$('analyzePhoto').disabled=true;
+    ensureVisionModel().catch(()=>{})
+  }catch(e){alert('Não consegui abrir a câmera. Verifique a permissão do navegador.')}
 }
 function makeCaptureFromSource(source,max=900,quality=.84){
   const sw=source.videoWidth||source.naturalWidth||source.width,sh=source.videoHeight||source.naturalHeight||source.height;if(!sw||!sh)return null;
@@ -296,12 +326,30 @@ function makeThumb(dataUrl){
 async function setCapture(dataUrl){
   state.cameraCapture=dataUrl;state.cameraCaptureThumb=await makeThumb(dataUrl);$('cameraShot').src=dataUrl;try{await $('cameraShot').decode()}catch{}$('cameraShot').hidden=false;$('cameraVideo').hidden=true;$('analyzePhoto').disabled=false;stopCamera()
 }
+async function addCurrentCaptureToSession(){
+  if(!state.cameraCapture||state.visionPhotos.length>=state.visionPhotoMax)return;
+  const dataUrl=state.cameraCapture,thumb=state.cameraCaptureThumb||await makeThumb(dataUrl);
+  const photo={dataUrl,thumb,candidates:[],detection:null,done:false};
+  state.visionPhotos.push(photo);renderVisionPhotoStrip();
+  await analyzeVisionPhoto(photo,state.visionPhotos.length);
+  await combineVisionPhotoResults();renderVisionPhotoStrip()
+}
 async function takeCameraPhoto(){
-  const v=$('cameraVideo');if(!v.videoWidth)return;const data=makeCaptureFromSource(v);if(!data)return;await setCapture(data);await runVisionRecognition()
+  const v=$('cameraVideo');if(!v.videoWidth)return;const data=makeCaptureFromSource(v);if(!data)return;await setCapture(data);await addCurrentCaptureToSession()
 }
-async function loadVisionFile(file){
-  if(!file)return;const reader=new FileReader();const data=await new Promise((resolve,reject)=>{reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});const img=new Image();img.onload=async()=>{const scaled=makeCaptureFromSource(img);await setCapture(scaled||data);await runVisionRecognition()};img.onerror=()=>setVisionStatus('Não consegui abrir essa imagem.','error');img.src=data
+async function loadVisionFiles(files){
+  const list=[...(files||[])];if(!list.length)return;
+  const remaining=state.visionPhotoMax-state.visionPhotos.length;
+  for(const file of list.slice(0,remaining)){
+    const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
+    const scaled=await new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(makeCaptureFromSource(img)||data);img.onerror=()=>resolve(null);img.src=data});
+    if(!scaled)continue;
+    await setCapture(scaled);await addCurrentCaptureToSession()
+  }
+  $('visionFile').value=''
 }
+async function loadVisionFile(file){return loadVisionFiles(file?[file]:[])}
+
 function confidenceInfo(score,topScore,secondScore){
   const pct=score*100;let label='Baixa',cls='low';
   if(pct>=50&&(topScore-secondScore)>=.12){label='Alta';cls='high'}else if(pct>=20){label='Média';cls='medium'}
