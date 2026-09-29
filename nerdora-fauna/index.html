@@ -44,7 +44,7 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
     <div class="camera-stage">
       <video id="cameraVideo" autoplay playsinline muted></video>
       <img id="cameraShot" alt="Foto capturada" hidden>
-      <span class="capture-badge">Modelo visual iNaturalist · público</span>
+      <span class="capture-badge">Visão híbrida · detector + iNaturalist</span>
       <div id="visionAnalyzing" class="analyzing-overlay" hidden><div><div class="spinner"></div><b>Analisando a imagem…</b><div style="color:#8da596;font-size:11px;margin-top:5px">Comparando com as classes do modelo visual</div></div></div>
     </div>
     <div class="camera-side">
@@ -57,7 +57,7 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
         <button id="analyzePhoto" disabled>Analisar novamente</button>
         <button id="cameraToSearch">Não encontrou? Buscar manualmente</button>
       </div>
-      <small class="privacy">A inferência visual é feita no próprio navegador. A foto não é enviada ao iNaturalist para reconhecimento. O modelo público usado nesta prévia cobre cerca de 500 táxons, então espécies fora dele podem não aparecer.</small>
+      <small class="privacy">A análise é feita no próprio navegador. O detector geral reconhece categorias comuns como cachorro, gato e aves; o modelo público do iNaturalist tenta refinar a identificação. A foto não é enviada ao iNaturalist para reconhecimento.</small>
     </div>
   </div>
   <div id="visionResults" class="vision-results" hidden>
@@ -100,7 +100,7 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 <div class="foot">Nerdora Fauna · preview online para validação das APIs · dados podem variar entre fontes.</div>
 </div>
 <script>
-const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[]};
+const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[],objectDetector:null};
 const SRC={inat:['iNaturalist','https://www.inaturalist.org'],gbif:['GBIF','https://www.gbif.org'],wiki:['Wikipedia/Wikimedia','https://pt.wikipedia.org'],globi:['GloBI','https://www.globalbioticinteractions.org']};
 const randomPool=['Panthera onca','Hydrochoerus hydrochaeris','Harpia harpyja','Balaenoptera musculus','Chrysocyon brachyurus','Myrmecophaga tridactyla','Orcinus orca','Loxodonta africana','Ursus maritimus','Ateles geoffroyi','Panthera leo','Panthera tigris','Gorilla gorilla','Ailuropoda melanoleuca','Giraffa camelopardalis','Crocodylus niloticus','Chelonia mydas','Ara ararauna','Phoenicopterus roseus','Canis lupus'];
 const localCatalog=[
@@ -195,40 +195,77 @@ function parseCSVLine(line){
 }
 function parseVisionTaxonomy(text){
   const lines=text.replace(/\r/g,'').split('\n').filter(Boolean);if(!lines.length)throw new Error('Taxonomia vazia');
-  const headers=parseCSVLine(lines[0]);const byLeaf=new Map();
-  for(const line of lines.slice(1)){const vals=parseCSVLine(line),row={};headers.forEach((h,i)=>row[h]=vals[i]??'');if(row.leaf_class_id!==''&&row.leaf_class_id!=null){const id=parseInt(row.leaf_class_id,10);if(Number.isFinite(id))byLeaf.set(id,{taxonId:parseInt(row.taxon_id,10),name:row.name,rankLevel:Number(row.rank_level)})}}
-  return byLeaf
+  const headers=parseCSVLine(lines[0]),byLeaf=new Map(),byTaxon=new Map();
+  for(const line of lines.slice(1)){
+    const vals=parseCSVLine(line),raw={};headers.forEach((h,i)=>raw[h]=vals[i]??'');
+    const row={taxonId:parseInt(raw.taxon_id,10),parentTaxonId:parseInt(raw.parent_taxon_id,10),name:raw.name,rankLevel:Number(raw.rank_level),leafId:raw.leaf_class_id===''?null:parseInt(raw.leaf_class_id,10)};
+    if(Number.isFinite(row.taxonId))byTaxon.set(row.taxonId,row);
+    if(Number.isFinite(row.leafId))byLeaf.set(row.leafId,row)
+  }
+  const animalLeafs=new Set();
+  for(const [leafId,row] of byLeaf){
+    let cur=row,guard=0,isAnimal=false;
+    while(cur&&guard++<30){if(cur.name==='Animalia'||cur.taxonId===1){isAnimal=true;break}cur=byTaxon.get(cur.parentTaxonId)}
+    if(isAnimal)animalLeafs.add(leafId)
+  }
+  return {byLeaf,byTaxon,animalLeafs,dogIncluded:[...byLeaf.values()].some(x=>/^(Canis familiaris|Canis lupus familiaris)$/i.test(x.name))}
 }
 async function fetchFirst(urls,asText=false){
   let last;for(const url of urls){try{const r=await fetch(url,{cache:'force-cache'});if(!r.ok)throw new Error('HTTP '+r.status);return asText?await r.text():await r.arrayBuffer()}catch(e){last=e}}
   throw last||new Error('Arquivo indisponível')
 }
 async function ensureVisionModel(){
-  if(state.visionModel&&state.visionTaxonomy)return;
+  if((state.visionModel||state.objectDetector)&&state.visionTaxonomy)return;
   if(state.visionLoading)return state.visionLoading;
   state.visionLoading=(async()=>{
+    let detectorOK=false,inatOK=false;
     try{
-      setVisionStatus('Carregando motor de visão e modelo público (~22 MB)…');
+      setVisionStatus('Carregando detector geral de animais…');
       await loadExternalScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js','tfjs-runtime');
-      await loadExternalScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/tf-tflite.min.js','tflite-runtime');
       if(window.tf?.setBackend){await tf.setBackend('cpu');await tf.ready()}
-      if(window.tflite?.setWasmPath)tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/');
-      const localModel='./model/INatVision_Small_2_fact256_8bit.tflite';
-      const releaseModel='https://github.com/inaturalist/model-files/releases/download/v25.01.15/INatVision_Small_2_fact256_8bit.tflite';
-      const localTax='./model/taxonomy.csv';
-      const releaseTax='https://github.com/inaturalist/model-files/releases/download/v25.01.15/taxonomy.csv';
-      const taxText=await fetchFirst([localTax,releaseTax],true);
-      state.visionTaxonomy=parseVisionTaxonomy(taxText);
-      let modelBuffer;
-      try{modelBuffer=await fetchFirst([localModel],false)}catch{modelBuffer=await fetchFirst([releaseModel],false)}
-      state.visionModel=await tflite.loadTFLiteModel(modelBuffer,{numThreads:Math.max(1,Math.min(2,Math.floor((navigator.hardwareConcurrency||2)/2)))});
-      setVisionStatus('Modelo visual pronto · '+state.visionTaxonomy.size+' classes mapeadas','ok');
+      try{
+        await loadExternalScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js','coco-runtime');
+        state.objectDetector=await cocoSsd.load({base:'lite_mobilenet_v2'});
+        detectorOK=true
+      }catch(e){console.warn('General detector unavailable',e)}
+      try{
+        setVisionStatus('Carregando modelo do iNaturalist (~22 MB)…');
+        await loadExternalScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/tf-tflite.min.js','tflite-runtime');
+        if(window.tflite?.setWasmPath)tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/');
+        const localModel='./model/INatVision_Small_2_fact256_8bit.tflite';
+        const releaseModel='https://github.com/inaturalist/model-files/releases/download/v25.01.15/INatVision_Small_2_fact256_8bit.tflite';
+        const localTax='./model/taxonomy.csv';
+        const releaseTax='https://github.com/inaturalist/model-files/releases/download/v25.01.15/taxonomy.csv';
+        const taxText=await fetchFirst([localTax,releaseTax],true);
+        state.visionTaxonomy=parseVisionTaxonomy(taxText);
+        let modelBuffer;try{modelBuffer=await fetchFirst([localModel],false)}catch{modelBuffer=await fetchFirst([releaseModel],false)}
+        state.visionModel=await tflite.loadTFLiteModel(modelBuffer,{numThreads:Math.max(1,Math.min(2,Math.floor((navigator.hardwareConcurrency||2)/2)))});
+        inatOK=true
+      }catch(e){console.warn('iNaturalist small model unavailable',e)}
+      if(!state.visionTaxonomy)state.visionTaxonomy={byLeaf:new Map(),byTaxon:new Map(),animalLeafs:new Set(),dogIncluded:false};
+      if(detectorOK&&inatOK)setVisionStatus('Visão híbrida pronta · detector geral + modelo iNaturalist','ok');
+      else if(detectorOK)setVisionStatus('Detector geral pronto · o refinamento iNaturalist não carregou, mas cachorro/gato e outros animais comuns continuam reconhecíveis','warn');
+      else if(inatOK)setVisionStatus('Modelo iNaturalist pronto · detector geral não carregou','warn');
+      else throw new Error('Nenhum motor visual pôde ser carregado')
     }catch(e){
-      console.error('Vision model load failed',e);setVisionStatus('Não consegui carregar o modelo visual neste navegador. A busca manual continua disponível.','error');throw e
+      console.error('Vision engines failed',e);setVisionStatus('Não consegui carregar os motores visuais neste navegador. A busca manual continua disponível.','error');throw e
     }finally{state.visionLoading=null}
   })();
   return state.visionLoading
 }
+const GENERAL_ANIMAL_CLASSES=new Set(['bird','cat','dog','horse','sheep','cow','elephant','bear','zebra','giraffe']);
+const GENERAL_TAXA={
+  dog:{common:'Cachorro doméstico',scientific:'Canis familiaris',taxonId:47144},
+  cat:{common:'Gato doméstico',scientific:'Felis catus'},
+  horse:{common:'Cavalo doméstico',scientific:'Equus caballus'},
+  sheep:{common:'Ovelha doméstica',scientific:'Ovis aries'},
+  cow:{common:'Gado doméstico',scientific:'Bos taurus'},
+  giraffe:{common:'Girafa',scientific:'Giraffa camelopardalis'},
+  zebra:{common:'Zebra',scientific:'Equus quagga'},
+  elephant:{common:'Elefante',scientific:'Elephantidae'},
+  bear:{common:'Urso',scientific:'Ursidae'},
+  bird:{common:'Ave',scientific:'Aves'}
+};
 async function startCamera(){
   try{stopCamera();$('visionResults').hidden=true;state.visionCandidates=[];state.cameraCapture=null;state.cameraCaptureThumb=null;state.cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});$('cameraVideo').srcObject=state.cameraStream;$('cameraVideo').hidden=false;$('cameraShot').hidden=true;$('takePhoto').disabled=false;$('analyzePhoto').disabled=true;ensureVisionModel().catch(()=>{})}
   catch(e){alert('Não consegui abrir a câmera. Verifique a permissão do navegador.')}
@@ -256,39 +293,80 @@ function confidenceInfo(score,topScore,secondScore){
 }
 function getOutputTensor(out){if(out?.dataSync)return out;const vals=Object.values(out||{});return vals.find(x=>x?.dataSync)||null}
 async function taxonDetailById(id){try{const j=await json('https://api.inaturalist.org/v1/taxa/'+id+'?locale=pt-BR',{},7000);return j.results?.[0]||null}catch{return null}}
+async function enrichVisionCandidate(cand){
+  try{
+    let t=null;
+    if(cand.taxonId)t=await taxonDetailById(cand.taxonId);
+    if(!t){const r=await resolve(cand.scientific);t=await taxon(r.id).catch(()=>r)}
+    if(t)return {...cand,taxonId:t.id,common:cap(t.preferred_common_name||cand.common||t.name),scientific:t.name,rank:t.rank||cand.rank||'',photo:t.default_photo?.medium_url||t.default_photo?.square_url||cand.photo||''}
+  }catch{}
+  return cand
+}
+function makeModelCanvas(img,bbox,targetW=299,targetH=299){
+  const canvas=document.createElement('canvas');canvas.width=targetW;canvas.height=targetH;const iw=img.naturalWidth,ih=img.naturalHeight;
+  let sx=0,sy=0,sw=iw,sh=ih;
+  if(bbox&&bbox.length===4){
+    const [x,y,w,h]=bbox,pad=Math.max(w,h)*.12;sx=Math.max(0,x-pad);sy=Math.max(0,y-pad);sw=Math.min(iw-sx,w+pad*2);sh=Math.min(ih-sy,h+pad*2)
+  }else{const side=Math.min(iw,ih);sx=(iw-side)/2;sy=(ih-side)/2;sw=sh=side}
+  const side=Math.max(sw,sh),cx=sx+sw/2,cy=sy+sh/2;sx=Math.max(0,cx-side/2);sy=Math.max(0,cy-side/2);sw=Math.min(side,iw-sx);sh=Math.min(side,ih-sy);
+  canvas.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,targetW,targetH);return canvas
+}
 async function runVisionRecognition(){
   if(!state.cameraCapture)return;
   $('visionAnalyzing').hidden=false;$('visionResults').hidden=true;$('candidateGrid').innerHTML='';
   try{
     await ensureVisionModel();
     const img=$('cameraShot');if(img.decode)try{await img.decode()}catch{}
-    const inputInfo=state.visionModel.inputs?.[0];const shape=inputInfo?.shape||[1,299,299,3],targetH=shape[1]||299,targetW=shape[2]||299;
-    const canvas=document.createElement('canvas');canvas.width=targetW;canvas.height=targetH;const iw=img.naturalWidth,ih=img.naturalHeight,side=Math.min(iw,ih),sx=(iw-side)/2,sy=(ih-side)/2;canvas.getContext('2d').drawImage(img,sx,sy,side,side,0,0,targetW,targetH);
-    let input=tf.browser.fromPixels(canvas).toFloat().expandDims(0);
-    const out=state.visionModel.predict(input),tensor=getOutputTensor(out);if(!tensor)throw new Error('Saída do modelo indisponível');
-    const scores=Array.from(tensor.dataSync());input.dispose();if(out?.dispose)out.dispose();else Object.values(out||{}).forEach(t=>t?.dispose?.());
-    const ranked=scores.map((score,index)=>({score,index,row:state.visionTaxonomy.get(index)})).filter(x=>x.row&&Number.isFinite(x.score)).sort((a,b)=>b.score-a.score).slice(0,24);
-    const details=await Promise.all(ranked.slice(0,16).map(async x=>({base:x,taxon:await taxonDetailById(x.row.taxonId)})));
-    let animals=details.filter(x=>x.taxon&&x.taxon.iconic_taxon_name==='Animalia').slice(0,5);
-    if(!animals.length)animals=details.filter(x=>x.taxon).slice(0,5);
-    const topScore=animals[0]?.base.score||0,secondScore=animals[1]?.base.score||0;
-    state.visionCandidates=animals.map((x,i)=>{const t=x.taxon,ci=confidenceInfo(x.base.score,topScore,secondScore);return {taxonId:t.id,common:cap(t.preferred_common_name||t.name),scientific:t.name,rank:t.rank||'',photo:t.default_photo?.medium_url||t.default_photo?.square_url||'',score:x.base.score,confidence:ci,index:i}})
-    renderVisionCandidates();
+    let detection=null;
+    if(state.objectDetector){
+      try{
+        const det=await state.objectDetector.detect(img,20,.18);
+        detection=(det||[]).filter(x=>GENERAL_ANIMAL_CLASSES.has(x.class)).sort((a,b)=>b.score-a.score)[0]||null
+      }catch(e){console.warn('object detection failed',e)}
+    }
+    const candidates=[];
+    if(detection){
+      const mapped=GENERAL_TAXA[detection.class];
+      if(mapped)candidates.push({...mapped,rank:'',photo:'',score:detection.score,confidence:confidenceInfo(detection.score,detection.score,0),source:'Detector geral',scoreLabel:'Detecção'})
+    }
+    if(state.visionModel&&state.visionTaxonomy?.byLeaf?.size){
+      try{
+        const inputInfo=state.visionModel.inputs?.[0],shape=inputInfo?.shape||[1,299,299,3],canvas=makeModelCanvas(img,detection?.bbox,shape[2]||299,shape[1]||299);
+        let input=tf.browser.fromPixels(canvas).toFloat().expandDims(0);
+        const out=state.visionModel.predict(input),tensor=getOutputTensor(out);if(!tensor)throw new Error('Saída do modelo indisponível');
+        const scores=Array.from(tensor.dataSync());input.dispose();if(out?.dispose)out.dispose();else Object.values(out||{}).forEach(t=>t?.dispose?.());
+        const ranked=scores.map((score,index)=>({score,index,row:state.visionTaxonomy.byLeaf.get(index)}))
+          .filter(x=>x.row&&Number.isFinite(x.score)&&(state.visionTaxonomy.animalLeafs.size===0||state.visionTaxonomy.animalLeafs.has(x.index)))
+          .sort((a,b)=>b.score-a.score).slice(0,8);
+        const topScore=ranked[0]?.score||0,secondScore=ranked[1]?.score||0;
+        for(const x of ranked.slice(0,5)){
+          const ci=confidenceInfo(x.score,topScore,secondScore);
+          candidates.push({taxonId:x.row.taxonId,common:x.row.name,scientific:x.row.name,rank:'',photo:'',score:x.score,confidence:ci,source:'iNaturalist Small',scoreLabel:'Score visual'})
+        }
+      }catch(e){console.warn('iNaturalist inference failed',e)}
+    }
+    const dedup=[...new Map(candidates.map(x=>[(x.taxonId||x.scientific),x])).values()]
+      .sort((a,b)=>((b.source==='Detector geral'?1:0)-(a.source==='Detector geral'?1:0))||(b.score-a.score)).slice(0,5);
+    state.visionCandidates=await Promise.all(dedup.map(enrichVisionCandidate));
+    renderVisionCandidates(detection);
   }catch(e){
-    console.error('Vision inference failed',e);$('candidateGrid').innerHTML='<div class="empty-note">Não consegui executar o reconhecimento visual agora. Você ainda pode usar a busca manual abaixo.</div>';$('visionResults').hidden=false;setVisionStatus('O reconhecimento visual falhou nesta tentativa. O restante do Fauna continua funcionando.','warn')
+    console.error('Vision inference failed',e);$('candidateGrid').innerHTML='<div class="empty-note">Não consegui executar o reconhecimento visual agora. Você ainda pode usar a busca manual.</div>';$('visionResults').hidden=false;setVisionStatus('O reconhecimento visual falhou nesta tentativa. O restante do Fauna continua funcionando.','warn')
   }finally{$('visionAnalyzing').hidden=true}
 }
-function renderVisionCandidates(){
+function renderVisionCandidates(detection=null){
   const g=$('candidateGrid'),items=state.visionCandidates;
-  if(!items.length){g.innerHTML='<div class="empty-note">O modelo não encontrou um candidato confiável entre as classes que conhece. Tente outra foto ou use a busca manual.</div>';$('visionResults').hidden=false;return}
-  g.innerHTML=items.map((x,i)=>'<article class="candidate-card '+(i===0?'top':'')+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="candidate-body"><b>'+x.common+'</b><em>'+x.scientific+'</em><small style="color:#81998c">'+(x.rank||'táxon')+'</small><div class="score-row"><div class="score-bar"><div class="score-fill" style="width:'+x.confidence.pct.toFixed(1)+'%"></div></div><span class="score-value">'+x.confidence.pct.toFixed(1)+'%</span></div><span class="confidence '+x.confidence.cls+'">Confiança '+x.confidence.label+'</span><button data-confirm-vision="'+i+'">Confirmar e registrar</button></div></article>').join('');
+  if(!items.length){g.innerHTML='<div class="empty-note">Não encontrei um candidato útil. Tente enquadrar apenas o animal, aproximar mais a câmera ou escolher outra foto.</div>';$('visionResults').hidden=false;return}
+  g.innerHTML=items.map((x,i)=>'<article class="candidate-card '+(i===0?'top':'')+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="candidate-body"><b>'+x.common+'</b><em>'+x.scientific+'</em><small style="color:#81998c">'+(x.source||'modelo visual')+(x.rank?' · '+x.rank:'')+'</small><div class="score-row"><div class="score-bar"><div class="score-fill" style="width:'+x.confidence.pct.toFixed(1)+'%"></div></div><span class="score-value">'+x.confidence.pct.toFixed(1)+'%</span></div><span class="confidence '+x.confidence.cls+'">'+(x.scoreLabel||'Confiança')+' · '+x.confidence.label+'</span><button data-confirm-vision="'+i+'">Confirmar e registrar</button></div></article>').join('');
   g.querySelectorAll('[data-confirm-vision]').forEach(b=>b.onclick=()=>confirmVisionCandidate(items[Number(b.dataset.confirmVision)]));
-  $('visionResults').hidden=false
+  $('visionResults').hidden=false;
+  if(detection&&detection.class==='dog')setVisionStatus('Cachorro detectado pelo detector geral. O iNaturalist foi usado para enriquecer o candidato antes da confirmação.','ok')
 }
 async function confirmVisionCandidate(cand){
-  if(!cand)return;const detail=await taxonDetailById(cand.taxonId);const group=[...(detail?.ancestors||[]),detail].find(x=>x?.rank==='class')?.name||'';
-  saveDiaryData({common:cand.common,scientific:cand.scientific,photo:state.cameraCaptureThumb||cand.photo||'',group,visionScore:Number((cand.score*100).toFixed(1))});
-  closeFeatures();$('q').value=cand.scientific;await search(cand.scientific);updateFoundButton();$('view').scrollIntoView({behavior:'smooth',block:'start'})
+  if(!cand)return;let detail=null;
+  try{detail=cand.taxonId?await taxonDetailById(cand.taxonId):null;if(!detail){const r=await resolve(cand.scientific);detail=await taxon(r.id).catch(()=>r)}}catch{}
+  const group=[...(detail?.ancestors||[]),detail].find(x=>x?.rank==='class')?.name||'';
+  saveDiaryData({common:cap(detail?.preferred_common_name||cand.common),scientific:detail?.name||cand.scientific,photo:state.cameraCaptureThumb||cand.photo||'',group,visionScore:Number((cand.score*100).toFixed(1))});
+  closeFeatures();$('q').value=detail?.name||cand.scientific;await search(detail?.name||cand.scientific);updateFoundButton();$('view').scrollIntoView({behavior:'smooth',block:'start'})
 }
 async function loadNearby(){
   if(!navigator.geolocation){$('nearbyStatus').textContent='Este navegador não oferece localização.';return}
