@@ -111,7 +111,7 @@ from pathlib import Path
 import re
 p=Path('site/nerdora-fauna/index.html')
 s=p.read_text(encoding='utf-8')
-m=re.search(r'<script>([\\s\\S]*?)</script>', s)
+m=re.search(r'<script>([\s\S]*?)</script>', s)
 assert m, 'Nerdora Fauna inline script not found'
 Path('/tmp/nerdora-fauna.js').write_text(m.group(1), encoding='utf-8')
 print('Nerdora Fauna JS extracted for syntax check')
