@@ -116,4 +116,4 @@ assert m, 'Nerdora Fauna inline script not found'
 Path('/tmp/nerdora-fauna.js').write_text(m.group(1), encoding='utf-8')
 print('Nerdora Fauna JS extracted for syntax check')
 PY
-node --check /tmp/nerdora-fauna.js > site/nerdora-fauna/syntax-check.txt 2>&1 || true
+node --check /tmp/nerdora-fauna.js
