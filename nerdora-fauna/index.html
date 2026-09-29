@@ -19,12 +19,13 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 .similar-card{border:1px solid #244234;background:#08150f;border-radius:14px;overflow:hidden;cursor:pointer}.similar-card img{width:100%;aspect-ratio:1;object-fit:cover;background:#153023}.similar-card div{padding:9px}.similar-card b{display:block;font-size:11px}.similar-card em{display:block;color:#78c89d;font-size:9px;margin-top:3px}
 .empty-note{color:#849b8e;padding:14px 2px}.section-note{color:#849b8e;font-size:11px;margin:0 0 12px}
 .vision-status{border:1px solid #2b4b3b;background:#0a1711;border-radius:12px;padding:10px 12px;color:#9fb6aa;font-size:11px;line-height:1.45}.vision-status.ok{border-color:#2d6b49;color:#9ff4c2}.vision-status.warn{border-color:#6e5737;color:#e7c893}.vision-status.error{border-color:#6b3b3b;color:#efb0b0}
+.geo-assist{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:center;border:1px solid #294839;background:#08150f;border-radius:12px;padding:10px}.geo-assist button{border:1px solid #3b5e4b;background:#10271b;color:#d7eee2;border-radius:10px;padding:9px 11px;font-weight:800;cursor:pointer}.geo-assist button.on{background:#173c29;border-color:#4f8a68;color:#aef4ca}.geo-assist small{color:#81998c;line-height:1.4}.geo-chip{display:inline-block;margin-top:5px;border:1px solid #355443;border-radius:999px;padding:4px 7px;font-size:9px;color:#a7c7b7}.geo-chip.hit{border-color:#3f7758;color:#98efbc}.geo-chip.none{border-color:#6a4c3e;color:#d6ae98}.geo-chip.off{border-color:#39493f;color:#82968b}.candidate-card.top.geo-top{box-shadow:0 0 0 2px #55e99b18,0 0 28px #55e99b12}.candidate-subscore{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;font-size:9px;color:#8ea397}.candidate-subscore strong{color:#cbe5d7;font-size:10px}
 .file-label{display:inline-flex;align-items:center;gap:7px;border:1px solid #355443;background:#11271c;color:#d8eee2;padding:10px 12px;border-radius:11px;cursor:pointer}.file-label input{display:none}
 .vision-results{margin-top:16px}.vision-results[hidden]{display:none}.vision-title{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:10px}.vision-title h4{margin:0;font-size:16px}.vision-title small{color:#829b8e}
 .candidate-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.candidate-card{border:1px solid #294839;background:#08150f;border-radius:15px;overflow:hidden;display:flex;flex-direction:column;min-width:0}.candidate-card.top{border-color:#55e99b;box-shadow:0 0 0 2px #55e99b18}.candidate-card img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#153023}.candidate-body{padding:11px;display:flex;flex-direction:column;gap:7px;flex:1}.candidate-card b{font-size:13px}.candidate-card em{font-size:10px;color:#77c79c}.score-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.score-bar{height:7px;border-radius:999px;background:#173024;overflow:hidden;flex:1}.score-fill{height:100%;background:linear-gradient(90deg,#20c77a,#55e99b)}.score-value{font-size:11px;font-weight:900;color:#b9efd0}.confidence{font-size:9px;text-transform:uppercase;letter-spacing:.06em;border:1px solid #355443;border-radius:999px;padding:4px 7px;width:max-content;color:#b3cabd}.confidence.high{border-color:#2d6b49;color:#8cf0b6}.confidence.medium{border-color:#706139;color:#e5cf88}.confidence.low{border-color:#654245;color:#e2aaaa}.candidate-card button{margin-top:auto;border:0;border-radius:10px;background:#2cda84;color:#062114;font-weight:900;padding:9px;cursor:pointer}.vision-note{margin-top:10px;color:#779082;font-size:10px;line-height:1.45}
 .capture-badge{position:absolute;left:10px;top:10px;background:#07100cdd;border:1px solid #315443;border-radius:999px;padding:6px 9px;font-size:10px;color:#bce9d0}.analyzing-overlay{position:absolute;inset:0;background:#04100cdd;display:grid;place-items:center;text-align:center;padding:24px;z-index:3}.analyzing-overlay[hidden]{display:none}.analyzing-overlay .spinner{margin:0 auto 10px}
 
-@media(max-width:780px){header .status{font-size:10px}.card{grid-template-columns:1fr}.photo{min-height:360px}.grid{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}.obs{grid-template-columns:repeat(2,1fr)}.info{padding:24px}.map{height:360px}.mode-grid{grid-template-columns:repeat(2,1fr)}.nearby-grid,.similar-grid,.diary-grid,.badge-grid{grid-template-columns:repeat(2,1fr)}.camera-box{grid-template-columns:1fr}.candidate-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:780px){header .status{font-size:10px}.card{grid-template-columns:1fr}.photo{min-height:360px}.grid{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}.obs{grid-template-columns:repeat(2,1fr)}.info{padding:24px}.map{height:360px}.mode-grid{grid-template-columns:repeat(2,1fr)}.nearby-grid,.similar-grid,.diary-grid,.badge-grid{grid-template-columns:repeat(2,1fr)}.camera-box{grid-template-columns:1fr}.candidate-grid{grid-template-columns:repeat(2,1fr)}.geo-assist{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -50,6 +51,10 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
     <div class="camera-side">
       <p>Fotografe o animal ou escolha uma imagem. O modelo visual gera candidatos reais; depois o Fauna consulta o iNaturalist para mostrar nomes e fotos de referência.</p>
       <div id="visionModelStatus" class="vision-status">O modelo será carregado quando você usar a identificação pela primeira vez.</div>
+      <div class="geo-assist">
+        <button id="visionLocationToggle">📍 Melhorar com localização</button>
+        <small id="visionLocationStatus">Desativada. Se você autorizar, o Fauna usa somente uma coordenada arredondada durante esta sessão para procurar registros próximos e reorganizar candidatos.</small>
+      </div>
       <div class="camera-actions">
         <button class="primary" id="startCamera">Abrir câmera</button>
         <button id="takePhoto" disabled>Capturar e identificar</button>
@@ -63,7 +68,7 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
   <div id="visionResults" class="vision-results" hidden>
     <div class="vision-title"><h4>Candidatos prováveis</h4><small>Compare lado a lado antes de confirmar</small></div>
     <div id="candidateGrid" class="candidate-grid"></div>
-    <div class="vision-note">“Confiança” aqui é um sinal relativo do modelo visual, não uma garantia de identificação. Confirme pela aparência e pela ficha da espécie.</div>
+    <div class="vision-note">O score visual continua sendo mostrado separadamente. Quando a localização está ativa, “evidência regional” significa registros observados próximos no iNaturalist — não prova que a espécie só exista ou não exista naquela região.</div>
   </div>
 </section>
 
@@ -100,7 +105,7 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 <div class="foot">Nerdora Fauna · preview online para validação das APIs · dados podem variar entre fontes.</div>
 </div>
 <script>
-const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[],objectDetector:null};
+const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[],objectDetector:null,visionLocation:null,visionLocationEnabled:false,visionGeoRadius:150};
 const SRC={inat:['iNaturalist','https://www.inaturalist.org'],gbif:['GBIF','https://www.gbif.org'],wiki:['Wikipedia/Wikimedia','https://pt.wikipedia.org'],globi:['GloBI','https://www.globalbioticinteractions.org']};
 const randomPool=['Panthera onca','Hydrochoerus hydrochaeris','Harpia harpyja','Balaenoptera musculus','Chrysocyon brachyurus','Myrmecophaga tridactyla','Orcinus orca','Loxodonta africana','Ursus maritimus','Ateles geoffroyi','Panthera leo','Panthera tigris','Gorilla gorilla','Ailuropoda melanoleuca','Giraffa camelopardalis','Crocodylus niloticus','Chelonia mydas','Ara ararauna','Phoenicopterus roseus','Canis lupus'];
 const localCatalog=[
@@ -293,6 +298,68 @@ function confidenceInfo(score,topScore,secondScore){
 }
 function getOutputTensor(out){if(out?.dataSync)return out;const vals=Object.values(out||{});return vals.find(x=>x?.dataSync)||null}
 async function taxonDetailById(id){try{const j=await json('https://api.inaturalist.org/v1/taxa/'+id+'?locale=pt-BR',{},7000);return j.results?.[0]||null}catch{return null}}
+function updateVisionLocationUI(){
+  const b=$('visionLocationToggle'),s=$('visionLocationStatus');if(!b||!s)return;
+  b.classList.toggle('on',!!state.visionLocationEnabled);
+  if(state.visionLocationEnabled&&state.visionLocation){
+    b.textContent='📍 Localização ativa';
+    s.textContent='Ativa nesta sessão. Consulta regional com coordenada arredondada e raio de '+state.visionGeoRadius+' km. A posição não é salva no Diário.'
+  }else{
+    b.textContent='📍 Melhorar com localização';
+    s.textContent='Desativada. Se você autorizar, o Fauna usa somente uma coordenada arredondada durante esta sessão para procurar registros próximos e reorganizar candidatos.'
+  }
+}
+function getVisionLocation(){
+  return new Promise((resolve,reject)=>{
+    if(!navigator.geolocation)return reject(new Error('Geolocalização indisponível'));
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        const lat=Math.round(pos.coords.latitude*10)/10,lng=Math.round(pos.coords.longitude*10)/10;
+        resolve({lat,lng,accuracy:pos.coords.accuracy||null})
+      },
+      err=>reject(err),
+      {enableHighAccuracy:false,timeout:8000,maximumAge:300000}
+    )
+  })
+}
+async function toggleVisionLocation(){
+  if(state.visionLocationEnabled){
+    state.visionLocationEnabled=false;state.visionLocation=null;updateVisionLocationUI();
+    if(state.visionCandidates.length){
+      state.visionCandidates.forEach(x=>{delete x.region;delete x.regionScore;delete x.combinedScore});
+      state.visionCandidates.sort((a,b)=>(a.originalIndex??999)-(b.originalIndex??999));renderVisionCandidates()
+    }
+    return
+  }
+  const b=$('visionLocationToggle'),s=$('visionLocationStatus');b.disabled=true;s.textContent='Solicitando permissão de localização…';
+  try{
+    state.visionLocation=await getVisionLocation();state.visionLocationEnabled=true;updateVisionLocationUI();
+    if(state.visionCandidates.length){s.textContent='Localização obtida. Recalculando evidência regional…';await applyRegionalEvidence();renderVisionCandidates()}
+  }catch(e){
+    state.visionLocationEnabled=false;state.visionLocation=null;b.classList.remove('on');b.textContent='📍 Melhorar com localização';s.textContent='Localização não autorizada ou indisponível. A identificação visual continua funcionando normalmente.'
+  }finally{b.disabled=false}
+}
+async function regionalObservationEvidence(cand){
+  if(!state.visionLocationEnabled||!state.visionLocation||!cand.taxonId)return {count:null,score:null};
+  try{
+    const {lat,lng}=state.visionLocation,r=state.visionGeoRadius;
+    const u='https://api.inaturalist.org/v1/observations?taxon_id='+encodeURIComponent(cand.taxonId)+'&lat='+lat+'&lng='+lng+'&radius='+r+'&quality_grade=research&per_page=1';
+    const j=await json(u,{},7000),count=Number(j.total_results||0);
+    const score=Math.min(1,Math.log1p(count)/Math.log(31));
+    return {count,score}
+  }catch{return {count:null,score:null}}
+}
+async function applyRegionalEvidence(){
+  if(!state.visionLocationEnabled||!state.visionLocation||!state.visionCandidates.length)return;
+  const topVisual=Math.max(...state.visionCandidates.map(x=>Number(x.score)||0),.000001);
+  const ev=await Promise.all(state.visionCandidates.map(regionalObservationEvidence));
+  state.visionCandidates=state.visionCandidates.map((x,i)=>{
+    const region=ev[i],visualNorm=Math.max(0,Math.min(1,(Number(x.score)||0)/topVisual));
+    const regionScore=region.score;
+    const combinedScore=regionScore==null?visualNorm:(visualNorm*.76+regionScore*.24);
+    return {...x,region,regionScore,combinedScore}
+  }).sort((a,b)=>(b.combinedScore??0)-(a.combinedScore??0))
+}
 async function enrichVisionCandidate(cand){
   try{
     let t=null;
@@ -347,7 +414,8 @@ async function runVisionRecognition(){
     }
     const dedup=[...new Map(candidates.map(x=>[(x.taxonId||x.scientific),x])).values()]
       .sort((a,b)=>((b.source==='Detector geral'?1:0)-(a.source==='Detector geral'?1:0))||(b.score-a.score)).slice(0,5);
-    state.visionCandidates=await Promise.all(dedup.map(enrichVisionCandidate));
+    state.visionCandidates=(await Promise.all(dedup.map(enrichVisionCandidate))).map((x,i)=>({...x,originalIndex:i}));
+    if(state.visionLocationEnabled&&state.visionLocation)await applyRegionalEvidence();
     renderVisionCandidates(detection);
   }catch(e){
     console.error('Vision inference failed',e);$('candidateGrid').innerHTML='<div class="empty-note">Não consegui executar o reconhecimento visual agora. Você ainda pode usar a busca manual.</div>';$('visionResults').hidden=false;setVisionStatus('O reconhecimento visual falhou nesta tentativa. O restante do Fauna continua funcionando.','warn')
@@ -356,10 +424,17 @@ async function runVisionRecognition(){
 function renderVisionCandidates(detection=null){
   const g=$('candidateGrid'),items=state.visionCandidates;
   if(!items.length){g.innerHTML='<div class="empty-note">Não encontrei um candidato útil. Tente enquadrar apenas o animal, aproximar mais a câmera ou escolher outra foto.</div>';$('visionResults').hidden=false;return}
-  g.innerHTML=items.map((x,i)=>'<article class="candidate-card '+(i===0?'top':'')+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="candidate-body"><b>'+x.common+'</b><em>'+x.scientific+'</em><small style="color:#81998c">'+(x.source||'modelo visual')+(x.rank?' · '+x.rank:'')+'</small><div class="score-row"><div class="score-bar"><div class="score-fill" style="width:'+x.confidence.pct.toFixed(1)+'%"></div></div><span class="score-value">'+x.confidence.pct.toFixed(1)+'%</span></div><span class="confidence '+x.confidence.cls+'">'+(x.scoreLabel||'Confiança')+' · '+x.confidence.label+'</span><button data-confirm-vision="'+i+'">Confirmar e registrar</button></div></article>').join('');
+  g.innerHTML=items.map((x,i)=>{
+    const visualPct=Math.max(0,Math.min(100,(Number(x.score)||0)*100));
+    const regionCount=x.region?.count,regionScore=x.regionScore,combined=x.combinedScore;
+    const geoText=regionCount==null?'Localização não usada':regionCount>0?regionCount.toLocaleString('pt-BR')+' registro(s) em até '+state.visionGeoRadius+' km':'Nenhum registro próximo na amostra';
+    const geoClass=regionCount==null?'off':regionCount>0?'hit':'none';
+    return '<article class="candidate-card '+(i===0?'top ':'')+(i===0&&state.visionLocationEnabled?'geo-top':'')+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="candidate-body"><b>'+x.common+'</b><em>'+x.scientific+'</em><small style="color:#81998c">'+(x.source||'modelo visual')+(x.rank?' · '+x.rank:'')+'</small><div class="candidate-subscore"><span>Visão</span><strong>'+visualPct.toFixed(1)+'%</strong></div><div class="score-row"><div class="score-bar"><div class="score-fill" style="width:'+visualPct.toFixed(1)+'%"></div></div><span class="score-value">'+(combined!=null?(combined*100).toFixed(1)+'%':'')+'</span></div><span class="geo-chip '+geoClass+'">📍 '+geoText+'</span>'+(combined!=null?'<div class="candidate-subscore"><span>Compatibilidade visão + região</span><strong>'+(combined*100).toFixed(1)+'%</strong></div>':'')+'<span class="confidence '+x.confidence.cls+'">'+(x.scoreLabel||'Confiança')+' · '+x.confidence.label+'</span><button data-confirm-vision="'+i+'">Confirmar e registrar</button></div></article>'
+  }).join('');
   g.querySelectorAll('[data-confirm-vision]').forEach(b=>b.onclick=()=>confirmVisionCandidate(items[Number(b.dataset.confirmVision)]));
   $('visionResults').hidden=false;
-  if(detection&&detection.class==='dog')setVisionStatus('Cachorro detectado pelo detector geral. O iNaturalist foi usado para enriquecer o candidato antes da confirmação.','ok')
+  if(detection&&detection.class==='dog'&&!state.visionLocationEnabled)setVisionStatus('Cachorro detectado pelo detector geral. Ative a localização se quiser acrescentar evidência regional.','ok');
+  else if(state.visionLocationEnabled)setVisionStatus('Candidatos reorganizados com visão + registros regionais do iNaturalist.','ok')
 }
 async function confirmVisionCandidate(cand){
   if(!cand)return;let detail=null;
@@ -411,7 +486,7 @@ document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{$('q').valu
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.tab).classList.add('on')});
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{const p=$(b.dataset.close);if(p)p.hidden=true;if(b.dataset.close==='cameraPanel')stopCamera()});
 $('modeIdentify').onclick=()=>{openFeature('cameraPanel');ensureVisionModel().catch(()=>{})};$('modeExplore').onclick=()=>{$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('modeNearby').onclick=()=>openFeature('nearbyPanel');$('modeDiary').onclick=()=>openFeature('diaryPanel');
-$('startCamera').onclick=startCamera;$('takePhoto').onclick=takeCameraPhoto;$('analyzePhoto').onclick=runVisionRecognition;$('visionFile').onchange=e=>loadVisionFile(e.target.files?.[0]);$('cameraToSearch').onclick=()=>{stopCamera();$('cameraPanel').hidden=true;$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('loadNearby').onclick=loadNearby;$('found').onclick=saveEncounter;
+$('visionLocationToggle').onclick=toggleVisionLocation;updateVisionLocationUI();$('startCamera').onclick=startCamera;$('takePhoto').onclick=takeCameraPhoto;$('analyzePhoto').onclick=runVisionRecognition;$('visionFile').onchange=e=>loadVisionFile(e.target.files?.[0]);$('cameraToSearch').onclick=()=>{stopCamera();$('cameraPanel').hidden=true;$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('loadNearby').onclick=loadNearby;$('found').onclick=saveEncounter;
 $('again').onclick=()=>{const left=randomPool.filter(x=>!state.seen.has(x));if(!left.length){$('again').disabled=true;$('again').textContent='✓ Todos vistos nesta sessão';return}const q=left[Math.floor(Math.random()*left.length)];$('q').value=q;search(q)};
 $('terra').onclick=()=>{document.querySelector('[data-tab="habitat"]').click();$('view').scrollIntoView({behavior:'smooth',block:'start'})};
 renderDiary();$('q').value='onça-pintada';search('onça-pintada');
