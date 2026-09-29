@@ -4,6 +4,7 @@ set -euo pipefail
 rm -rf site extracted
 mkdir -p site extracted
 cp web-pwa-src/* site/
+cp -R nerdora-fauna site/nerdora-fauna
 
 TAR="QuizNerdora-Android-v0.13.0.tar.gz"
 if compgen -G "web-transfer/tar.b64.part.*" > /dev/null; then
