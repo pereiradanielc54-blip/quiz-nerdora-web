@@ -24,6 +24,7 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 .vision-results{margin-top:16px}.vision-results[hidden]{display:none}.vision-title{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:10px}.vision-title h4{margin:0;font-size:16px}.vision-title small{color:#829b8e}
 .candidate-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.candidate-card{border:1px solid #294839;background:#08150f;border-radius:15px;overflow:hidden;display:flex;flex-direction:column;min-width:0}.candidate-card.top{border-color:#55e99b;box-shadow:0 0 0 2px #55e99b18}.candidate-card img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#153023}.candidate-body{padding:11px;display:flex;flex-direction:column;gap:7px;flex:1}.candidate-card b{font-size:13px}.candidate-card em{font-size:10px;color:#77c79c}.score-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.score-bar{height:7px;border-radius:999px;background:#173024;overflow:hidden;flex:1}.score-fill{height:100%;background:linear-gradient(90deg,#20c77a,#55e99b)}.score-value{font-size:11px;font-weight:900;color:#b9efd0}.confidence{font-size:9px;text-transform:uppercase;letter-spacing:.06em;border:1px solid #355443;border-radius:999px;padding:4px 7px;width:max-content;color:#b3cabd}.confidence.high{border-color:#2d6b49;color:#8cf0b6}.confidence.medium{border-color:#706139;color:#e5cf88}.confidence.low{border-color:#654245;color:#e2aaaa}.candidate-card button{margin-top:auto;border:0;border-radius:10px;background:#2cda84;color:#062114;font-weight:900;padding:9px;cursor:pointer}.vision-note{margin-top:10px;color:#779082;font-size:10px;line-height:1.45}
 .capture-badge{position:absolute;left:10px;top:10px;background:#07100cdd;border:1px solid #315443;border-radius:999px;padding:6px 9px;font-size:10px;color:#bce9d0}.analyzing-overlay{position:absolute;inset:0;background:#04100cdd;display:grid;place-items:center;text-align:center;padding:24px;z-index:3}.analyzing-overlay[hidden]{display:none}.analyzing-overlay .spinner{margin:0 auto 10px}
+.photo-session{margin-top:12px;border:1px solid #294839;background:#08150f;border-radius:14px;padding:12px}.photo-session-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.photo-session-head b{font-size:12px}.photo-counter{font-size:10px;color:#9ff4c2;border:1px solid #35694c;border-radius:999px;padding:4px 8px}.photo-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.photo-slot{position:relative;border:1px dashed #355443;border-radius:11px;aspect-ratio:1;overflow:hidden;background:#0b1b13;display:grid;place-items:center;color:#5f786a;font-size:20px}.photo-slot.filled{border-style:solid}.photo-slot img{width:100%;height:100%;object-fit:cover}.photo-slot span{position:absolute;left:5px;top:5px;background:#05100bcc;border:1px solid #315443;border-radius:999px;padding:3px 6px;font-size:8px;color:#d6eee1}.photo-slot button{position:absolute;right:4px;top:4px;width:23px;height:23px;border-radius:50%;border:1px solid #604846;background:#1b0e0ecc;color:#ffd4d4;padding:0}.photo-session-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.photo-session-actions button{border:1px solid #355443;background:#11271c;color:#d8eee2;padding:9px 11px;border-radius:10px}.photo-session-actions button.primary{background:#1bc879;color:#062114;border-color:#1bc879;font-weight:900}.photo-session-actions button:disabled{opacity:.45}.multi-note{color:#789184;font-size:10px;line-height:1.45;margin-top:8px}.multi-evidence{display:inline-block;margin-top:5px;border:1px solid #4a6958;border-radius:999px;padding:4px 7px;font-size:9px;color:#bee6d0}
 
 @media(max-width:780px){header .status{font-size:10px}.card{grid-template-columns:1fr}.photo{min-height:360px}.grid{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}.obs{grid-template-columns:repeat(2,1fr)}.info{padding:24px}.map{height:360px}.mode-grid{grid-template-columns:repeat(2,1fr)}.nearby-grid,.similar-grid,.diary-grid,.badge-grid{grid-template-columns:repeat(2,1fr)}.camera-box{grid-template-columns:1fr}.candidate-grid{grid-template-columns:repeat(2,1fr)}.geo-assist{grid-template-columns:1fr}}
 </style>
@@ -58,9 +59,19 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
       <div class="camera-actions">
         <button class="primary" id="startCamera">Abrir câmera</button>
         <button id="takePhoto" disabled>Capturar e identificar</button>
-        <label class="file-label">🖼️ Escolher foto<input id="visionFile" type="file" accept="image/*"></label>
+        <label class="file-label">🖼️ Escolher fotos<input id="visionFile" type="file" accept="image/*" multiple></label>
         <button id="analyzePhoto" disabled>Analisar novamente</button>
         <button id="cameraToSearch">Não encontrou? Buscar manualmente</button>
+      </div>
+      <div class="photo-session">
+        <div class="photo-session-head"><b>📸 Fotos do mesmo animal</b><span class="photo-counter" id="visionPhotoCounter">0 / 4</span></div>
+        <div class="photo-strip" id="visionPhotoStrip"></div>
+        <div class="photo-session-actions">
+          <button id="addVisionPhoto" disabled>+ Outro ângulo</button>
+          <button class="primary" id="combineVisionPhotos" disabled>Combinar identificação</button>
+          <button id="clearVisionPhotos" disabled>Limpar</button>
+        </div>
+        <div class="multi-note">Use de 2 a 4 fotos do mesmo animal, de preferência em ângulos diferentes. Cada foto é analisada separadamente e o Fauna cruza os resultados antes de ordenar os candidatos.</div>
       </div>
       <small class="privacy">A análise é feita no próprio navegador. O detector geral reconhece categorias comuns como cachorro, gato e aves; o modelo público do iNaturalist tenta refinar a identificação. A foto não é enviada ao iNaturalist para reconhecimento.</small>
     </div>
@@ -105,7 +116,7 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 <div class="foot">Nerdora Fauna · preview online para validação das APIs · dados podem variar entre fontes.</div>
 </div>
 <script>
-const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[],objectDetector:null,visionLocation:null,visionLocationEnabled:false,visionGeoRadius:150};
+const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[],objectDetector:null,visionLocation:null,visionLocationEnabled:false,visionGeoRadius:150,visionPhotos:[],visionPhotoMax:4,visionAnalyzingBatch:false};
 const SRC={inat:['iNaturalist','https://www.inaturalist.org'],gbif:['GBIF','https://www.gbif.org'],wiki:['Wikipedia/Wikimedia','https://pt.wikipedia.org'],globi:['GloBI','https://www.globalbioticinteractions.org']};
 const randomPool=['Panthera onca','Hydrochoerus hydrochaeris','Harpia harpyja','Balaenoptera musculus','Chrysocyon brachyurus','Myrmecophaga tridactyla','Orcinus orca','Loxodonta africana','Ursus maritimus','Ateles geoffroyi','Panthera leo','Panthera tigris','Gorilla gorilla','Ailuropoda melanoleuca','Giraffa camelopardalis','Crocodylus niloticus','Chelonia mydas','Ara ararauna','Phoenicopterus roseus','Canis lupus'];
 const localCatalog=[
@@ -158,7 +169,7 @@ function writeDiary(rows){try{localStorage.setItem(DIARY_KEY,JSON.stringify(rows
 function isSaved(scientific){return readDiary().some(x=>x.scientific===scientific)}
 function saveDiaryData(entry){
   const rows=readDiary();let row=rows.find(x=>x.scientific===entry.scientific);
-  if(row){row.count=(row.count||1)+1;row.lastSeen=Date.now();row.photo=entry.photo||row.photo||'';row.group=entry.group||row.group||'';if(entry.visionScore!=null)row.visionScore=entry.visionScore}
+  if(row){row.count=(row.count||1)+1;row.lastSeen=Date.now();row.photo=entry.photo||row.photo||'';row.group=entry.group||row.group||'';if(entry.visionScore!=null)row.visionScore=entry.visionScore;if(entry.visionPhotoCount!=null)row.visionPhotoCount=entry.visionPhotoCount}
   else rows.unshift({...entry,count:1,lastSeen:Date.now()});
   writeDiary(rows);renderDiary();
 }
