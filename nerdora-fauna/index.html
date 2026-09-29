@@ -143,8 +143,9 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 </div>
 </div>
 <script>
-const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[],objectDetector:null,visionLocation:null,visionLocationEnabled:false,visionGeoRadius:150,visionPhotos:[],visionPhotoMax:4,visionAnalyzingBatch:false,visionActivePhotoIndex:-1,visionHierarchy:null};
+const $=s=>document.getElementById(s), state={seen:new Set(),animal:null,seq:0,suggestTimer:null,suggestSeq:0,suggestions:[],cameraStream:null,cameraCapture:null,cameraCaptureThumb:null,visionModel:null,visionTaxonomy:null,visionLoading:null,visionCandidates:[],objectDetector:null,visionLocation:null,visionLocationEnabled:false,visionGeoRadius:150,visionPhotos:[],visionPhotoMax:4,visionAnalyzingBatch:false,visionActivePhotoIndex:-1,visionHierarchy:null,pendingFeedback:null};
 const SRC={inat:['iNaturalist','https://www.inaturalist.org'],gbif:['GBIF','https://www.gbif.org'],wiki:['Wikipedia/Wikimedia','https://pt.wikipedia.org'],globi:['GloBI','https://www.globalbioticinteractions.org']};
+const TERRA_URL='https://raw.githack.com/pereiradanielc54-blip/quiz-nerdora-web/nerdora-terra-v0.1/nerdora-terra/index.html';
 const randomPool=['Panthera onca','Hydrochoerus hydrochaeris','Harpia harpyja','Balaenoptera musculus','Chrysocyon brachyurus','Myrmecophaga tridactyla','Orcinus orca','Loxodonta africana','Ursus maritimus','Ateles geoffroyi','Panthera leo','Panthera tigris','Gorilla gorilla','Ailuropoda melanoleuca','Giraffa camelopardalis','Crocodylus niloticus','Chelonia mydas','Ara ararauna','Phoenicopterus roseus','Canis lupus'];
 const localCatalog=[
 ['Onça-pintada','Panthera onca',['onca','jaguar']],['Capivara','Hydrochoerus hydrochaeris',['capivara']],['Harpia','Harpia harpyja',['gavião-real','gaviao real']],['Baleia-azul','Balaenoptera musculus',['baleia azul']],['Lobo-guará','Chrysocyon brachyurus',['lobo guara']],['Tamanduá-bandeira','Myrmecophaga tridactyla',['tamandua']],['Orca','Orcinus orca',['baleia assassina']],['Elefante-africano','Loxodonta africana',['elefante']],['Urso-polar','Ursus maritimus',['urso']],['Macaco-aranha-de-Geoffroy','Ateles geoffroyi',['macaco aranha']],['Leão','Panthera leo',['leao']],['Tigre','Panthera tigris',['tigre']],['Gorila','Gorilla gorilla',['gorila']],['Panda-gigante','Ailuropoda melanoleuca',['panda']],['Girafa','Giraffa camelopardalis',['girafa']],['Crocodilo-do-Nilo','Crocodylus niloticus',['crocodilo']],['Tartaruga-verde','Chelonia mydas',['tartaruga marinha']],['Arara-canindé','Ara ararauna',['arara']],['Flamingo','Phoenicopterus roseus',['flamingo']],['Lobo-cinzento','Canis lupus',['lobo']],['Guepardo','Acinonyx jubatus',['guepardo']],['Leopardo','Panthera pardus',['leopardo']],['Hipopótamo','Hippopotamus amphibius',['hipopotamo']],['Rinoceronte-branco','Ceratotherium simum',['rinoceronte']],['Coala','Phascolarctos cinereus',['coala']],['Canguru-vermelho','Osphranter rufus',['canguru']],['Águia-careca','Haliaeetus leucocephalus',['aguia']],['Pinguim-imperador','Aptenodytes forsteri',['pinguim']],['Tubarão-branco','Carcharodon carcharias',['tubarao']],['Golfinho-nariz-de-garrafa','Tursiops truncatus',['golfinho']]
@@ -194,23 +195,74 @@ const DIARY_KEY='nerdoraFaunaDiaryV1';
 function readDiary(){try{return JSON.parse(localStorage.getItem(DIARY_KEY)||'[]')}catch{return []}}
 function writeDiary(rows){try{localStorage.setItem(DIARY_KEY,JSON.stringify(rows))}catch{}}
 function isSaved(scientific){return readDiary().some(x=>x.scientific===scientific)}
+function makeEncounter(entry){
+  return {
+    id:'enc_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7),
+    date:Date.now(),
+    photo:entry.photo||'',
+    location:entry.location||null,
+    method:entry.method||'manual',
+    score:entry.visionScore??null,
+    photoCount:entry.visionPhotoCount||1,
+    confirmedByUser:entry.confirmedByUser!==false,
+    feedback:null,
+    identifiedRank:entry.identifiedRank||'species',
+    partialIdentification:!!entry.partialIdentification
+  }
+}
+function normalizeDiaryRow(row){
+  if(Array.isArray(row.encounters))return row;
+  const encounter=makeEncounter({photo:row.photo,visionScore:row.visionScore,visionPhotoCount:row.visionPhotoCount,identifiedRank:row.identifiedRank,partialIdentification:row.partialIdentification,method:row.visionScore!=null?'legacy-vision':'legacy-manual'});
+  encounter.date=row.lastSeen||Date.now();
+  return {...row,encounters:[encounter],count:row.count||1,lastSeen:row.lastSeen||encounter.date}
+}
+function readDiary(){try{return (JSON.parse(localStorage.getItem(DIARY_KEY)||'[]')||[]).map(normalizeDiaryRow)}catch{return []}}
 function saveDiaryData(entry){
-  const rows=readDiary();let row=rows.find(x=>x.scientific===entry.scientific);
-  if(row){row.count=(row.count||1)+1;row.lastSeen=Date.now();row.photo=entry.photo||row.photo||'';row.group=entry.group||row.group||'';if(entry.visionScore!=null)row.visionScore=entry.visionScore;if(entry.visionPhotoCount!=null)row.visionPhotoCount=entry.visionPhotoCount;if(entry.identifiedRank)row.identifiedRank=entry.identifiedRank;if(entry.partialIdentification!=null)row.partialIdentification=entry.partialIdentification}
-  else rows.unshift({...entry,count:1,lastSeen:Date.now()});
+  const rows=readDiary();let row=rows.find(x=>x.scientific===entry.scientific);const encounter=makeEncounter(entry);
+  if(row){
+    row.encounters=row.encounters||[];row.encounters.unshift(encounter);row.count=(row.count||0)+1;row.lastSeen=encounter.date;row.photo=entry.photo||row.photo||'';row.group=entry.group||row.group||'';row.common=entry.common||row.common;
+    if(entry.visionScore!=null)row.visionScore=entry.visionScore;if(entry.visionPhotoCount!=null)row.visionPhotoCount=entry.visionPhotoCount;if(entry.identifiedRank)row.identifiedRank=entry.identifiedRank;if(entry.partialIdentification!=null)row.partialIdentification=entry.partialIdentification
+  }else{
+    row={...entry,count:1,lastSeen:encounter.date,encounters:[encounter]};rows.unshift(row)
+  }
   writeDiary(rows);renderDiary();
+  return {row,encounter}
 }
 function saveEncounter(){
   const a=state.animal;if(!a)return;
-  saveDiaryData({common:a.common,scientific:a.scientific,photo:a.photo||'',group:a.tax?.class||''});
-  updateFoundButton();
+  saveDiaryData({common:a.common,scientific:a.scientific,photo:a.photo||'',group:a.tax?.class||'',method:'manual-profile',confirmedByUser:true,identifiedRank:a.tax?.species?'species':(a.tax?.genus?'genus':'taxon')});
+  updateFoundButton()
 }
 function updateFoundButton(){const b=$('found');if(!b||!state.animal)return;const saved=isSaved(state.animal.scientific);b.classList.toggle('saved',saved);b.textContent=saved?'✓ Encontrado novamente':'✓ Eu encontrei este animal'}
+function latestEncounter(row){return row?.encounters?.[0]||null}
+function fmtLocation(loc){return loc&&Number.isFinite(loc.lat)&&Number.isFinite(loc.lng)?loc.lat.toFixed(1)+', '+loc.lng.toFixed(1):'Não registrada'}
+function methodLabel(m){return ({'hierarchical-auto':'IA por níveis','manual-candidate':'Candidato confirmado','manual-profile':'Registro manual','legacy-vision':'IA (registro antigo)','legacy-manual':'Manual (registro antigo)'})[m]||m||'Não informado'}
+function openTerraForEncounter(row,enc){
+  const loc=enc?.location;if(!loc){alert('Este encontro não possui localização aproximada salva.');return}
+  const p=new URLSearchParams({modo:'fauna',scientificName:row.scientific,commonName:row.common||row.scientific,lat:String(loc.lat),lng:String(loc.lng),radius:'50'});
+  window.open(TERRA_URL+'?'+p.toString(),'_blank','noopener')
+}
 function renderDiary(){
-  const rows=readDiary();const grid=$('diaryGrid');if(!grid)return;
-  grid.innerHTML=rows.length?rows.map(x=>'<div class="diary-card" data-species="'+x.scientific.replace(/"/g,'&quot;')+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="meta"><b>'+x.common+'</b><em>'+x.scientific+'</em><small>'+x.count+' encontro(s) · último '+new Date(x.lastSeen).toLocaleDateString('pt-BR')+(x.identifiedRank?' · '+rankLabel(x.identifiedRank):'')+'</small></div></div>').join(''):'<div class="empty-note">Seu diário ainda está vazio. Abra uma espécie e toque em “Eu encontrei este animal”.</div>';
-  grid.querySelectorAll('.diary-card').forEach(el=>el.onclick=()=>{closeFeatures();$('q').value=el.dataset.species;search(el.dataset.species)});
-  renderBadges(rows);
+  const rows=readDiary(),grid=$('diaryGrid');if(!grid)return;
+  grid.innerHTML=rows.length?rows.map((x,rowIndex)=>{
+    const e=latestEncounter(x),fb=e?.feedback===true?'✓ IA correta':e?.feedback===false?'✕ IA incorreta':'Sem feedback';
+    return '<div class="diary-card" data-row="'+rowIndex+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="meta"><b>'+x.common+'</b><em>'+x.scientific+'</em><small>'+x.count+' encontro(s) · último '+new Date(x.lastSeen).toLocaleDateString('pt-BR')+(x.identifiedRank?' · '+rankLabel(x.identifiedRank):'')+'</small><div class="entry-meta"><span>📍 '+fmtLocation(e?.location)+'</span><span>🧠 '+methodLabel(e?.method)+' · score '+(e?.score==null?'—':Number(e.score).toFixed(1)+'%')+'</span><span>👤 Confirmado pelo usuário: '+(e?.confirmedByUser?'sim':'não')+' · '+fb+'</span></div><div class="entry-actions"><button data-open-species="'+rowIndex+'">Abrir ficha</button><button data-terra-row="'+rowIndex+'">🌍 Ver no Terra</button></div></div></div>'
+  }).join(''):'<div class="empty-note">Seu diário ainda está vazio. Abra uma espécie e toque em “Eu encontrei este animal”.</div>';
+  grid.querySelectorAll('[data-open-species]').forEach(b=>b.onclick=()=>{const row=rows[Number(b.dataset.openSpecies)];closeFeatures();$('q').value=row.scientific;search(row.scientific)});
+  grid.querySelectorAll('[data-terra-row]').forEach(b=>b.onclick=()=>{const row=rows[Number(b.dataset.terraRow)];openTerraForEncounter(row,latestEncounter(row))});
+  renderDiaryMap(rows);renderBadges(rows)
+}
+function renderDiaryMap(rows){
+  const map=$('diaryMap'),info=$('diaryMapInfo');if(!map||!info)return;
+  const points=[];rows.forEach((row,rowIndex)=>(row.encounters||[]).forEach((enc,encIndex)=>{if(Number.isFinite(enc?.location?.lat)&&Number.isFinite(enc?.location?.lng))points.push({row,rowIndex,enc,encIndex})}));
+  map.innerHTML=points.map((p,i)=>{const x=((p.enc.location.lng+180)/360)*100,y=((90-p.enc.location.lat)/180)*100;return '<button class="diary-pin" data-map-pin="'+i+'" style="left:'+x.toFixed(2)+'%;top:'+y.toFixed(2)+'%" title="'+p.row.common+'"></button>'}).join('');
+  info.textContent=points.length?points.length+' encontro(s) com localização aproximada no mapa.':'Nenhum encontro com localização aproximada ainda.';
+  map.querySelectorAll('[data-map-pin]').forEach(b=>b.onclick=()=>{const p=points[Number(b.dataset.mapPin)];info.innerHTML='<b>'+p.row.common+'</b> · <i>'+p.row.scientific+'</i><br>'+new Date(p.enc.date).toLocaleString('pt-BR')+' · '+fmtLocation(p.enc.location)+'<br>Método: '+methodLabel(p.enc.method)+' · score '+(p.enc.score==null?'—':Number(p.enc.score).toFixed(1)+'%')+'<br><button id="mapTerraBtn" style="margin-top:8px;border:1px solid #355443;background:#10231a;color:#d8eee2;border-radius:9px;padding:8px 10px">🌍 Ver no Terra</button>';setTimeout(()=>{const bt=$('mapTerraBtn');if(bt)bt.onclick=()=>openTerraForEncounter(p.row,p.enc)},0)})
+}
+function setDiaryView(id){
+  document.querySelectorAll('.diary-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.diaryView===id));
+  document.querySelectorAll('.diary-view').forEach(v=>v.hidden=v.id!==id);
+  if(id==='diaryMapView')renderDiaryMap(readDiary())
 }
 function renderBadges(rows){
   const distinct=rows.length,total=rows.reduce((s,x)=>s+(x.count||1),0),mammals=rows.filter(x=>x.group==='Mammalia').length,birds=rows.filter(x=>x.group==='Aves').length;
@@ -223,6 +275,15 @@ function renderBadges(rows){
     ['🔁','Observador fiel','Some 10 encontros no diário',total>=10]
   ];
   $('badgeGrid').innerHTML=badges.map(b=>'<div class="badge-card '+(b[3]?'':'locked')+'"><div class="badge-icon">'+b[0]+'</div><b>'+b[1]+'</b><small>'+b[2]+(b[3]?' · desbloqueada':'')+'</small></div>').join('');
+}
+function showFeedbackPrompt(scientific,encounterId,displayName){
+  state.pendingFeedback={scientific,encounterId};$('feedbackSpecies').textContent=(displayName||scientific)+' · seu feedback fica salvo localmente para medir onde a IA acerta ou erra.';$('feedbackToast').hidden=false
+}
+function saveIdentificationFeedback(value){
+  const p=state.pendingFeedback;if(!p)return;
+  const rows=readDiary(),row=rows.find(x=>x.scientific===p.scientific),enc=row?.encounters?.find(e=>e.id===p.encounterId);
+  if(enc){enc.feedback=value;writeDiary(rows);renderDiary()}
+  $('feedbackToast').hidden=true;state.pendingFeedback=null
 }
 function closeFeatures(){['cameraPanel','nearbyPanel','diaryPanel'].forEach(id=>$(id).hidden=true);stopCamera()}
 function openFeature(id){closeFeatures();$(id).hidden=false;$(id).scrollIntoView({behavior:'smooth',block:'start'});if(id==='diaryPanel')renderDiary()}
@@ -715,6 +776,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))$('su
 document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{$('q').value=b.dataset.q;search(b.dataset.q)});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.tab).classList.add('on')});
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{const p=$(b.dataset.close);if(p)p.hidden=true;if(b.dataset.close==='cameraPanel')stopCamera()});
+document.querySelectorAll('[data-diary-view]').forEach(b=>b.onclick=()=>setDiaryView(b.dataset.diaryView));
+$('feedbackYes').onclick=()=>saveIdentificationFeedback(true);$('feedbackNo').onclick=()=>saveIdentificationFeedback(false);
 $('modeIdentify').onclick=()=>{openFeature('cameraPanel');ensureVisionModel().catch(()=>{})};$('modeExplore').onclick=()=>{$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('modeNearby').onclick=()=>openFeature('nearbyPanel');$('modeDiary').onclick=()=>openFeature('diaryPanel');
 $('visionLocationToggle').onclick=toggleVisionLocation;updateVisionLocationUI();renderVisionPhotoStrip();$('startCamera').onclick=()=>startCamera(false);$('addVisionPhoto').onclick=()=>startCamera(true);$('takePhoto').onclick=takeCameraPhoto;$('analyzePhoto').onclick=runVisionRecognition;$('combineVisionPhotos').onclick=runVisionRecognition;$('clearVisionPhotos').onclick=()=>{stopCamera();resetVisionPhotoSession();$('cameraShot').hidden=true;$('cameraVideo').hidden=false;$('analyzePhoto').disabled=true};$('visionFile').onchange=e=>loadVisionFiles(e.target.files);$('cameraToSearch').onclick=()=>{stopCamera();$('cameraPanel').hidden=true;$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('loadNearby').onclick=loadNearby;$('found').onclick=saveEncounter;
 $('again').onclick=()=>{const left=randomPool.filter(x=>!state.seen.has(x));if(!left.length){$('again').disabled=true;$('again').textContent='✓ Todos vistos nesta sessão';return}const q=left[Math.floor(Math.random()*left.length)];$('q').value=q;search(q)};
