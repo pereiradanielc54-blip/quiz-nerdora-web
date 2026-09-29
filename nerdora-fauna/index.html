@@ -585,8 +585,64 @@ async function runVisionRecognition(){
   for(let i=0;i<state.visionPhotos.length;i++)if(!state.visionPhotos[i].done)await analyzeVisionPhoto(state.visionPhotos[i],i+1);
   await combineVisionPhotoResults();renderVisionPhotoStrip()
 }
+const TAXON_RANKS=['kingdom','phylum','class','order','family','genus','species'];
+const TAXON_THRESHOLDS={kingdom:.50,phylum:.54,class:.58,order:.64,family:.70,genus:.77,species:.86};
+function rankLabel(rank){return ({kingdom:'Reino',phylum:'Filo',class:'Classe',order:'Ordem',family:'Família',genus:'Gênero',species:'Espécie'})[rank]||rank||'Táxon'}
+function candidateEvidence(x){
+  const base=Number(x.combinedScore??x.score??0);
+  return Math.max(.0001,Math.pow(Math.max(0,Math.min(1,base)),2.2))
+}
+function deriveSafeHierarchy(items){
+  let pool=(items||[]).filter(x=>Array.isArray(x.lineage)&&x.lineage.length);
+  if(!pool.length)return null;
+  const path=[];let lastSafe=null;
+  for(const rank of TAXON_RANKS){
+    const groups=new Map(),total=pool.reduce((s,x)=>s+candidateEvidence(x),0)||1;
+    for(const x of pool){
+      const node=x.lineage.find(n=>n.rank===rank);if(!node)continue;
+      const key=String(node.id),w=candidateEvidence(x);
+      if(!groups.has(key))groups.set(key,{node,weight:0,candidates:[]});
+      const g=groups.get(key);g.weight+=w;g.candidates.push(x)
+    }
+    if(!groups.size)continue;
+    const sorted=[...groups.values()].sort((a,b)=>b.weight-a.weight),best=sorted[0],second=sorted[1];
+    const share=best.weight/total,margin=(best.weight-(second?.weight||0))/total,threshold=TAXON_THRESHOLDS[rank]||.7;
+    const topRaw=Math.max(...best.candidates.map(x=>Number(x.combinedScore??x.score??0)));
+    const strongSpecies=rank==='species'&&topRaw>=.78&&margin>=.18;
+    const safe=share>=threshold||strongSpecies;
+    const step={...best.node,support:share,margin,threshold,safe};
+    path.push(step);
+    if(safe){lastSafe=step;pool=best.candidates}else break
+  }
+  if(!lastSafe){
+    const animal={id:1,name:'Animalia',rank:'kingdom',common:'Animais',support:1,margin:1,threshold:.5,safe:true};
+    path.unshift(animal);lastSafe=animal
+  }
+  const possibles=(items||[]).slice(0,4).map(x=>x.scientific).filter(Boolean);
+  return {path,lastSafe,possibles,candidateCount:(items||[]).length}
+}
+function renderHierarchy(){
+  const h=deriveSafeHierarchy(state.visionCandidates);state.visionHierarchy=h;
+  const panel=$('hierarchyPanel');if(!h){panel.hidden=true;return}
+  panel.hidden=false;
+  $('hierarchyTitle').textContent='Identificação segura até '+rankLabel(h.lastSafe.rank)+': '+h.lastSafe.name;
+  $('hierarchySafeLevel').textContent=rankLabel(h.lastSafe.rank);
+  $('hierarchyPath').innerHTML=h.path.map((x,i)=>'<span class="tax-node '+(x.safe?'safe':'uncertain')+'"><small>'+rankLabel(x.rank)+'</small><b>'+x.name+'</b></span>'+(i<h.path.length-1?'<span class="tax-arrow">→</span>':'')).join('');
+  const pct=(h.lastSafe.support*100).toFixed(0);
+  $('hierarchySummary').innerHTML='<strong>'+h.lastSafe.name+'</strong> é o nível mais específico sustentado pela concordância atual entre fotos, modelo visual'+(state.visionLocationEnabled?' e evidência regional':'')+'. Apoio relativo neste nível: <strong>'+pct+'%</strong>.';
+  $('hierarchyHint').textContent=h.lastSafe.rank==='species'?'A espécie atingiu o limiar de segurança.':'O Fauna não força uma espécie abaixo deste nível.';
+  $('hierarchyPossible').textContent=h.lastSafe.rank==='species'?'':('Possibilidades mais específicas continuam apenas para comparação manual: '+h.possibles.join(', ')+'.');
+  $('confirmSafeTaxon').onclick=confirmSafeHierarchy
+}
+async function confirmSafeHierarchy(){
+  const h=state.visionHierarchy;if(!h?.lastSafe)return;
+  const t=h.lastSafe,group=h.path.find(x=>x.rank==='class')?.name||'';
+  saveDiaryData({common:t.common||t.name,scientific:t.name,photo:state.visionPhotos[0]?.cropThumb||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||'',group,visionScore:Number((t.support*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1,identifiedRank:t.rank,partialIdentification:t.rank!=='species'});
+  closeFeatures();$('q').value=t.name;await search(t.name);updateFoundButton();$('view').scrollIntoView({behavior:'smooth',block:'start'})
+}
 function renderVisionCandidates(detection=null){
   const g=$('candidateGrid'),items=state.visionCandidates;
+  renderHierarchy();
   if(!items.length){g.innerHTML='<div class="empty-note">Não encontrei um candidato útil. Tente enquadrar apenas o animal, aproximar mais a câmera ou escolher outra foto.</div>';$('visionResults').hidden=false;return}
   g.innerHTML=items.map((x,i)=>{
     const visualPct=Math.max(0,Math.min(100,(Number(x.score)||0)*100));
@@ -594,7 +650,7 @@ function renderVisionCandidates(detection=null){
     const geoText=regionCount==null?'Localização não usada':regionCount>0?regionCount.toLocaleString('pt-BR')+' registro(s) em até '+state.visionGeoRadius+' km':'Nenhum registro próximo na amostra';
     const geoClass=regionCount==null?'off':regionCount>0?'hit':'none';
     const multiText=(x.photoCount||1)>1?('📸 '+x.support+' de '+x.photoCount+' fotos sustentam este candidato'):('📸 1 foto analisada');
-    return '<article class="candidate-card '+(i===0?'top ':'')+(i===0&&state.visionLocationEnabled?'geo-top':'')+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="candidate-body"><b>'+x.common+'</b><em>'+x.scientific+'</em><small style="color:#81998c">'+(x.source||'modelo visual')+(x.rank?' · '+x.rank:'')+'</small><div class="candidate-subscore"><span>Visão</span><strong>'+visualPct.toFixed(1)+'%</strong></div><div class="score-row"><div class="score-bar"><div class="score-fill" style="width:'+visualPct.toFixed(1)+'%"></div></div><span class="score-value">'+(combined!=null?(combined*100).toFixed(1)+'%':'')+'</span></div><span class="multi-evidence">'+multiText+'</span><span class="geo-chip '+geoClass+'">📍 '+geoText+'</span>'+(combined!=null?'<div class="candidate-subscore"><span>Compatibilidade visão + região</span><strong>'+(combined*100).toFixed(1)+'%</strong></div>':'')+'<span class="confidence '+x.confidence.cls+'">'+(x.scoreLabel||'Confiança')+' · '+x.confidence.label+'</span><button data-confirm-vision="'+i+'">Confirmar e registrar</button></div></article>'
+    return '<article class="candidate-card '+(i===0?'top ':'')+(i===0&&state.visionLocationEnabled?'geo-top':'')+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="candidate-body"><b>'+x.common+'</b><em>'+x.scientific+'</em><small style="color:#81998c">'+(x.source||'modelo visual')+(x.rank?' · '+x.rank:'')+'</small><div class="candidate-subscore"><span>Visão</span><strong>'+visualPct.toFixed(1)+'%</strong></div><div class="score-row"><div class="score-bar"><div class="score-fill" style="width:'+visualPct.toFixed(1)+'%"></div></div><span class="score-value">'+(combined!=null?(combined*100).toFixed(1)+'%':'')+'</span></div><span class="multi-evidence">'+multiText+'</span><span class="geo-chip '+geoClass+'">📍 '+geoText+'</span>'+(combined!=null?'<div class="candidate-subscore"><span>Compatibilidade visão + região</span><strong>'+(combined*100).toFixed(1)+'%</strong></div>':'')+'<span class="confidence '+x.confidence.cls+'">'+(x.scoreLabel||'Confiança')+' · '+x.confidence.label+'</span><button data-confirm-vision="'+i+'">'+(state.visionHierarchy?.lastSafe?.rank==='species'&&state.visionHierarchy?.lastSafe?.id===x.taxonId?'Confirmar e registrar':'Confirmar manualmente')+'</button></div></article>'
   }).join('');
   g.querySelectorAll('[data-confirm-vision]').forEach(b=>b.onclick=()=>confirmVisionCandidate(items[Number(b.dataset.confirmVision)]));
   $('visionResults').hidden=false;
@@ -605,7 +661,7 @@ async function confirmVisionCandidate(cand){
   if(!cand)return;let detail=null;
   try{detail=cand.taxonId?await taxonDetailById(cand.taxonId):null;if(!detail){const r=await resolve(cand.scientific);detail=await taxon(r.id).catch(()=>r)}}catch{}
   const group=[...(detail?.ancestors||[]),detail].find(x=>x?.rank==='class')?.name||'';
-  saveDiaryData({common:cap(detail?.preferred_common_name||cand.common),scientific:detail?.name||cand.scientific,photo:state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||cand.photo||'',group,visionScore:Number((cand.score*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1});
+  saveDiaryData({common:cap(detail?.preferred_common_name||cand.common),scientific:detail?.name||cand.scientific,photo:state.visionPhotos[0]?.cropThumb||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||cand.photo||'',group,visionScore:Number((cand.score*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1,identifiedRank:detail?.rank||cand.rank||'species',partialIdentification:false});
   closeFeatures();$('q').value=detail?.name||cand.scientific;await search(detail?.name||cand.scientific);updateFoundButton();$('view').scrollIntoView({behavior:'smooth',block:'start'})
 }
 async function loadNearby(){
