@@ -18,7 +18,13 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 .camera-box{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.camera-stage{background:#050b08;border:1px solid #294839;border-radius:16px;min-height:260px;overflow:hidden;position:relative}.camera-stage video,.camera-stage img{width:100%;height:100%;min-height:260px;object-fit:cover;display:block}.camera-side{display:flex;flex-direction:column;gap:10px;justify-content:center}.camera-side p{color:#9db0a5;line-height:1.55}.camera-actions{display:flex;gap:8px;flex-wrap:wrap}.camera-actions button{border:1px solid #355443;background:#11271c;color:#d8eee2;padding:10px 12px;border-radius:11px}.camera-actions .primary{background:linear-gradient(135deg,var(--g2),#46de8d);color:#062114;border:0;font-weight:900}.found-btn.saved{background:#173426;color:#9ff4c2;border:1px solid #3d7357}
 .similar-card{border:1px solid #244234;background:#08150f;border-radius:14px;overflow:hidden;cursor:pointer}.similar-card img{width:100%;aspect-ratio:1;object-fit:cover;background:#153023}.similar-card div{padding:9px}.similar-card b{display:block;font-size:11px}.similar-card em{display:block;color:#78c89d;font-size:9px;margin-top:3px}
 .empty-note{color:#849b8e;padding:14px 2px}.section-note{color:#849b8e;font-size:11px;margin:0 0 12px}
-@media(max-width:780px){header .status{font-size:10px}.card{grid-template-columns:1fr}.photo{min-height:360px}.grid{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}.obs{grid-template-columns:repeat(2,1fr)}.info{padding:24px}.map{height:360px}.mode-grid{grid-template-columns:repeat(2,1fr)}.nearby-grid,.similar-grid,.diary-grid,.badge-grid{grid-template-columns:repeat(2,1fr)}.camera-box{grid-template-columns:1fr}}
+.vision-status{border:1px solid #2b4b3b;background:#0a1711;border-radius:12px;padding:10px 12px;color:#9fb6aa;font-size:11px;line-height:1.45}.vision-status.ok{border-color:#2d6b49;color:#9ff4c2}.vision-status.warn{border-color:#6e5737;color:#e7c893}.vision-status.error{border-color:#6b3b3b;color:#efb0b0}
+.file-label{display:inline-flex;align-items:center;gap:7px;border:1px solid #355443;background:#11271c;color:#d8eee2;padding:10px 12px;border-radius:11px;cursor:pointer}.file-label input{display:none}
+.vision-results{margin-top:16px}.vision-results[hidden]{display:none}.vision-title{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:10px}.vision-title h4{margin:0;font-size:16px}.vision-title small{color:#829b8e}
+.candidate-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.candidate-card{border:1px solid #294839;background:#08150f;border-radius:15px;overflow:hidden;display:flex;flex-direction:column;min-width:0}.candidate-card.top{border-color:#55e99b;box-shadow:0 0 0 2px #55e99b18}.candidate-card img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#153023}.candidate-body{padding:11px;display:flex;flex-direction:column;gap:7px;flex:1}.candidate-card b{font-size:13px}.candidate-card em{font-size:10px;color:#77c79c}.score-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.score-bar{height:7px;border-radius:999px;background:#173024;overflow:hidden;flex:1}.score-fill{height:100%;background:linear-gradient(90deg,#20c77a,#55e99b)}.score-value{font-size:11px;font-weight:900;color:#b9efd0}.confidence{font-size:9px;text-transform:uppercase;letter-spacing:.06em;border:1px solid #355443;border-radius:999px;padding:4px 7px;width:max-content;color:#b3cabd}.confidence.high{border-color:#2d6b49;color:#8cf0b6}.confidence.medium{border-color:#706139;color:#e5cf88}.confidence.low{border-color:#654245;color:#e2aaaa}.candidate-card button{margin-top:auto;border:0;border-radius:10px;background:#2cda84;color:#062114;font-weight:900;padding:9px;cursor:pointer}.vision-note{margin-top:10px;color:#779082;font-size:10px;line-height:1.45}
+.capture-badge{position:absolute;left:10px;top:10px;background:#07100cdd;border:1px solid #315443;border-radius:999px;padding:6px 9px;font-size:10px;color:#bce9d0}.analyzing-overlay{position:absolute;inset:0;background:#04100cdd;display:grid;place-items:center;text-align:center;padding:24px;z-index:3}.analyzing-overlay[hidden]{display:none}.analyzing-overlay .spinner{margin:0 auto 10px}
+
+@media(max-width:780px){header .status{font-size:10px}.card{grid-template-columns:1fr}.photo{min-height:360px}.grid{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}.obs{grid-template-columns:repeat(2,1fr)}.info{padding:24px}.map{height:360px}.mode-grid{grid-template-columns:repeat(2,1fr)}.nearby-grid,.similar-grid,.diary-grid,.badge-grid{grid-template-columns:repeat(2,1fr)}.camera-box{grid-template-columns:1fr}.candidate-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -26,7 +32,7 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 <header><div class="brand"><div class="n">N</div><div><b>NERDORA <span>FAUNA</span></b><div style="color:#8da596;font-size:11px;margin-top:3px">Preview online · APIs reais</div></div></div><div class="status" id="net">Pronto para consultar</div></header>
 <section class="hero"><small>CATÁLOGO VIVO</small><h1>Descubra qualquer animal.</h1><p>Esta versão online consulta dados reais em fontes abertas. Se uma fonte falhar, as outras continuam funcionando e a ficha não trava.</p><div class="search-wrap"><form class="search" id="form"><input id="q" autocomplete="off" spellcheck="false" placeholder="Digite um animal: onça, macaco, Panthera..."><button>Explorar</button></form><div id="suggestions" class="suggestions" hidden></div></div><div class="quick"><button data-q="onça-pintada">Onça-pintada</button><button data-q="baleia-azul">Baleia-azul</button><button data-q="harpia">Harpia</button><button data-q="capivara">Capivara</button></div></section>
 <section class="mode-grid" aria-label="Modos do Nerdora Fauna">
-  <button class="mode-card" id="modeIdentify"><span>📷</span><b>Identificar / Registrar</b><small>Use a câmera e confirme a espécie pela busca.</small></button>
+  <button class="mode-card" id="modeIdentify"><span>📷</span><b>Identificar / Registrar</b><small>Câmera com reconhecimento visual e candidatos prováveis.</small></button>
   <button class="mode-card" id="modeExplore"><span>🔎</span><b>Explorar</b><small>Pesquise qualquer animal por nome popular ou científico.</small></button>
   <button class="mode-card" id="modeNearby"><span>🧭</span><b>Fauna perto de mim</b><small>Descubra espécies observadas na sua região.</small></button>
   <button class="mode-card" id="modeDiary"><span>📒</span><b>Meu Diário</b><small>Guarde espécies encontradas e desbloqueie conquistas.</small></button>
@@ -35,12 +41,29 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 <section class="feature-panel" id="cameraPanel" hidden>
   <div class="feature-head"><h3>📷 Identificar / Registrar</h3><button data-close="cameraPanel">Fechar</button></div>
   <div class="camera-box">
-    <div class="camera-stage"><video id="cameraVideo" autoplay playsinline muted></video><img id="cameraShot" alt="Foto capturada" hidden></div>
-    <div class="camera-side">
-      <p>Nesta prévia, a câmera registra o encontro e você confirma a espécie pela busca. Isso evita mostrar uma identificação automática falsa enquanto o modelo visual ainda não está integrado.</p>
-      <div class="camera-actions"><button class="primary" id="startCamera">Abrir câmera</button><button id="takePhoto" disabled>Capturar foto</button><button id="cameraToSearch">Confirmar espécie pela busca</button></div>
-      <small class="privacy">A foto fica apenas nesta sessão do navegador. Ela não é enviada para as APIs do Fauna.</small>
+    <div class="camera-stage">
+      <video id="cameraVideo" autoplay playsinline muted></video>
+      <img id="cameraShot" alt="Foto capturada" hidden>
+      <span class="capture-badge">Modelo visual iNaturalist · público</span>
+      <div id="visionAnalyzing" class="analyzing-overlay" hidden><div><div class="spinner"></div><b>Analisando a imagem…</b><div style="color:#8da596;font-size:11px;margin-top:5px">Comparando com as classes do modelo visual</div></div></div>
     </div>
+    <div class="camera-side">
+      <p>Fotografe o animal ou escolha uma imagem. O modelo visual gera candidatos reais; depois o Fauna consulta o iNaturalist para mostrar nomes e fotos de referência.</p>
+      <div id="visionModelStatus" class="vision-status">O modelo será carregado quando você usar a identificação pela primeira vez.</div>
+      <div class="camera-actions">
+        <button class="primary" id="startCamera">Abrir câmera</button>
+        <button id="takePhoto" disabled>Capturar e identificar</button>
+        <label class="file-label">🖼️ Escolher foto<input id="visionFile" type="file" accept="image/*"></label>
+        <button id="analyzePhoto" disabled>Analisar novamente</button>
+        <button id="cameraToSearch">Não encontrou? Buscar manualmente</button>
+      </div>
+      <small class="privacy">A inferência visual é feita no próprio navegador. A foto não é enviada ao iNaturalist para reconhecimento. O modelo público usado nesta prévia cobre cerca de 500 táxons, então espécies fora dele podem não aparecer.</small>
+    </div>
+  </div>
+  <div id="visionResults" class="vision-results" hidden>
+    <div class="vision-title"><h4>Candidatos prováveis</h4><small>Compare lado a lado antes de confirmar</small></div>
+    <div id="candidateGrid" class="candidate-grid"></div>
+    <div class="vision-note">“Confiança” aqui é um sinal relativo do modelo visual, não uma garantia de identificação. Confirme pela aparência e pela ficha da espécie.</div>
   </div>
 </section>
 
