@@ -299,6 +299,62 @@ body.app-screen-open,body.species-screen-open{overflow:hidden}
 #cameraPanel>.vision-results{margin-bottom:26px}
 @media(max-width:780px){#cameraPanel>.crop-inspector,#cameraPanel>.vision-results{margin-left:12px;margin-right:12px}}
 
+
+/* ===== Camera UX compact ===== */
+.camera-screen-layout{grid-template-columns:minmax(0,.9fr) minmax(320px,.7fr)}
+.camera-screen-main{display:flex;justify-content:center}
+.camera-screen-main>.camera-box{width:min(100%,620px)}
+.camera-stage{
+  width:100%;min-height:0!important;aspect-ratio:4/3;max-height:390px;
+  border-radius:22px;background:
+    radial-gradient(circle at 50% 36%,#1c2d25 0,transparent 36%),
+    linear-gradient(160deg,#08100d,#030604);
+}
+.camera-stage video,.camera-stage>img{
+  width:100%;height:100%;min-height:0!important;position:absolute;inset:0;
+  object-fit:cover;
+}
+.camera-permission{
+  position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:24px;text-align:center;
+  background:radial-gradient(circle at 50% 35%,#6141bb20,transparent 38%),linear-gradient(180deg,#08100de8,#050907f4);
+}
+.camera-permission[hidden]{display:none}
+.camera-permission-card{max-width:330px}
+.camera-permission-icon{width:58px;height:58px;margin:0 auto 12px;border-radius:19px;display:grid;place-items:center;font-size:26px;background:linear-gradient(145deg,#7955dc2d,#24cc7d1b);border:1px solid #886ae13e;box-shadow:0 14px 38px #0006}
+.camera-permission b{display:block;font-size:15px}.camera-permission p{margin:7px auto 13px!important;color:#82978c!important;font-size:10px;line-height:1.5}
+.camera-permission button{border:0;border-radius:12px;padding:11px 15px;background:linear-gradient(135deg,#7a55e4,#5d3ac7 58%,#23c97b);color:white;font-weight:900;cursor:pointer}
+.camera-permission small{display:block;margin-top:9px;color:#60746a;font-size:8px}
+.camera-shutter-wrap{
+  position:absolute;z-index:6;left:50%;bottom:14px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:10px;padding:7px 10px 7px 7px;
+  border:1px solid #ffffff21;border-radius:999px;background:#060b09cc;
+  backdrop-filter:blur(12px);box-shadow:0 10px 28px #0008
+}
+.camera-shutter-wrap[hidden]{display:none}
+.camera-shutter{
+  width:54px;height:54px;padding:0!important;border-radius:50%!important;
+  border:4px solid #ecfff4!important;background:#55e99b!important;
+  box-shadow:inset 0 0 0 5px #07120d,0 0 0 2px #ffffff2e,0 0 22px #55e99b55!important;
+  color:transparent!important;position:relative;cursor:pointer
+}
+.camera-shutter:after{content:"";position:absolute;inset:9px;border-radius:50%;background:#f3fff8}
+.camera-shutter-wrap span{font-size:10px;color:#d9eae1;font-weight:900;white-space:nowrap}
+.camera-stage.camera-live{box-shadow:0 0 0 1px #55e99b26,0 18px 46px #0006}
+.camera-stage.camera-live .capture-badge{top:9px}
+.camera-error{color:#efa9a9!important}
+.camera-actions #startCamera,.camera-actions #takePhoto{display:none}
+
+@media(max-width:900px){
+  .camera-screen-main>.camera-box{width:min(100%,560px)}
+  .camera-stage{max-height:350px}
+}
+@media(max-width:780px){
+  .camera-stage{aspect-ratio:4/3;min-height:0!important;max-height:330px}
+  .camera-stage video,.camera-stage>img{min-height:0!important}
+  .camera-shutter{width:50px;height:50px}
+  .camera-shutter-wrap{bottom:10px}
+}
+
 </style>
 </head>
 <body>
@@ -361,10 +417,23 @@ body.app-screen-open,body.species-screen-open{overflow:hidden}
     <div class="camera-screen-layout">
       <div class="camera-screen-main">
         <div class="camera-box">
-    <div class="camera-stage">
-      <video id="cameraVideo" autoplay playsinline muted></video>
+    <div class="camera-stage" id="cameraStage">
+      <video id="cameraVideo" autoplay playsinline muted hidden></video>
       <img id="cameraShot" alt="Foto capturada" hidden>
       <span class="capture-badge">Visão híbrida · detector + iNaturalist</span>
+      <div class="camera-permission" id="cameraPermissionGate">
+        <div class="camera-permission-card">
+          <div class="camera-permission-icon">📷</div>
+          <b>Permitir acesso à câmera</b>
+          <p>O Nerdora Fauna precisa da câmera apenas enquanto esta tela estiver aberta para fotografar o animal.</p>
+          <button id="grantCamera">Permitir câmera</button>
+          <small id="cameraPermissionText">A foto só é registrada quando você tocar no botão de captura.</small>
+        </div>
+      </div>
+      <div class="camera-shutter-wrap" id="cameraShutterWrap" hidden>
+        <button class="camera-shutter" id="takePhoto" disabled aria-label="Registrar foto"></button>
+        <span>Registrar foto</span>
+      </div>
       <div id="visionAnalyzing" class="analyzing-overlay" hidden><div><div class="spinner"></div><b>Analisando a imagem…</b><div style="color:#8da596;font-size:11px;margin-top:5px">Comparando com as classes do modelo visual</div></div></div>
     </div>
       </div>
@@ -378,7 +447,6 @@ body.app-screen-open,body.species-screen-open{overflow:hidden}
       </div>
       <div class="camera-actions">
         <button class="primary" id="startCamera">Abrir câmera</button>
-        <button id="takePhoto" disabled>Capturar e identificar</button>
         <label class="file-label">🖼️ Escolher fotos<input id="visionFile" type="file" accept="image/*" multiple></label>
         <button id="analyzePhoto" disabled>Analisar novamente</button>
         <button id="cameraToSearch">Não encontrou? Buscar manualmente</button>
@@ -667,7 +735,7 @@ function openFeature(id){
   if(id==='diaryPanel')renderDiary();
   if(id==='cameraPanel')setVisionStep(1)
 }
-function stopCamera(){if(state.cameraStream){state.cameraStream.getTracks().forEach(t=>t.stop());state.cameraStream=null}}
+function stopCamera(){if(state.cameraStream){state.cameraStream.getTracks().forEach(t=>t.stop());state.cameraStream=null}if($('cameraStage'))$('cameraStage').classList.remove('camera-live');if($('cameraShutterWrap'))$('cameraShutterWrap').hidden=true}
 function setVisionStatus(text,type=''){const el=$('visionModelStatus');el.textContent=text;el.className='vision-status'+(type?' '+type:'')}
 function loadExternalScript(src,id){
   return new Promise((resolve,reject)=>{if(id&&document.getElementById(id))return resolve();const s=document.createElement('script');if(id)s.id=id;s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error('Falha ao carregar '+src));document.head.appendChild(s)})
@@ -752,7 +820,9 @@ const GENERAL_TAXA={
 };
 function resetVisionPhotoSession(){
   state.visionPhotos=[];state.visionCandidates=[];state.visionHierarchy=null;state.cameraCapture=null;state.cameraCaptureThumb=null;state.visionActivePhotoIndex=-1;
-  $('visionResults').hidden=true;$('candidateGrid').innerHTML='';$('cropInspector').hidden=true;renderVisionPhotoStrip()
+  $('visionResults').hidden=true;$('candidateGrid').innerHTML='';$('cropInspector').hidden=true;
+  if($('cameraPermissionGate'))$('cameraPermissionGate').hidden=false;if($('cameraShutterWrap'))$('cameraShutterWrap').hidden=true;if($('cameraStage'))$('cameraStage').classList.remove('camera-live');
+  renderVisionPhotoStrip()
 }
 function renderVisionPhotoStrip(){
   const strip=$('visionPhotoStrip'),photos=state.visionPhotos,max=state.visionPhotoMax;
@@ -782,14 +852,24 @@ function renderVisionPhotoStrip(){
   $('visionFile').disabled=full
 }
 async function startCamera(keepSession=false){
+  const gate=$('cameraPermissionGate'),msg=$('cameraPermissionText'),stage=$('cameraStage'),shutter=$('cameraShutterWrap');
   try{setVisionStep(1);
     stopCamera();
     if(!keepSession)resetVisionPhotoSession();
     state.cameraCapture=null;state.cameraCaptureThumb=null;$('cropInspector').hidden=true;
+    if(!navigator.mediaDevices?.getUserMedia)throw new Error('camera_unavailable');
+    if(gate)gate.hidden=true;
+    if(msg){msg.classList.remove('camera-error');msg.textContent='Solicitando permissão ao navegador…'}
     state.cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
     $('cameraVideo').srcObject=state.cameraStream;$('cameraVideo').hidden=false;$('cameraShot').hidden=true;$('takePhoto').disabled=false;$('analyzePhoto').disabled=true;
+    if(stage)stage.classList.add('camera-live');if(shutter)shutter.hidden=false;
     ensureVisionModel().catch(()=>{})
-  }catch(e){alert('Não consegui abrir a câmera. Verifique a permissão do navegador.')}
+  }catch(e){
+    stopCamera();$('cameraVideo').hidden=true;$('takePhoto').disabled=true;
+    if(stage)stage.classList.remove('camera-live');if(shutter)shutter.hidden=true;
+    if(gate)gate.hidden=false;
+    if(msg){msg.classList.add('camera-error');msg.textContent=e?.name==='NotAllowedError'?'Permissão negada. Toque em “Permitir câmera” e autorize no navegador.':'Não consegui abrir a câmera neste navegador. Você ainda pode escolher uma foto da galeria.'}
+  }
 }
 function makeCaptureFromSource(source,max=900,quality=.84){
   const sw=source.videoWidth||source.naturalWidth||source.width,sh=source.videoHeight||source.naturalHeight||source.height;if(!sw||!sh)return null;
@@ -799,7 +879,8 @@ function makeThumb(dataUrl){
   return new Promise(resolve=>{const img=new Image();img.onload=()=>{const max=360,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*scale),h=Math.round(img.naturalHeight*scale),cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);resolve(cv.toDataURL('image/jpeg',.68))};img.onerror=()=>resolve(null);img.src=dataUrl})
 }
 async function setCapture(dataUrl){
-  setVisionStep(2);state.cameraCapture=dataUrl;state.cameraCaptureThumb=await makeThumb(dataUrl);$('cameraShot').src=dataUrl;try{await $('cameraShot').decode()}catch{}$('cameraShot').hidden=false;$('cameraVideo').hidden=true;$('analyzePhoto').disabled=false;stopCamera()
+  setVisionStep(2);state.cameraCapture=dataUrl;state.cameraCaptureThumb=await makeThumb(dataUrl);$('cameraShot').src=dataUrl;try{await $('cameraShot').decode()}catch{}$('cameraShot').hidden=false;$('cameraVideo').hidden=true;$('analyzePhoto').disabled=false;
+  $('cameraShutterWrap').hidden=true;$('cameraStage').classList.remove('camera-live');stopCamera()
 }
 async function addCurrentCaptureToSession(){
   if(!state.cameraCapture||state.visionPhotos.length>=state.visionPhotoMax)return;
@@ -1187,7 +1268,7 @@ $('speciesDiaryShortcut').onclick=()=>openFeature('diaryPanel');
 $('speciesIdentifyShortcut').onclick=()=>{openFeature('cameraPanel');ensureVisionModel().catch(()=>{})};
 $('feedbackYes').onclick=()=>saveIdentificationFeedback(true);$('feedbackNo').onclick=()=>saveIdentificationFeedback(false);
 $('modeIdentify').onclick=()=>{openFeature('cameraPanel');ensureVisionModel().catch(()=>{})};$('modeExplore').onclick=()=>{closeFeatures();$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>$('q').focus(),350)};$('modeNearby').onclick=()=>openFeature('nearbyPanel');$('modeDiary').onclick=()=>openFeature('diaryPanel');
-$('visionLocationToggle').onclick=toggleVisionLocation;updateVisionLocationUI();renderVisionPhotoStrip();$('startCamera').onclick=()=>startCamera(false);$('addVisionPhoto').onclick=()=>startCamera(true);$('takePhoto').onclick=takeCameraPhoto;$('analyzePhoto').onclick=runVisionRecognition;$('combineVisionPhotos').onclick=runVisionRecognition;$('clearVisionPhotos').onclick=()=>{stopCamera();resetVisionPhotoSession();$('cameraShot').hidden=true;$('cameraVideo').hidden=false;$('analyzePhoto').disabled=true};$('visionFile').onchange=e=>loadVisionFiles(e.target.files);$('cameraToSearch').onclick=()=>{closeFeaturePanel('cameraPanel');$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>$('q').focus(),350)};$('loadNearby').onclick=loadNearby;$('found').onclick=saveEncounter;
+$('visionLocationToggle').onclick=toggleVisionLocation;updateVisionLocationUI();renderVisionPhotoStrip();$('grantCamera').onclick=()=>startCamera(state.visionPhotos.length>0);$('startCamera').onclick=()=>startCamera(false);$('addVisionPhoto').onclick=()=>{stopCamera();$('cameraShot').hidden=true;$('cameraVideo').hidden=true;$('cameraPermissionGate').hidden=false;$('cameraPermissionText').classList.remove('camera-error');$('cameraPermissionText').textContent='Autorize a câmera novamente para registrar outro ângulo.';$('cameraPanel').scrollTo({top:0,behavior:'smooth'})};$('takePhoto').onclick=takeCameraPhoto;$('analyzePhoto').onclick=runVisionRecognition;$('combineVisionPhotos').onclick=runVisionRecognition;$('clearVisionPhotos').onclick=()=>{stopCamera();resetVisionPhotoSession();$('cameraShot').hidden=true;$('cameraVideo').hidden=false;$('analyzePhoto').disabled=true};$('visionFile').onchange=e=>loadVisionFiles(e.target.files);$('cameraToSearch').onclick=()=>{closeFeaturePanel('cameraPanel');$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>$('q').focus(),350)};$('loadNearby').onclick=loadNearby;$('found').onclick=saveEncounter;
 $('again').onclick=()=>{const left=randomPool.filter(x=>!state.seen.has(x));if(!left.length){$('again').disabled=true;$('again').textContent='✓ Todos vistos nesta sessão';return}const q=left[Math.floor(Math.random()*left.length)];$('q').value=q;search(q)};
 $('terra').onclick=()=>{document.querySelector('[data-tab="habitat"]').click();$('view').scrollIntoView({behavior:'smooth',block:'start'})};
 renderDiary();$('q').value='onça-pintada';search('onça-pintada');
