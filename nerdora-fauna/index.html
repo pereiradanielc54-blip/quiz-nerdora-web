@@ -588,6 +588,10 @@ function openTerraForEncounter(row,enc){
 }
 function renderDiary(){
   const rows=readDiary(),grid=$('diaryGrid');if(!grid)return;
+  const encounters=rows.reduce((s,x)=>s+(x.encounters?.length||x.count||0),0),geo=rows.reduce((s,x)=>s+(x.encounters||[]).filter(e=>Number.isFinite(e?.location?.lat)&&Number.isFinite(e?.location?.lng)).length,0);
+  if($('diarySpeciesCount'))$('diarySpeciesCount').textContent=rows.length;
+  if($('diaryEncounterCount'))$('diaryEncounterCount').textContent=encounters;
+  if($('diaryGeoCount'))$('diaryGeoCount').textContent=geo;
   grid.innerHTML=rows.length?rows.map((x,rowIndex)=>{
     const e=latestEncounter(x),fb=e?.feedback===true?'✓ IA correta':e?.feedback===false?'✕ IA incorreta':'Sem feedback';
     return '<div class="diary-card" data-row="'+rowIndex+'">'+(x.photo?'<img src="'+x.photo+'" loading="lazy" alt="">':'')+'<div class="meta"><b>'+x.common+'</b><em>'+x.scientific+'</em><small>'+x.count+' encontro(s) · último '+new Date(x.lastSeen).toLocaleDateString('pt-BR')+(x.identifiedRank?' · '+rankLabel(x.identifiedRank):'')+'</small><div class="entry-meta"><span>📍 '+fmtLocation(e?.location)+'</span><span>🧠 '+methodLabel(e?.method)+' · score '+(e?.score==null?'—':Number(e.score).toFixed(1)+'%')+'</span><span>👤 Confirmado pelo usuário: '+(e?.confirmedByUser?'sim':'não')+' · '+fb+'</span></div><div class="entry-actions"><button data-open-species="'+rowIndex+'">Abrir ficha</button><button data-terra-row="'+rowIndex+'">🌍 Ver no Terra</button></div></div></div>'
@@ -638,8 +642,27 @@ function saveIdentificationFeedback(value){
   if(enc){enc.feedback=value;writeDiary(rows);renderDiary()}
   $('feedbackToast').hidden=true;state.pendingFeedback=null
 }
-function closeFeatures(){['cameraPanel','nearbyPanel','diaryPanel'].forEach(id=>$(id).hidden=true);stopCamera()}
-function openFeature(id){closeFeatures();$(id).hidden=false;$(id).scrollIntoView({behavior:'smooth',block:'start'});if(id==='diaryPanel')renderDiary()}
+function syncScreenLock(){
+  const appOpen=['cameraPanel','diaryPanel'].some(id=>!$(id).hidden);
+  document.body.classList.toggle('app-screen-open',appOpen)
+}
+function closeFeatures(){
+  ['cameraPanel','nearbyPanel','diaryPanel'].forEach(id=>$(id).hidden=true);
+  stopCamera();syncScreenLock()
+}
+function closeFeaturePanel(id){
+  const p=$(id);if(p)p.hidden=true;if(id==='cameraPanel')stopCamera();syncScreenLock()
+}
+function setVisionStep(step){
+  document.querySelectorAll('#cameraPanel .screen-step').forEach((el,i)=>el.classList.toggle('active',i<step))
+}
+
+function openFeature(id){
+  closeFeatures();$(id).hidden=false;
+  if($(id).classList.contains('app-screen-shell')){syncScreenLock();$(id).scrollTop=0}else $(id).scrollIntoView({behavior:'smooth',block:'start'});
+  if(id==='diaryPanel')renderDiary();
+  if(id==='cameraPanel')setVisionStep(1)
+}
 function stopCamera(){if(state.cameraStream){state.cameraStream.getTracks().forEach(t=>t.stop());state.cameraStream=null}}
 function setVisionStatus(text,type=''){const el=$('visionModelStatus');el.textContent=text;el.className='vision-status'+(type?' '+type:'')}
 function loadExternalScript(src,id){
@@ -755,7 +778,7 @@ function renderVisionPhotoStrip(){
   $('visionFile').disabled=full
 }
 async function startCamera(keepSession=false){
-  try{
+  try{setVisionStep(1);
     stopCamera();
     if(!keepSession)resetVisionPhotoSession();
     state.cameraCapture=null;state.cameraCaptureThumb=null;$('cropInspector').hidden=true;
@@ -772,7 +795,7 @@ function makeThumb(dataUrl){
   return new Promise(resolve=>{const img=new Image();img.onload=()=>{const max=360,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*scale),h=Math.round(img.naturalHeight*scale),cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);resolve(cv.toDataURL('image/jpeg',.68))};img.onerror=()=>resolve(null);img.src=dataUrl})
 }
 async function setCapture(dataUrl){
-  state.cameraCapture=dataUrl;state.cameraCaptureThumb=await makeThumb(dataUrl);$('cameraShot').src=dataUrl;try{await $('cameraShot').decode()}catch{}$('cameraShot').hidden=false;$('cameraVideo').hidden=true;$('analyzePhoto').disabled=false;stopCamera()
+  setVisionStep(2);state.cameraCapture=dataUrl;state.cameraCaptureThumb=await makeThumb(dataUrl);$('cameraShot').src=dataUrl;try{await $('cameraShot').decode()}catch{}$('cameraShot').hidden=false;$('cameraVideo').hidden=true;$('analyzePhoto').disabled=false;stopCamera()
 }
 async function addCurrentCaptureToSession(){
   if(!state.cameraCapture||state.visionPhotos.length>=state.visionPhotoMax)return;
@@ -915,7 +938,7 @@ async function thumbFromData(dataUrl,max=260){
   return new Promise(resolve=>{const img=new Image();img.onload=()=>{const cv=document.createElement('canvas');cv.width=max;cv.height=max;cv.getContext('2d').drawImage(img,0,0,max,max);resolve(cv.toDataURL('image/jpeg',.72))};img.onerror=()=>resolve(null);img.src=dataUrl})
 }
 function showVisionCropInspector(index){
-  const p=state.visionPhotos[index];if(!p||!p.cropDataUrl||!p.annotatedDataUrl){$('cropInspector').hidden=true;return}
+  setVisionStep(2);const p=state.visionPhotos[index];if(!p||!p.cropDataUrl||!p.annotatedDataUrl){$('cropInspector').hidden=true;return}
   state.visionActivePhotoIndex=index;
   $('cropAnnotatedPreview').src=p.annotatedDataUrl;$('cropOnlyPreview').src=p.cropDataUrl;
   $('cropInspectorLabel').textContent='Foto '+(index+1)+' de '+state.visionPhotos.length;
@@ -1060,7 +1083,7 @@ function renderHierarchy(){
 async function confirmSafeHierarchy(){
   const h=state.visionHierarchy;if(!h?.lastSafe)return;
   const t=h.lastSafe,group=h.path.find(x=>x.rank==='class')?.name||'',loc=state.visionLocationEnabled&&state.visionLocation?{lat:state.visionLocation.lat,lng:state.visionLocation.lng,radiusKm:state.visionGeoRadius}:null;
-  const saved=saveDiaryData({common:t.common||t.name,scientific:t.name,photo:state.visionPhotos[0]?.cropThumb||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||'',group,visionScore:Number((t.support*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1,identifiedRank:t.rank,partialIdentification:t.rank!=='species',location:loc,method:'hierarchical-auto',confirmedByUser:true});
+  setVisionStep(4);const saved=saveDiaryData({common:t.common||t.name,scientific:t.name,photo:state.visionPhotos[0]?.cropThumb||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||'',group,visionScore:Number((t.support*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1,identifiedRank:t.rank,partialIdentification:t.rank!=='species',location:loc,method:'hierarchical-auto',confirmedByUser:true});
   showFeedbackPrompt(t.name,saved.encounter.id,t.common||t.name);
   closeFeatures();$('q').value=t.name;await search(t.name);updateFoundButton();$('view').scrollIntoView({behavior:'smooth',block:'start'})
 }
@@ -1077,7 +1100,7 @@ function candidateDifferenceItems(x){
 }
 function currentUserComparisonPhoto(){return state.visionPhotos[state.visionActivePhotoIndex]?.cropDataUrl||state.visionPhotos[0]?.cropDataUrl||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||''}
 function renderVisionCandidates(detection=null){
-  const g=$('candidateGrid'),items=state.visionCandidates;
+  setVisionStep(3);const g=$('candidateGrid'),items=state.visionCandidates;
   renderHierarchy();
   if(!items.length){g.innerHTML='<div class="empty-note">Não encontrei um candidato útil. Tente enquadrar apenas o animal, aproximar mais a câmera ou escolher outra foto.</div>';$('visionResults').hidden=false;return}
   g.innerHTML=items.map((x,i)=>{
@@ -1098,7 +1121,7 @@ async function confirmVisionCandidate(cand){
   if(!cand)return;let detail=null;
   try{detail=cand.taxonId?await taxonDetailById(cand.taxonId):null;if(!detail){const r=await resolve(cand.scientific);detail=await taxon(r.id).catch(()=>r)}}catch{}
   const group=[...(detail?.ancestors||[]),detail].find(x=>x?.rank==='class')?.name||'',scientific=detail?.name||cand.scientific,common=cap(detail?.preferred_common_name||cand.common),loc=state.visionLocationEnabled&&state.visionLocation?{lat:state.visionLocation.lat,lng:state.visionLocation.lng,radiusKm:state.visionGeoRadius}:null;
-  const saved=saveDiaryData({common,scientific,photo:state.visionPhotos[0]?.cropThumb||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||cand.photo||'',group,visionScore:Number((cand.score*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1,identifiedRank:detail?.rank||cand.rank||'species',partialIdentification:false,location:loc,method:'manual-candidate',confirmedByUser:true});
+  setVisionStep(4);const saved=saveDiaryData({common,scientific,photo:state.visionPhotos[0]?.cropThumb||state.visionPhotos[0]?.thumb||state.cameraCaptureThumb||cand.photo||'',group,visionScore:Number((cand.score*100).toFixed(1)),visionPhotoCount:state.visionPhotos.length||1,identifiedRank:detail?.rank||cand.rank||'species',partialIdentification:false,location:loc,method:'manual-candidate',confirmedByUser:true});
   showFeedbackPrompt(scientific,saved.encounter.id,common);
   closeFeatures();$('q').value=scientific;await search(scientific);updateFoundButton();$('view').scrollIntoView({behavior:'smooth',block:'start'})
 }
@@ -1135,7 +1158,7 @@ function taxonomy(i,g){const o={};[...(i?.ancestors||[]),i].filter(Boolean).forE
 function countries(a){const c={};for(const x of a||[]){const n=x.country||x.countryCode;if(n)c[n]=(c[n]||0)+1}return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0])}
 function showSource(st){$('sources').innerHTML=Object.entries(SRC).map(([k,v])=>'<span class="pill '+(st[k]?'ok':'bad')+'">'+(st[k]?'● ':'○ ')+v[0]+'</span>').join('');$('sourceRows').innerHTML=Object.entries(SRC).map(([k,v])=>'<div class="row"><span>'+v[0]+'</span><b><a style="color:#86efb3" href="'+v[1]+'" target="_blank">'+(st[k]?'Dados usados':'Sem resposta')+' ↗</a></b></div>').join('')}
 function drawMap(rows){const pts=(rows||[]).filter(x=>Number.isFinite(x.decimalLatitude)&&Number.isFinite(x.decimalLongitude));$('map').innerHTML=pts.length?pts.map(p=>{const x=((p.decimalLongitude+180)/360)*100,y=((90-p.decimalLatitude)/180)*100;return '<i class="dot" style="left:'+x.toFixed(2)+'%;top:'+y.toFixed(2)+'%" title="'+p.decimalLatitude.toFixed(2)+','+p.decimalLongitude.toFixed(2)+'"></i>'}).join(''):'<div style="padding:20px;color:#8ca294">Nenhuma coordenada retornada nesta consulta.</div>'}
-function render(a){state.animal=a;state.seen.add(a.scientific);const leftRandom=randomPool.filter(x=>!state.seen.has(x));$('again').disabled=!leftRandom.length;$('again').textContent=leftRandom.length?'🎲 Outro animal ('+leftRandom.length+')':'✓ Todos vistos nesta sessão';$('loading').hidden=true;$('err').hidden=true;$('view').hidden=false;$('name').textContent=a.common;$('sci').textContent=a.scientific;$('summary').textContent=a.summary;$('desc').textContent=a.description;$('img').src=a.photo||'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800"><rect width="100%" height="100%" fill="#103023"/><text x="50%" y="48%" text-anchor="middle" font-size="160">🐾</text><text x="50%" y="68%" text-anchor="middle" font-family="Arial" font-size="44" fill="white">'+a.common.replace(/[<>&]/g,'')+'</text></svg>');$('credit').textContent=a.credit||'Sem foto retornada';const lab={kingdom:'Reino',phylum:'Filo',class:'Classe',order:'Ordem',family:'Família',genus:'Gênero',species:'Espécie'};$('tax').innerHTML=Object.entries(lab).filter(([k])=>a.tax[k]).map(([k,l])=>'<div class="row"><span>'+l+'</span><b>'+a.tax[k]+'</b></div>').join('');$('stats').innerHTML=[['Grupo',a.tax.class||a.tax.phylum||'Animalia'],['Família',a.tax.family||'—'],['Registros GBIF',Number(a.total||0).toLocaleString('pt-BR')],['Avistamentos',a.observations.length]].map(x=>'<div class="stat"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('');const cs=countries(a.occ);$('dist').innerHTML=cs.length?'Países mais frequentes na amostra de registros: <b>'+cs.join(', ')+'</b>.':'Nenhum país retornado na amostra.';drawMap(a.occ);$('obs').innerHTML=a.observations.length?a.observations.map(o=>{const p=o.photos?.[0]?.url?.replace('square','medium');return '<div class="ob">'+(p?'<img src="'+p+'" loading="lazy">':'')+'<div><b>'+(o.place_guess||'Local não informado')+'</b><small>'+(o.observed_on||'data não informada')+'</small></div></div>'}).join(''):'<p style="color:#8ca294">Nenhum avistamento retornado.</p>';$('rel').innerHTML=a.relations.length?a.relations.map(r=>'<div><small>'+cap(r.interaction_type||'interage')+'</small><b>'+r.target_taxon_name+'</b></div>').join(''):'<p style="color:#8ca294">Nenhuma relação retornada pelo GloBI.</p>';showSource(a.status);renderSimilar(a.similar||[]);updateFoundButton();$('net').textContent='Dados reais · '+Object.values(a.status).filter(Boolean).length+' fontes ativas'}
+function render(a){state.animal=a;state.seen.add(a.scientific);document.body.classList.add('species-screen-open');const leftRandom=randomPool.filter(x=>!state.seen.has(x));$('again').disabled=!leftRandom.length;$('again').textContent=leftRandom.length?'🎲 Outro animal ('+leftRandom.length+')':'✓ Todos vistos nesta sessão';$('loading').hidden=true;$('err').hidden=true;$('view').hidden=false;$('name').textContent=a.common;$('sci').textContent=a.scientific;if($('speciesClassBadge'))$('speciesClassBadge').textContent=(a.tax.class||a.tax.phylum||'Animalia')+' · Dossiê biológico';$('summary').textContent=a.summary;$('desc').textContent=a.description;$('img').src=a.photo||'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800"><rect width="100%" height="100%" fill="#103023"/><text x="50%" y="48%" text-anchor="middle" font-size="160">🐾</text><text x="50%" y="68%" text-anchor="middle" font-family="Arial" font-size="44" fill="white">'+a.common.replace(/[<>&]/g,'')+'</text></svg>');$('credit').textContent=a.credit||'Sem foto retornada';const lab={kingdom:'Reino',phylum:'Filo',class:'Classe',order:'Ordem',family:'Família',genus:'Gênero',species:'Espécie'};$('tax').innerHTML=Object.entries(lab).filter(([k])=>a.tax[k]).map(([k,l])=>'<div class="row"><span>'+l+'</span><b>'+a.tax[k]+'</b></div>').join('');$('stats').innerHTML=[['Grupo',a.tax.class||a.tax.phylum||'Animalia'],['Família',a.tax.family||'—'],['Registros GBIF',Number(a.total||0).toLocaleString('pt-BR')],['Avistamentos',a.observations.length]].map(x=>'<div class="stat"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('');const cs=countries(a.occ);$('dist').innerHTML=cs.length?'Países mais frequentes na amostra de registros: <b>'+cs.join(', ')+'</b>.':'Nenhum país retornado na amostra.';drawMap(a.occ);$('obs').innerHTML=a.observations.length?a.observations.map(o=>{const p=o.photos?.[0]?.url?.replace('square','medium');return '<div class="ob">'+(p?'<img src="'+p+'" loading="lazy">':'')+'<div><b>'+(o.place_guess||'Local não informado')+'</b><small>'+(o.observed_on||'data não informada')+'</small></div></div>'}).join(''):'<p style="color:#8ca294">Nenhum avistamento retornado.</p>';$('rel').innerHTML=a.relations.length?a.relations.map(r=>'<div><small>'+cap(r.interaction_type||'interage')+'</small><b>'+r.target_taxon_name+'</b></div>').join(''):'<p style="color:#8ca294">Nenhuma relação retornada pelo GloBI.</p>';showSource(a.status);renderSimilar(a.similar||[]);updateFoundButton();$('net').textContent='Dados reais · '+Object.values(a.status).filter(Boolean).length+' fontes ativas'}
 async function search(q){q=q.trim();if(!q)return;const seq=++state.seq;$('loading').hidden=false;$('view').hidden=true;$('err').hidden=true;$('net').textContent='Consultando APIs…';$('phase').textContent='Identificando espécie no iNaturalist';try{const r=await resolve(q),i=await taxon(r.id).catch(()=>r);if(seq!==state.seq)return;const scientific=i?.name||r.name,common=cap(i?.preferred_common_name||r.preferred_common_name||scientific);$('phase').textContent='Carregando GBIF, Wikipedia, iNaturalist e GloBI';const res=await Promise.allSettled([gbif(scientific),wiki(scientific,common),obs(i?.id||r.id),globi(scientific),similarTaxa(i)]);if(seq!==state.seq)return;const g=res[0].status==='fulfilled'?res[0].value:null,w=res[1].status==='fulfilled'?res[1].value:null,o=res[2].status==='fulfilled'?res[2].value:[],re=res[3].status==='fulfilled'?res[3].value:[],sim=res[4].status==='fulfilled'?res[4].value:[];const ph=i?.default_photo,photo=ph?.original_url||ph?.medium_url||ph?.url||w?.original?.source||'',text=clean(w?.extract||i?.wikipedia_summary||'')||common+' ('+scientific+') é uma espécie identificada pelas bases conectadas ao Nerdora Fauna.';render({common,scientific,photo,credit:ph?.attribution||(w?.original?.source?'Wikimedia Commons':''),summary:text.split(/(?<=[.!?])\s+/).slice(0,3).join(' '),description:text,tax:taxonomy(i,g),occ:g?.occ?.results||[],total:g?.occ?.count||0,observations:o,relations:re,similar:sim,status:{inat:!!i,gbif:!!g,wiki:!!w,globi:res[3].status==='fulfilled'}})}catch(e){console.error(e);$('loading').hidden=true;$('err').hidden=false;$('err').textContent='Não consegui identificar essa espécie agora: '+(e.message||e);$('net').textContent='Consulta falhou — tente outro nome'}}
 $('form').onsubmit=e=>{e.preventDefault();$('suggestions').hidden=true;search($('q').value)};
 $('q').addEventListener('input',e=>queueSuggestions(e.target.value));
@@ -1143,11 +1166,11 @@ $('q').addEventListener('focus',e=>{if(e.target.value.trim())queueSuggestions(e.
 document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))$('suggestions').hidden=true});
 document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{$('q').value=b.dataset.q;search(b.dataset.q)});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.tab).classList.add('on')});
-document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{const p=$(b.dataset.close);if(p)p.hidden=true;if(b.dataset.close==='cameraPanel')stopCamera()});
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeFeaturePanel(b.dataset.close));
 document.querySelectorAll('[data-diary-view]').forEach(b=>b.onclick=()=>setDiaryView(b.dataset.diaryView));
 function navigateFaunaWorld(target){
   document.querySelectorAll('.world-dock button').forEach(b=>b.classList.toggle('active',b.dataset.worldGo===target));
-  if(target==='home'){closeFeatures();$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(target==='home'){closeFeatures();$('view').hidden=true;document.body.classList.remove('species-screen-open');$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'});return}
   if(target==='identify'){$('modeIdentify').click();return}
   if(target==='nearby'){$('modeNearby').click();return}
   if(target==='diary'){$('modeDiary').click();return}
@@ -1155,9 +1178,12 @@ function navigateFaunaWorld(target){
 }
 document.querySelectorAll('[data-world-go]').forEach(b=>b.onclick=()=>navigateFaunaWorld(b.dataset.worldGo));
 document.querySelectorAll('[data-mobile-go]').forEach(b=>b.onclick=()=>navigateFaunaWorld(b.dataset.mobileGo));
+$('speciesBack').onclick=()=>{$('view').hidden=true;document.body.classList.remove('species-screen-open');$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'})};
+$('speciesDiaryShortcut').onclick=()=>openFeature('diaryPanel');
+$('speciesIdentifyShortcut').onclick=()=>{openFeature('cameraPanel');ensureVisionModel().catch(()=>{})};
 $('feedbackYes').onclick=()=>saveIdentificationFeedback(true);$('feedbackNo').onclick=()=>saveIdentificationFeedback(false);
 $('modeIdentify').onclick=()=>{openFeature('cameraPanel');ensureVisionModel().catch(()=>{})};$('modeExplore').onclick=()=>{closeFeatures();$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>$('q').focus(),350)};$('modeNearby').onclick=()=>openFeature('nearbyPanel');$('modeDiary').onclick=()=>openFeature('diaryPanel');
-$('visionLocationToggle').onclick=toggleVisionLocation;updateVisionLocationUI();renderVisionPhotoStrip();$('startCamera').onclick=()=>startCamera(false);$('addVisionPhoto').onclick=()=>startCamera(true);$('takePhoto').onclick=takeCameraPhoto;$('analyzePhoto').onclick=runVisionRecognition;$('combineVisionPhotos').onclick=runVisionRecognition;$('clearVisionPhotos').onclick=()=>{stopCamera();resetVisionPhotoSession();$('cameraShot').hidden=true;$('cameraVideo').hidden=false;$('analyzePhoto').disabled=true};$('visionFile').onchange=e=>loadVisionFiles(e.target.files);$('cameraToSearch').onclick=()=>{stopCamera();$('cameraPanel').hidden=true;$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('loadNearby').onclick=loadNearby;$('found').onclick=saveEncounter;
+$('visionLocationToggle').onclick=toggleVisionLocation;updateVisionLocationUI();renderVisionPhotoStrip();$('startCamera').onclick=()=>startCamera(false);$('addVisionPhoto').onclick=()=>startCamera(true);$('takePhoto').onclick=takeCameraPhoto;$('analyzePhoto').onclick=runVisionRecognition;$('combineVisionPhotos').onclick=runVisionRecognition;$('clearVisionPhotos').onclick=()=>{stopCamera();resetVisionPhotoSession();$('cameraShot').hidden=true;$('cameraVideo').hidden=false;$('analyzePhoto').disabled=true};$('visionFile').onchange=e=>loadVisionFiles(e.target.files);$('cameraToSearch').onclick=()=>{closeFeaturePanel('cameraPanel');$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>$('q').focus(),350)};$('loadNearby').onclick=loadNearby;$('found').onclick=saveEncounter;
 $('again').onclick=()=>{const left=randomPool.filter(x=>!state.seen.has(x));if(!left.length){$('again').disabled=true;$('again').textContent='✓ Todos vistos nesta sessão';return}const q=left[Math.floor(Math.random()*left.length)];$('q').value=q;search(q)};
 $('terra').onclick=()=>{document.querySelector('[data-tab="habitat"]').click();$('view').scrollIntoView({behavior:'smooth',block:'start'})};
 renderDiary();$('q').value='onça-pintada';search('onça-pintada');
