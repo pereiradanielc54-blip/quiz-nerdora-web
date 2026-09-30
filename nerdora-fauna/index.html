@@ -197,6 +197,103 @@ header.world-header{
   .mobile-world-nav button{border:0;background:transparent;color:#788b81;border-radius:14px;padding:7px 2px;font-size:9px;font-weight:900}.mobile-world-nav button span{display:block;font-size:18px;margin-bottom:3px}.mobile-world-nav button:active{background:#7454df1d;color:#d7ccff}
 }
 
+
+/* ===== Nerdora Fauna UI v3 · App Screens ===== */
+body.app-screen-open,body.species-screen-open{overflow:hidden}
+.app-screen-shell{
+  position:fixed;z-index:420;left:50%;top:94px;bottom:18px;width:min(1180px,calc(100vw - 32px));
+  transform:translateX(-50%);overflow:auto;overscroll-behavior:contain;
+  border:1px solid #ffffff14;border-radius:28px;
+  background:
+    radial-gradient(circle at 85% 2%,#744aff20,transparent 28rem),
+    radial-gradient(circle at 5% 38%,#29d88712,transparent 30rem),
+    linear-gradient(160deg,#0c1110 0%,#080d0b 58%,#060908 100%);
+  box-shadow:0 32px 100px #000c,inset 0 1px #fff0c;
+}
+.app-screen-shell[hidden]{display:none!important}
+.app-screen-shell.feature-panel{max-width:none;margin:0;padding:0}
+.app-screen-top{
+  position:sticky;top:0;z-index:30;min-height:72px;padding:13px 17px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  background:linear-gradient(180deg,#0d1211f7,#0b100fee);
+  border-bottom:1px solid #ffffff0d;backdrop-filter:blur(18px);
+}
+.app-screen-title{display:flex;align-items:center;gap:12px;min-width:0}
+.app-screen-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:linear-gradient(145deg,#7c55e42b,#28d3841a);border:1px solid #8969e33b}
+.app-screen-title small{display:block;font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:#8976bb;font-weight:900}
+.app-screen-title h3{margin:3px 0 0;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.screen-close{
+  width:38px;height:38px;border-radius:12px!important;display:grid;place-items:center;
+  background:#ffffff07!important;border:1px solid #ffffff12!important;color:#c6d6ce!important;padding:0!important;font-size:17px
+}
+.app-screen-content{padding:18px 20px 28px}
+.camera-screen-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.7fr);gap:16px;align-items:start}
+.camera-screen-main{min-width:0}.camera-screen-rail{display:grid;gap:12px;position:sticky;top:88px}
+.camera-stage{min-height:480px;border-radius:24px}.camera-stage video,.camera-stage>img{min-height:480px}
+.camera-screen-rail .camera-side{padding:16px;border:1px solid #ffffff0f;border-radius:20px;background:#ffffff04}
+.camera-screen-rail .camera-side>p{margin-top:0}
+.camera-screen-rail .photo-session{margin:0}
+.crop-inspector{margin-top:16px}.vision-results{padding-top:16px}
+.screen-stepbar{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:13px}
+.screen-step{border:1px solid #ffffff0d;border-radius:13px;padding:9px;background:#ffffff04}
+.screen-step small{display:block;font-size:8px;color:#6d8176;text-transform:uppercase}.screen-step b{display:block;font-size:10px;margin-top:3px;color:#aabdb3}
+.screen-step.active{border-color:#7657d952;background:linear-gradient(135deg,#7550db18,#32d58a0e)}.screen-step.active b{color:#e4ddff}
+
+.diary-app-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px}
+.diary-sidebar{position:sticky;top:88px;display:grid;gap:10px;align-self:start}
+.diary-summary-card{border:1px solid #ffffff0f;border-radius:20px;padding:16px;background:linear-gradient(145deg,#121714,#0a100e)}
+.diary-summary-card small{display:block;color:#7c9085;font-size:9px;text-transform:uppercase;letter-spacing:.08em}.diary-summary-card strong{display:block;font-size:30px;margin-top:4px;background:linear-gradient(100deg,#fff,#b99fff,#7becad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.diary-summary-card span{display:block;color:#708379;font-size:10px;margin-top:2px}
+.diary-side-nav{display:grid;gap:6px}.diary-side-nav button{border:1px solid #ffffff0e;background:#ffffff04;color:#83968d;border-radius:13px;padding:11px;text-align:left;font-weight:900}.diary-side-nav button.on{border-color:#7557db48;background:linear-gradient(135deg,#7450d91d,#1ecb7d13);color:#e3dbff}
+.diary-main{min-width:0}.diary-tabs{display:none}.diary-grid{grid-template-columns:repeat(3,1fr)}
+.diary-card{border-radius:20px;box-shadow:inset 0 1px #fff08;transition:.2s ease}.diary-card:hover{transform:translateY(-2px);border-color:#7556d840}.diary-card img{aspect-ratio:16/10}
+.diary-section-title{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:20px 0 10px}.diary-section-title h3{margin:0;font-size:15px}.diary-section-title small{color:#6e8277;font-size:9px}
+.diary-map{height:520px}
+
+#view.species-screen{
+  position:fixed;z-index:410;left:50%;top:94px;bottom:18px;width:min(1180px,calc(100vw - 32px));
+  transform:translateX(-50%);overflow:auto;overscroll-behavior:contain;
+  border:1px solid #ffffff14;border-radius:28px;background:linear-gradient(160deg,#0b1110,#070b09 58%,#050806);
+  box-shadow:0 32px 100px #000d,inset 0 1px #fff0c;padding:0 18px 26px
+}
+#view[hidden]{display:none!important}
+.species-appbar{
+  position:sticky;top:0;z-index:80;margin:0 -18px 14px;padding:12px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:#0b100ff2;border-bottom:1px solid #ffffff0d;backdrop-filter:blur(18px)
+}
+.species-back{display:flex;align-items:center;gap:9px;border:0;background:transparent;color:#cbd9d2;font-weight:900;cursor:pointer}.species-back span{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;border:1px solid #ffffff11;background:#ffffff06}
+.species-appbar-right{display:flex;gap:7px}.species-mini-action{border:1px solid #ffffff10;background:#ffffff05;color:#91a69b;border-radius:11px;padding:8px 10px;font-size:9px;font-weight:900}
+.species-hero{min-height:520px;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);border-radius:26px}
+.species-hero .photo{min-height:520px}.species-hero .info{display:flex;flex-direction:column;justify-content:flex-end;padding:38px}
+.species-hero .info h2{font-size:clamp(42px,6vw,68px)}
+.species-class-badge{display:inline-flex;width:max-content;padding:6px 9px;border-radius:999px;border:1px solid #755be03e;background:#755be014;color:#cbbdff;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.species-actions-sticky{position:sticky;bottom:0;z-index:75;margin:18px -18px -26px;padding:10px 18px;background:#080d0bea;border-top:1px solid #ffffff0c;backdrop-filter:blur(16px)}
+.species-actions-sticky .actions{justify-content:center}
+.species-actions-sticky .btn{min-width:150px}
+#view .sources{margin-top:2px}.species-stat-grid{grid-template-columns:repeat(4,1fr)}
+#view .tabs{top:58px;margin:0 -2px}
+
+@media(max-width:900px){
+  .camera-screen-layout{grid-template-columns:1fr}.camera-screen-rail{position:static}.camera-stage{min-height:420px}.camera-stage video,.camera-stage>img{min-height:420px}
+  .diary-app-grid{grid-template-columns:1fr}.diary-sidebar{position:static;grid-template-columns:repeat(3,1fr)}.diary-side-nav{grid-column:1/-1;grid-template-columns:repeat(2,1fr)}
+  .diary-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:780px){
+  .app-screen-shell,#view.species-screen{top:72px;bottom:78px;left:0;width:100vw;transform:none;border-radius:0;border-left:0;border-right:0}
+  .app-screen-shell.feature-panel{padding:0}.app-screen-content{padding:12px 12px 22px}.app-screen-top{min-height:58px;padding:9px 12px}
+  .app-screen-icon{width:36px;height:36px;border-radius:12px}.app-screen-title h3{font-size:14px}
+  .camera-stage{min-height:48vh;border-radius:18px}.camera-stage video,.camera-stage>img{min-height:48vh}
+  .screen-stepbar{grid-template-columns:repeat(4,minmax(70px,1fr));overflow:auto}.screen-step{padding:7px}
+  .camera-screen-rail .camera-side{padding:12px;border-radius:16px}.camera-actions{display:grid;grid-template-columns:1fr 1fr}.camera-actions button,.camera-actions .file-label{justify-content:center;text-align:center}
+  .diary-sidebar{grid-template-columns:repeat(3,1fr);gap:7px}.diary-summary-card{padding:11px;border-radius:15px}.diary-summary-card strong{font-size:22px}.diary-summary-card span{font-size:8px}
+  .diary-grid{grid-template-columns:1fr}.diary-map{height:54vh}
+  #view.species-screen{padding:0 12px 18px}.species-appbar{margin:0 -12px 10px;padding:9px 10px}.species-appbar-right{display:none}
+  .species-hero{min-height:0;border-radius:20px}.species-hero .photo{min-height:46vh}.species-hero .info{padding:22px}.species-hero .info h2{font-size:40px}
+  .species-stat-grid{grid-template-columns:repeat(2,1fr)}#view .tabs{top:52px}
+  .species-actions-sticky{margin:14px -12px -18px;padding:8px 10px}.species-actions-sticky .actions{display:grid;grid-template-columns:1fr 1fr}.species-actions-sticky .btn{min-width:0;padding:10px 8px;font-size:10px}.species-actions-sticky #again{grid-column:1/-1}
+}
+
 </style>
 </head>
 <body>
@@ -244,16 +341,30 @@ header.world-header{
   <button class="mode-card" id="modeDiary"><div class="module-tag">Collection</div><span>📒</span><b>Meu Diário</b><small>Guarde encontros, veja seu mapa e acompanhe conquistas e qualidade da IA.</small></button>
 </section>
 
-<section class="feature-panel" id="cameraPanel" hidden>
-  <div class="feature-head"><h3>📷 Identificar / Registrar</h3><button data-close="cameraPanel">Fechar</button></div>
-  <div class="camera-box">
+<section class="feature-panel app-screen-shell" id="cameraPanel" hidden>
+  <div class="app-screen-top">
+    <div class="app-screen-title"><div class="app-screen-icon">📷</div><div><small>Fauna Vision</small><h3>Identificar e registrar</h3></div></div>
+    <button class="screen-close" data-close="cameraPanel" aria-label="Fechar">✕</button>
+  </div>
+  <div class="app-screen-content">
+    <div class="screen-stepbar">
+      <div class="screen-step active"><small>01</small><b>Capturar</b></div>
+      <div class="screen-step"><small>02</small><b>Recortar</b></div>
+      <div class="screen-step"><small>03</small><b>Comparar</b></div>
+      <div class="screen-step"><small>04</small><b>Registrar</b></div>
+    </div>
+    <div class="camera-screen-layout">
+      <div class="camera-screen-main">
+        <div class="camera-box">
     <div class="camera-stage">
       <video id="cameraVideo" autoplay playsinline muted></video>
       <img id="cameraShot" alt="Foto capturada" hidden>
       <span class="capture-badge">Visão híbrida · detector + iNaturalist</span>
       <div id="visionAnalyzing" class="analyzing-overlay" hidden><div><div class="spinner"></div><b>Analisando a imagem…</b><div style="color:#8da596;font-size:11px;margin-top:5px">Comparando com as classes do modelo visual</div></div></div>
     </div>
-    <div class="camera-side">
+      </div>
+      <div class="camera-screen-rail">
+        <div class="camera-side">
       <p>Fotografe o animal ou escolha uma imagem. O modelo visual gera candidatos reais; depois o Fauna consulta o iNaturalist para mostrar nomes e fotos de referência.</p>
       <div id="visionModelStatus" class="vision-status">O modelo será carregado quando você usar a identificação pela primeira vez.</div>
       <div class="geo-assist">
@@ -278,6 +389,8 @@ header.world-header{
         <div class="multi-note">Use de 2 a 4 fotos do mesmo animal, de preferência em ângulos diferentes. Cada foto é analisada separadamente e o Fauna cruza os resultados antes de ordenar os candidatos.</div>
       </div>
       <small class="privacy">A análise é feita no próprio navegador. O detector geral reconhece categorias comuns como cachorro, gato e aves; o modelo público do iNaturalist tenta refinar a identificação. A foto não é enviada ao iNaturalist para reconhecimento.</small>
+        </div>
+      </div>
     </div>
   </div>
   <div id="cropInspector" class="crop-inspector" hidden>
@@ -301,6 +414,7 @@ header.world-header{
     <div id="candidateGrid" class="candidate-grid"></div>
     <div class="vision-note">O score visual continua sendo mostrado separadamente. Quando a localização está ativa, “evidência regional” significa registros observados próximos no iNaturalist — não prova que a espécie só exista ou não exista naquela região.</div>
   </div>
+  </div>
 </section>
 
 <section class="feature-panel" id="nearbyPanel" hidden>
@@ -311,24 +425,45 @@ header.world-header{
   <div id="nearbyGrid" class="nearby-grid"></div>
 </section>
 
-<section class="feature-panel" id="diaryPanel" hidden>
-  <div class="feature-head"><h3>📒 Meu Diário de Fauna</h3><button data-close="diaryPanel">Fechar</button></div>
-  <p class="section-note">Os encontros ficam salvos apenas neste navegador. Localização, quando autorizada, é armazenada de forma aproximada.</p>
-  <div class="diary-tabs"><button class="on" data-diary-view="diaryListView">Lista</button><button data-diary-view="diaryMapView">Mapa</button></div>
-  <div id="diaryListView" class="diary-view"><div id="diaryGrid" class="diary-grid"></div></div>
-  <div id="diaryMapView" class="diary-view" hidden><div id="diaryMap" class="diary-map"></div><div id="diaryMapInfo" class="diary-map-info">Os encontros com localização aproximada aparecerão aqui.</div></div>
-  <h3 style="margin-top:18px">🧠 Qualidade da identificação</h3>
-  <div id="aiQualitySummary" class="rows"></div>
-  <h3 style="margin-top:18px">🏅 Expedições e conquistas</h3>
-  <div id="badgeGrid" class="badge-grid"></div>
+<section class="feature-panel app-screen-shell" id="diaryPanel" hidden>
+  <div class="app-screen-top">
+    <div class="app-screen-title"><div class="app-screen-icon">📒</div><div><small>Fauna Collection</small><h3>Meu Diário de Fauna</h3></div></div>
+    <button class="screen-close" data-close="diaryPanel" aria-label="Fechar">✕</button>
+  </div>
+  <div class="app-screen-content">
+    <div class="diary-app-grid">
+      <aside class="diary-sidebar">
+        <div class="diary-summary-card"><small>Espécies</small><strong id="diarySpeciesCount">0</strong><span>registradas</span></div>
+        <div class="diary-summary-card"><small>Encontros</small><strong id="diaryEncounterCount">0</strong><span>no diário</span></div>
+        <div class="diary-summary-card"><small>Mapa</small><strong id="diaryGeoCount">0</strong><span>com localização</span></div>
+        <div class="diary-side-nav">
+          <button class="on" data-diary-view="diaryListView">▦ Coleção</button>
+          <button data-diary-view="diaryMapView">⌖ Mapa de descobertas</button>
+        </div>
+      </aside>
+      <div class="diary-main">
+        <div class="section-note">Seus encontros ficam salvos neste navegador. Localização, quando autorizada, é armazenada de forma aproximada.</div>
+        <div id="diaryListView" class="diary-view"><div id="diaryGrid" class="diary-grid"></div></div>
+        <div id="diaryMapView" class="diary-view" hidden><div id="diaryMap" class="diary-map"></div><div id="diaryMapInfo" class="diary-map-info">Os encontros com localização aproximada aparecerão aqui.</div></div>
+        <div class="diary-section-title"><h3>🧠 Qualidade da identificação</h3><small>Feedback local da IA</small></div>
+        <div id="aiQualitySummary" class="rows"></div>
+        <div class="diary-section-title"><h3>🏅 Expedições e conquistas</h3><small>Progresso do explorador</small></div>
+        <div id="badgeGrid" class="badge-grid"></div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <div id="loading" class="loading" hidden><div class="spinner"></div><div><b>Consultando bases de biodiversidade…</b><div style="color:#8da596;font-size:12px;margin-top:4px" id="phase">Identificando espécie</div></div></div>
 <div id="err" class="error" hidden></div>
-<main id="view" hidden>
-<section class="card"><div class="photo"><img id="img" alt=""><div class="credit" id="credit"></div></div><div class="info"><h2 id="name"></h2><div class="sci" id="sci"></div><p id="summary"></p><div class="actions"><button class="btn" id="again">🎲 Outro animal</button><button class="btn ghost found-btn" id="found">✓ Eu encontrei este animal</button><button class="btn ghost" id="terra">🌍 Nerdora Terra</button></div></div></section>
+<main id="view" class="species-screen" hidden>
+<div class="species-appbar">
+  <button class="species-back" id="speciesBack"><span>‹</span>Voltar à Fauna</button>
+  <div class="species-appbar-right"><button class="species-mini-action" id="speciesDiaryShortcut">📒 Diário</button><button class="species-mini-action" id="speciesIdentifyShortcut">📷 Identificar</button></div>
+</div>
+<section class="card species-hero"><div class="photo"><img id="img" alt=""><div class="credit" id="credit"></div></div><div class="info"><div class="species-class-badge" id="speciesClassBadge">Dossiê biológico</div><h2 id="name"></h2><div class="sci" id="sci"></div><p id="summary"></p></div></section>
 <div class="sources" id="sources"></div>
-<div class="grid" id="stats"></div>
+<div class="grid species-stat-grid" id="stats"></div>
 <nav class="tabs"><button class="on" data-tab="overview">Visão geral</button><button data-tab="habitat">Habitat</button><button data-tab="observations">Avistamentos</button><button data-tab="relations">Relações</button><button data-tab="similar">Semelhantes</button><button data-tab="sources2">Fontes</button></nav>
 <section class="tab on" id="overview"><div class="cols"><article class="panel"><h3>Sobre a espécie</h3><p id="desc"></p></article><article class="panel"><h3>Classificação</h3><div class="rows" id="tax"></div></article></div></section>
 <section class="tab" id="habitat"><div class="cols"><article class="panel"><h3>Registros geográficos GBIF</h3><div class="map" id="map"></div></article><article class="panel"><h3>Distribuição</h3><p id="dist"></p><p style="font-size:12px;color:#8ca294">Os pontos são registros observados, não representam toda a área de habitat.</p></article></div></section>
@@ -336,6 +471,7 @@ header.world-header{
 <section class="tab" id="relations"><article class="panel"><h3>Relações ecológicas no GloBI</h3><div class="rel" id="rel"></div></article></section>
 <section class="tab" id="similar"><article class="panel"><h3>Espécies semelhantes / parentes próximas</h3><p class="section-note">Sugestões do mesmo gênero quando disponíveis no iNaturalist.</p><div class="similar-grid" id="similarGrid"></div></article></section>
 <section class="tab" id="sources2"><article class="panel"><h3>Fontes consultadas</h3><div class="rows" id="sourceRows"></div></article></section>
+<div class="species-actions-sticky"><div class="actions"><button class="btn" id="again">🎲 Outro animal</button><button class="btn ghost found-btn" id="found">✓ Eu encontrei este animal</button><button class="btn ghost" id="terra">🌍 Nerdora Terra</button></div></div>
 </main>
 <div class="foot">Nerdora Fauna · preview online para validação das APIs · dados podem variar entre fontes.</div>
 <nav class="mobile-world-nav" aria-label="Atalhos Nerdora Fauna">
