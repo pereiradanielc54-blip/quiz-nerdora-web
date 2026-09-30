@@ -1009,8 +1009,18 @@ document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{$('q').valu
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.tab).classList.add('on')});
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{const p=$(b.dataset.close);if(p)p.hidden=true;if(b.dataset.close==='cameraPanel')stopCamera()});
 document.querySelectorAll('[data-diary-view]').forEach(b=>b.onclick=()=>setDiaryView(b.dataset.diaryView));
+function navigateFaunaWorld(target){
+  document.querySelectorAll('.world-dock button').forEach(b=>b.classList.toggle('active',b.dataset.worldGo===target));
+  if(target==='home'){closeFeatures();$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(target==='identify'){$('modeIdentify').click();return}
+  if(target==='nearby'){$('modeNearby').click();return}
+  if(target==='diary'){$('modeDiary').click();return}
+  if(target==='explore'){closeFeatures();$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>$('q').focus(),350)}
+}
+document.querySelectorAll('[data-world-go]').forEach(b=>b.onclick=()=>navigateFaunaWorld(b.dataset.worldGo));
+document.querySelectorAll('[data-mobile-go]').forEach(b=>b.onclick=()=>navigateFaunaWorld(b.dataset.mobileGo));
 $('feedbackYes').onclick=()=>saveIdentificationFeedback(true);$('feedbackNo').onclick=()=>saveIdentificationFeedback(false);
-$('modeIdentify').onclick=()=>{openFeature('cameraPanel');ensureVisionModel().catch(()=>{})};$('modeExplore').onclick=()=>{$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('modeNearby').onclick=()=>openFeature('nearbyPanel');$('modeDiary').onclick=()=>openFeature('diaryPanel');
+$('modeIdentify').onclick=()=>{openFeature('cameraPanel');ensureVisionModel().catch(()=>{})};$('modeExplore').onclick=()=>{closeFeatures();$('faunaHome').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>$('q').focus(),350)};$('modeNearby').onclick=()=>openFeature('nearbyPanel');$('modeDiary').onclick=()=>openFeature('diaryPanel');
 $('visionLocationToggle').onclick=toggleVisionLocation;updateVisionLocationUI();renderVisionPhotoStrip();$('startCamera').onclick=()=>startCamera(false);$('addVisionPhoto').onclick=()=>startCamera(true);$('takePhoto').onclick=takeCameraPhoto;$('analyzePhoto').onclick=runVisionRecognition;$('combineVisionPhotos').onclick=runVisionRecognition;$('clearVisionPhotos').onclick=()=>{stopCamera();resetVisionPhotoSession();$('cameraShot').hidden=true;$('cameraVideo').hidden=false;$('analyzePhoto').disabled=true};$('visionFile').onchange=e=>loadVisionFiles(e.target.files);$('cameraToSearch').onclick=()=>{stopCamera();$('cameraPanel').hidden=true;$('q').focus();window.scrollTo({top:120,behavior:'smooth'})};$('loadNearby').onclick=loadNearby;$('found').onclick=saveEncounter;
 $('again').onclick=()=>{const left=randomPool.filter(x=>!state.seen.has(x));if(!left.length){$('again').disabled=true;$('again').textContent='✓ Todos vistos nesta sessão';return}const q=left[Math.floor(Math.random()*left.length)];$('q').value=q;search(q)};
 $('terra').onclick=()=>{document.querySelector('[data-tab="habitat"]').click();$('view').scrollIntoView({behavior:'smooth',block:'start'})};
