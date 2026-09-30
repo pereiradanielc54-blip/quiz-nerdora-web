@@ -31,17 +31,217 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 .photo-session{margin-top:12px;border:1px solid #294839;background:#08150f;border-radius:14px;padding:12px}.photo-session-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.photo-session-head b{font-size:12px}.photo-counter{font-size:10px;color:#9ff4c2;border:1px solid #35694c;border-radius:999px;padding:4px 8px}.photo-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.photo-slot{position:relative;border:1px dashed #355443;border-radius:11px;aspect-ratio:1;overflow:hidden;background:#0b1b13;display:grid;place-items:center;color:#5f786a;font-size:20px}.photo-slot.filled{border-style:solid}.photo-slot img{width:100%;height:100%;object-fit:cover}.photo-slot span{position:absolute;left:5px;top:5px;background:#05100bcc;border:1px solid #315443;border-radius:999px;padding:3px 6px;font-size:8px;color:#d6eee1}.photo-slot button{position:absolute;right:4px;top:4px;width:23px;height:23px;border-radius:50%;border:1px solid #604846;background:#1b0e0ecc;color:#ffd4d4;padding:0}.photo-session-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.photo-session-actions button{border:1px solid #355443;background:#11271c;color:#d8eee2;padding:9px 11px;border-radius:10px}.photo-session-actions button.primary{background:#1bc879;color:#062114;border-color:#1bc879;font-weight:900}.photo-session-actions button:disabled{opacity:.45}.multi-note{color:#789184;font-size:10px;line-height:1.45;margin-top:8px}.multi-evidence{display:inline-block;margin-top:5px;border:1px solid #4a6958;border-radius:999px;padding:4px 7px;font-size:9px;color:#bee6d0}
 
 @media(max-width:780px){header .status{font-size:10px}.card{grid-template-columns:1fr}.photo{min-height:360px}.grid{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}.obs{grid-template-columns:repeat(2,1fr)}.info{padding:24px}.map{height:360px}.mode-grid{grid-template-columns:repeat(2,1fr)}.nearby-grid,.similar-grid,.diary-grid,.badge-grid{grid-template-columns:repeat(2,1fr)}.camera-box{grid-template-columns:1fr}.candidate-grid{grid-template-columns:1fr}.geo-assist{grid-template-columns:1fr}.crop-compare{grid-template-columns:1fr 1fr}.diary-map{height:340px}}
+
+/* ===== Nerdora World UI v2 ===== */
+:root{
+  --nerd:#8b5cf6;--nerd2:#c65cff;--nerd3:#5b37d8;
+  --fauna:#55e99b;--fauna2:#1fc77a;
+  --surface:#0b1110;--surface2:#101816;--surface3:#141d1a;
+  --soft:#ffffff0a;--glass:#0b1210d9;
+}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 14% -8%,#713cff2c 0,transparent 34rem),
+    radial-gradient(circle at 88% 13%,#26dc8b1c 0,transparent 31rem),
+    linear-gradient(180deg,#07090b 0%,#07100c 42%,#050907 100%);
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.18;
+  background-image:
+    linear-gradient(#ffffff08 1px,transparent 1px),
+    linear-gradient(90deg,#ffffff08 1px,transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom,#000,transparent 68%);
+}
+.app{max-width:1220px;padding:0 20px 84px}
+header.world-header{
+  height:auto;min-height:84px;position:sticky;top:0;z-index:150;
+  margin:0 -20px;padding:14px 20px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  background:linear-gradient(180deg,#080b0de8,#080d0bea);
+  border-bottom:1px solid #ffffff10;
+}
+.world-head-left{display:flex;align-items:center;gap:14px;min-width:0}
+.brand-mark{position:relative;width:48px;height:48px;flex:0 0 48px}
+.brand-mark:before{content:"";position:absolute;inset:-4px;border-radius:18px;background:linear-gradient(135deg,var(--nerd),var(--fauna));filter:blur(10px);opacity:.28}
+.n{
+  position:relative;width:48px;height:48px;border-radius:17px;
+  background:linear-gradient(145deg,#9a66ff,#6d43e5 55%,#31d98a);
+  border:1px solid #d8c8ff44;box-shadow:inset 0 1px #fff4,0 8px 26px #6d43e533;
+}
+.brand-copy{min-width:0}.brand-copy .eyebrow{font-size:9px;letter-spacing:.18em;color:#9e8fc6;font-weight:900;text-transform:uppercase}
+.brand-copy b{display:block;font-size:15px;letter-spacing:.09em;margin-top:3px}.brand-copy b span{color:var(--fauna)}
+.breadcrumb{display:flex;align-items:center;gap:6px;color:#7f9389;font-size:10px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.breadcrumb i{font-style:normal;color:#574c70}.breadcrumb strong{color:#9ddbb8;font-weight:800}
+.world-head-right{display:flex;align-items:center;gap:9px}
+.status{border-color:#ffffff12;background:#ffffff08;color:#b9cec3;box-shadow:inset 0 1px #fff1}
+.world-pulse{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid #7c5cff33;border-radius:999px;background:#7c5cff0f;color:#bdaeff;font-size:10px;font-weight:800}
+.world-pulse:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fauna);box-shadow:0 0 12px var(--fauna)}
+
+.world-dock{
+  position:sticky;top:84px;z-index:140;margin:0 -4px;padding:9px 4px;
+  display:flex;gap:7px;overflow:auto;scrollbar-width:none;
+  background:linear-gradient(180deg,#070b0ae8,#070b0a00);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.world-dock::-webkit-scrollbar{display:none}
+.world-dock button{
+  flex:0 0 auto;border:1px solid #ffffff10;background:#0d1312cc;color:#8fa39a;
+  border-radius:999px;padding:9px 13px;font-size:10px;font-weight:900;letter-spacing:.02em;
+  display:flex;align-items:center;gap:7px;cursor:pointer
+}
+.world-dock button:hover,.world-dock button.active{color:#ecfff5;border-color:#7655d655;background:linear-gradient(135deg,#6f49d927,#1dc97a16)}
+.world-dock .fauna-dot{width:7px;height:7px;border-radius:50%;background:var(--fauna);box-shadow:0 0 10px #55e99b88}
+
+.hero{
+  position:relative;text-align:left;padding:74px 0 32px;
+  display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);gap:34px;align-items:end;
+}
+.hero:before{
+  content:"";position:absolute;right:2%;top:28px;width:270px;height:270px;border-radius:50%;
+  border:1px solid #865cff20;box-shadow:inset 0 0 80px #34dd8d0c,0 0 90px #7c4dff0c;
+  background:
+    radial-gradient(circle at 50% 50%,#55e99b10 0 1px,transparent 2px),
+    radial-gradient(circle at 50% 50%,transparent 0 43%,#8b5cf614 44% 44.8%,transparent 45.5%);
+  pointer-events:none
+}
+.hero-main{position:relative;z-index:1}
+.hero small{color:#a988ff}
+.hero .world-kicker{display:flex;align-items:center;gap:9px;color:#a890e9;font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-bottom:13px}
+.hero .world-kicker:before{content:"";width:28px;height:2px;background:linear-gradient(90deg,var(--nerd),var(--fauna));border-radius:2px}
+.hero h1{max-width:760px;font-size:clamp(42px,7vw,74px);margin:0 0 16px;background:linear-gradient(105deg,#fff 10%,#ded2ff 55%,#9bf2c0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1 span{display:block;color:var(--fauna);-webkit-text-fill-color:var(--fauna)}
+.hero p{margin:0;max-width:660px;color:#9aacA2;font-size:15px}
+.hero-side{position:relative;z-index:1;display:grid;gap:9px}
+.hero-orbit-card{
+  border:1px solid #ffffff11;background:linear-gradient(145deg,#111715d9,#0a100ed9);
+  border-radius:20px;padding:14px 15px;display:grid;grid-template-columns:auto 1fr;gap:11px;align-items:center;
+  box-shadow:inset 0 1px #ffffff08
+}
+.hero-orbit-card .ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#794fe82e,#2bd4881c);font-size:19px;border:1px solid #8d6cff24}
+.hero-orbit-card b{display:block;font-size:11px}.hero-orbit-card small{display:block;color:#71857a;font-size:9px;margin-top:3px;letter-spacing:0;text-transform:none;font-weight:600}
+.search-wrap{grid-column:1/-1;max-width:none;width:100%;margin-top:8px}
+.search{
+  background:linear-gradient(145deg,#111816,#0a100e);border:1px solid #ffffff13;border-radius:20px;padding:8px;
+  box-shadow:0 20px 60px #0005,inset 0 1px #fff08
+}
+.search:focus-within{border-color:#8e6af166;box-shadow:0 0 0 3px #8b5cf615,0 18px 50px #0005}
+.search input{font-size:16px;padding:16px 17px}
+.search button,.btn{background:linear-gradient(135deg,#8258ee,#5e3ac9 55%,#25c97b);color:#fff;box-shadow:0 8px 24px #6c45d42e}
+.quick{justify-content:flex-start;margin-top:10px}.quick button{background:#ffffff06;border-color:#ffffff0e;color:#8fa59a}.quick button:hover{border-color:#55e99b55;color:#c9f8db}
+
+.section-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:18px 0 12px}
+.section-heading .copy small{display:block;color:#8a72cf;font-size:9px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.section-heading h2{margin:4px 0 0;font-size:20px;letter-spacing:-.02em}.section-heading p{margin:0;color:#6f8379;font-size:11px;max-width:450px;text-align:right}
+
+.mode-grid{max-width:none;margin-bottom:30px;gap:12px}
+.mode-card{
+  position:relative;min-height:148px;padding:18px;border-radius:22px;border-color:#ffffff10;
+  background:linear-gradient(155deg,#121916,#0a100e);overflow:hidden;transition:.2s ease;
+  box-shadow:inset 0 1px #ffffff09
+}
+.mode-card:before{content:"";position:absolute;inset:auto -30px -45px auto;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#7450df28,transparent 68%)}
+.mode-card:after{content:"";position:absolute;left:0;top:0;width:3px;height:100%;background:linear-gradient(180deg,var(--nerd),var(--fauna));opacity:.6}
+.mode-card:hover{transform:translateY(-3px);border-color:#815fe54d;box-shadow:0 15px 40px #0005}
+.mode-card span{position:relative;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#ffffff08;border:1px solid #ffffff0d;font-size:20px;margin-bottom:15px}
+.mode-card b{font-size:13px}.mode-card small{font-size:10px;color:#758a80;max-width:190px}
+.mode-card .module-tag{position:absolute;right:12px;top:12px;color:#7e6aaa;font-size:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:900}
+
+.feature-panel{
+  max-width:none;border-color:#ffffff11;background:linear-gradient(145deg,#0f1714e8,#090e0ce8);border-radius:24px;padding:22px;
+  box-shadow:0 22px 70px #0004,inset 0 1px #fff08
+}
+.feature-head{padding-bottom:13px;border-bottom:1px solid #ffffff0b}.feature-head h3{font-size:17px}.feature-head button{background:#ffffff06;border-color:#ffffff10}
+.camera-stage,.photo-session,.crop-inspector,.vision-status,.geo-assist,.hierarchy-panel,.candidate-card,.species-card,.diary-card,.badge-card,.similar-card,.panel,.stat{
+  border-color:#ffffff0f;background:linear-gradient(150deg,#101714,#09100d)
+}
+.camera-stage{border-radius:20px;box-shadow:inset 0 0 40px #0005}
+.capture-badge{border-color:#8a6bf033;background:#100d18db;color:#c9bcf6}
+.photo-session,.crop-inspector{border-radius:16px}
+.vision-status.ok{background:#10241a}.geo-assist{background:#0c1311}
+.hierarchy-panel{background:linear-gradient(145deg,#131620,#0b130f);border-color:#7357c833}
+.tax-node.safe{border-color:#436f55;background:#0d2116}.tax-node.uncertain{border-color:#7259a255}
+.candidate-card.top{border-color:#805ee9;box-shadow:0 0 0 1px #805ee955,0 18px 50px #0005}
+.best-match{border-color:#7b5be9;background:#161227;color:#d8ccff}
+.score-fill{background:linear-gradient(90deg,var(--nerd),var(--fauna))}
+.confidence.high{border-color:#55e99b55;background:#55e99b0b}
+.diary-tabs button.on{background:linear-gradient(135deg,#7451d925,#1ccf7d16);border-color:#7451d955;color:#dcd2ff}
+
+.card{
+  border-radius:30px;border-color:#ffffff11;background:linear-gradient(145deg,#111714,#090e0c);
+  box-shadow:0 25px 80px #0006,inset 0 1px #fff08
+}
+.photo:after{content:"NERDORA FAUNA · DOSSIÊ";position:absolute;left:15px;top:15px;padding:7px 9px;border-radius:999px;background:#0a0e0cbb;border:1px solid #ffffff18;color:#cfc1ff;font-size:8px;font-weight:900;letter-spacing:.11em}
+.info{position:relative}.info:before{content:"";position:absolute;right:20px;top:20px;width:56px;height:56px;border-radius:50%;border:1px solid #7d5be333;box-shadow:inset 0 0 25px #55e99b0c}
+.info h2{background:linear-gradient(100deg,#fff,#d9cfff 60%,#a4f1c4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sci{color:#7fe8ad}.sources{padding-top:18px}.pill{background:#ffffff05;border-color:#ffffff0d}.pill.ok{border-color:#55e99b33}.grid{gap:12px}.stat{min-height:90px;padding:16px}.stat small{color:#7b8f84}.tabs{position:sticky;top:132px;z-index:100;background:#070b0ae8;backdrop-filter:blur(12px);border-bottom-color:#ffffff0e}.tabs button.on{background:linear-gradient(135deg,#7451d925,#1dcc7c17);color:#e8e2ff}
+.panel{border-radius:20px}.row{border-bottom-color:#ffffff09}
+.feedback-toast{border-color:#7559cf55;background:#0e1210f5;backdrop-filter:blur(18px);box-shadow:0 24px 80px #000b}
+
+.mobile-world-nav{display:none}
+@media(max-width:780px){
+  .app{padding:0 12px 98px}
+  header.world-header{margin:0 -12px;padding:11px 12px;min-height:72px}
+  .brand-mark,.n{width:42px;height:42px}.brand-mark{flex-basis:42px}.brand-copy b{font-size:12px}.brand-copy .eyebrow,.world-pulse{display:none}.status{font-size:9px;padding:7px 9px;max-width:122px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .world-dock{top:72px;margin:0 -12px;padding:8px 12px}.world-dock button{padding:8px 10px}
+  .hero{grid-template-columns:1fr;padding:46px 0 24px;gap:18px}.hero:before{width:200px;height:200px;right:-50px;top:20px}.hero h1{font-size:44px}.hero-side{grid-template-columns:repeat(3,1fr)}.hero-orbit-card{display:block;padding:10px}.hero-orbit-card .ico{width:34px;height:34px;margin-bottom:7px}.hero-orbit-card small{display:none}
+  .search-wrap{margin-top:4px}.search button{padding:13px}.quick{overflow:auto;flex-wrap:nowrap;justify-content:flex-start;padding-bottom:3px}
+  .section-heading{align-items:flex-start}.section-heading p{display:none}.mode-grid{grid-template-columns:repeat(2,1fr);gap:9px}.mode-card{min-height:138px;padding:15px}.mode-card small{font-size:9px}
+  .feature-panel{padding:15px;border-radius:20px}.card{border-radius:22px}.info h2{font-size:38px}
+  .tabs{top:120px}
+  .mobile-world-nav{
+    position:fixed;z-index:500;left:10px;right:10px;bottom:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:7px;
+    background:#0b100ef2;border:1px solid #ffffff13;border-radius:20px;box-shadow:0 20px 60px #000c;backdrop-filter:blur(18px)
+  }
+  .mobile-world-nav button{border:0;background:transparent;color:#788b81;border-radius:14px;padding:7px 2px;font-size:9px;font-weight:900}.mobile-world-nav button span{display:block;font-size:18px;margin-bottom:3px}.mobile-world-nav button:active{background:#7454df1d;color:#d7ccff}
+}
+
 </style>
 </head>
 <body>
 <div class="app">
-<header><div class="brand"><div class="n">N</div><div><b>NERDORA <span>FAUNA</span></b><div style="color:#8da596;font-size:11px;margin-top:3px">Preview online · APIs reais</div></div></div><div class="status" id="net">Pronto para consultar</div></header>
-<section class="hero"><small>CATÁLOGO VIVO</small><h1>Descubra qualquer animal.</h1><p>Esta versão online consulta dados reais em fontes abertas. Se uma fonte falhar, as outras continuam funcionando e a ficha não trava.</p><div class="search-wrap"><form class="search" id="form"><input id="q" autocomplete="off" spellcheck="false" placeholder="Digite um animal: onça, macaco, Panthera..."><button>Explorar</button></form><div id="suggestions" class="suggestions" hidden></div></div><div class="quick"><button data-q="onça-pintada">Onça-pintada</button><button data-q="baleia-azul">Baleia-azul</button><button data-q="harpia">Harpia</button><button data-q="capivara">Capivara</button></div></section>
+<header class="world-header">
+  <div class="world-head-left">
+    <div class="brand-mark"><div class="n">N</div></div>
+    <div class="brand-copy">
+      <div class="eyebrow">Mundo Nerdora</div>
+      <b>NERDORA <span>FAUNA</span></b>
+      <div class="breadcrumb"><span>Mundo Nerd</span><i>›</i><span>Exploração</span><i>›</i><strong>Fauna</strong></div>
+    </div>
+  </div>
+  <div class="world-head-right"><div class="world-pulse">Ecossistema conectado</div><div class="status" id="net">Pronto para consultar</div></div>
+</header>
+<nav class="world-dock" aria-label="Navegação Nerdora Fauna">
+  <button class="active" data-world-go="home"><span class="fauna-dot"></span>Início</button>
+  <button data-world-go="identify">📷 Identificar</button>
+  <button data-world-go="nearby">🧭 Próximos</button>
+  <button data-world-go="diary">📒 Diário</button>
+  <button data-world-go="explore">🔎 Explorar</button>
+</nav>
+<section class="hero" id="faunaHome">
+  <div class="hero-main">
+    <div class="world-kicker">Módulo de biodiversidade</div>
+    <h1>Explore a vida.<span>Descubra o planeta vivo.</span></h1>
+    <p>Identifique animais, compare espécies, registre encontros e conecte cada descoberta ao Nerdora Terra. Tudo dentro do mesmo Mundo Nerdora.</p>
+  </div>
+  <div class="hero-side">
+    <div class="hero-orbit-card"><div class="ico">🧠</div><div><b>Visão inteligente</b><small>IA + taxonomia + evidência regional</small></div></div>
+    <div class="hero-orbit-card"><div class="ico">🌍</div><div><b>Terra conectado</b><small>Descobertas ligadas ao território</small></div></div>
+    <div class="hero-orbit-card"><div class="ico">📒</div><div><b>Diário vivo</b><small>Seu histórico de observações</small></div></div>
+  </div>
+  <div class="search-wrap">
+    <form class="search" id="form"><input id="q" autocomplete="off" spellcheck="false" placeholder="Busque um animal, nome científico ou grupo..."><button>Explorar</button></form>
+    <div id="suggestions" class="suggestions" hidden></div>
+    <div class="quick"><button data-q="onça-pintada">Onça-pintada</button><button data-q="baleia-azul">Baleia-azul</button><button data-q="harpia">Harpia</button><button data-q="capivara">Capivara</button></div>
+  </div>
+</section>
+<div class="section-heading"><div class="copy"><small>Portais de exploração</small><h2>Escolha como entrar na Fauna</h2></div><p>Cada módulo compartilha a mesma base de espécies, observações, diário e conexão com o Nerdora Terra.</p></div>
 <section class="mode-grid" aria-label="Modos do Nerdora Fauna">
-  <button class="mode-card" id="modeIdentify"><span>📷</span><b>Identificar / Registrar</b><small>Câmera com reconhecimento visual e candidatos prováveis.</small></button>
-  <button class="mode-card" id="modeExplore"><span>🔎</span><b>Explorar</b><small>Pesquise qualquer animal por nome popular ou científico.</small></button>
-  <button class="mode-card" id="modeNearby"><span>🧭</span><b>Fauna perto de mim</b><small>Descubra espécies observadas na sua região.</small></button>
-  <button class="mode-card" id="modeDiary"><span>📒</span><b>Meu Diário</b><small>Guarde espécies encontradas e desbloqueie conquistas.</small></button>
+  <button class="mode-card" id="modeIdentify"><div class="module-tag">Fauna Vision</div><span>📷</span><b>Identificar / Registrar</b><small>Câmera, recorte inteligente, taxonomia por níveis e comparação visual.</small></button>
+  <button class="mode-card" id="modeExplore"><div class="module-tag">Database</div><span>🔎</span><b>Explorar</b><small>Pesquise espécies, relações, habitat, registros e classificação científica.</small></button>
+  <button class="mode-card" id="modeNearby"><div class="module-tag">Field Mode</div><span>🧭</span><b>Fauna perto de mim</b><small>Descubra registros reais próximos e explore a biodiversidade da região.</small></button>
+  <button class="mode-card" id="modeDiary"><div class="module-tag">Collection</div><span>📒</span><b>Meu Diário</b><small>Guarde encontros, veja seu mapa e acompanhe conquistas e qualidade da IA.</small></button>
 </section>
 
 <section class="feature-panel" id="cameraPanel" hidden>
@@ -138,6 +338,12 @@ header{height:76px;display:flex;align-items:center;justify-content:space-between
 <section class="tab" id="sources2"><article class="panel"><h3>Fontes consultadas</h3><div class="rows" id="sourceRows"></div></article></section>
 </main>
 <div class="foot">Nerdora Fauna · preview online para validação das APIs · dados podem variar entre fontes.</div>
+<nav class="mobile-world-nav" aria-label="Atalhos Nerdora Fauna">
+  <button data-mobile-go="home"><span>◈</span>Início</button>
+  <button data-mobile-go="identify"><span>📷</span>Identificar</button>
+  <button data-mobile-go="nearby"><span>🧭</span>Próximos</button>
+  <button data-mobile-go="diary"><span>📒</span>Diário</button>
+</nav>
 <div id="feedbackToast" class="feedback-toast" hidden>
   <b>A identificação estava correta?</b>
   <small id="feedbackSpecies">Seu feedback fica salvo localmente para medir onde a IA acerta ou erra.</small>
