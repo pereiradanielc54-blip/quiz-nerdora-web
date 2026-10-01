@@ -3,7 +3,7 @@ set -euo pipefail
 
 rm -rf site extracted
 mkdir -p site extracted
-cp -r web-pwa-src/* site/
+cp web-pwa-src/* site/
 
 TAR="QuizNerdora-Android-v0.13.0.tar.gz"
 if compgen -G "web-transfer/tar.b64.part.*" > /dev/null; then
