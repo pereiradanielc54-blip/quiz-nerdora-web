@@ -1190,7 +1190,11 @@ try{
  });
  map.on('moveend',scheduleRegionalRefresh);
  map.on('zoomend',scheduleRegionalRefresh);
- map.once('idle',()=>document.querySelector('#loading').classList.add('hide'));
+ map.once('idle',()=>{
+  document.querySelector('#loading').classList.add('hide');
+  requestAnimationFrame(()=>map?.resize());
+ });
+ window.addEventListener('resize',()=>requestAnimationFrame(()=>map?.resize()),{passive:true});
 }catch(e){
  document.querySelector('#loading').textContent='Globo indisponível neste navegador';
 }
