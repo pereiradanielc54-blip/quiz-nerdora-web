@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#00040a">
   <title>Nerdora Terra — Preview</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="./styles.css?v=13">
+  <link rel="stylesheet" href="./styles.css?v=14">
 </head>
 <body>
   <main class="screen">
@@ -20,6 +20,59 @@
     <button id="geoDivisionsBtn" class="geo-divisions-btn panel ui-layer" type="button" aria-pressed="false" title="Mostrar divisões geográficas">
       <span>🗺️</span><b>Divisões</b>
     </button>
+
+    <button id="liveDataBtn" class="live-data-btn panel ui-layer" type="button" aria-expanded="false" title="Abrir Terra ao Vivo">
+      <span class="live-data-dot"></span><b>Ao vivo</b>
+    </button>
+
+    <aside class="live-sheet" id="liveSheet" aria-hidden="true">
+      <div class="live-backdrop" id="liveBackdrop"></div>
+      <section class="live-card panel">
+        <div class="live-head">
+          <div>
+            <small>NERDORA TERRA • OSIRIS</small>
+            <h3>Terra ao Vivo <span class="live-head-dot"></span></h3>
+            <p>Eventos reais sobre o mesmo planeta 3D.</p>
+          </div>
+          <button id="liveClose" class="live-close" type="button" aria-label="Fechar">×</button>
+        </div>
+
+        <div class="live-feed-list">
+          <button class="live-feed-row" type="button" data-live-feed="earthquakes" aria-pressed="false">
+            <span class="live-feed-icon quake">〽️</span>
+            <span class="live-feed-copy"><b>Terremotos</b><small>USGS • últimas ocorrências</small></span>
+            <span class="live-feed-count" id="liveCountEarthquakes">—</span>
+            <span class="live-switch"><i></i></span>
+          </button>
+
+          <button class="live-feed-row" type="button" data-live-feed="fires" aria-pressed="false">
+            <span class="live-feed-icon fire">🔥</span>
+            <span class="live-feed-copy"><b>Incêndios</b><small>NASA FIRMS • focos ativos</small></span>
+            <span class="live-feed-count" id="liveCountFires">—</span>
+            <span class="live-switch"><i></i></span>
+          </button>
+
+          <button class="live-feed-row" type="button" data-live-feed="weather" aria-pressed="false">
+            <span class="live-feed-icon weather">🌀</span>
+            <span class="live-feed-copy"><b>Clima severo</b><small>NASA EONET / GDACS / NOAA</small></span>
+            <span class="live-feed-count" id="liveCountWeather">—</span>
+            <span class="live-switch"><i></i></span>
+          </button>
+
+          <button class="live-feed-row" type="button" data-live-feed="satellites" aria-pressed="false">
+            <span class="live-feed-icon satellite">🛰️</span>
+            <span class="live-feed-copy"><b>Satélites</b><small>Posições orbitais atuais</small></span>
+            <span class="live-feed-count" id="liveCountSatellites">—</span>
+            <span class="live-switch"><i></i></span>
+          </button>
+        </div>
+
+        <div class="live-foot">
+          <span id="liveStatus">Ative uma camada para começar.</span>
+          <button id="liveRefresh" type="button">↻ Atualizar</button>
+        </div>
+      </section>
+    </aside>
 
     <section class="ui-layer top-ui">
       <header class="panel header">
@@ -93,6 +146,6 @@
 
     <div class="toast" id="toast"></div>
   </main>
-  <script type="module" src="./app.js?v=13"></script>
+  <script type="module" src="./app.js?v=14"></script>
 </body>
 </html>
