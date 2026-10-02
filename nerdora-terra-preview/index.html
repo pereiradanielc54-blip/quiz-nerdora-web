@@ -7,6 +7,7 @@
   <title>Nerdora Terra — Preview</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
   <link rel="stylesheet" href="./styles.css?v=16">
+  <link rel="stylesheet" href="./layout-v17.css?v=17">
 </head>
 <body>
   <main class="screen">
@@ -16,15 +17,6 @@
       <div class="credit">EOX Sentinel-2 • Relevo 3D</div>
       <div class="loading" id="loading">Carregando Terra 3D...</div>
     </section>
-
-    <div class="map-tools ui-layer" aria-label="Ferramentas do mapa">
-      <button id="liveDataBtn" class="live-data-btn panel" type="button" aria-expanded="false" title="Abrir Terra ao Vivo">
-        <span class="live-data-dot"></span><b>Ao vivo</b>
-      </button>
-      <button id="geoDivisionsBtn" class="geo-divisions-btn panel" type="button" aria-pressed="false" title="Mostrar divisões geográficas">
-        <span>🗺️</span><b>Divisões</b>
-      </button>
-    </div>
 
     <aside class="live-sheet" id="liveSheet" aria-hidden="true">
       <div class="live-backdrop" id="liveBackdrop"></div>
@@ -141,6 +133,14 @@
         Gire a Terra, toque nos pontos de interesse e viaje por bilhões de anos de história.
       </div>
 
+      <div class="main-actions terra-tools-actions">
+        <button id="liveDataBtn" class="live-data-btn panel" type="button" aria-expanded="false" title="Abrir Terra ao Vivo">
+          <span class="live-data-dot"></span><b>Ao vivo</b>
+        </button>
+        <button id="geoDivisionsBtn" class="geo-divisions-btn panel" type="button" aria-pressed="false" title="Mostrar divisões geográficas">
+          <span>🗺️</span><b>Divisões</b>
+        </button>
+      </div>
     </section>
 
     <section class="ui-layer bottom-ui">
