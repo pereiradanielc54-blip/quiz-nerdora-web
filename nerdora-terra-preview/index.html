@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
   <link rel="stylesheet" href="./styles.css?v=16">
   <link rel="stylesheet" href="./layout-v17.css?v=17">
+  <link rel="stylesheet" href="./discover-v18.css?v=18">
 </head>
 <body>
   <main class="screen">
@@ -166,13 +167,13 @@
       <section class="discover-card panel">
         <div class="discover-head">
           <div>
-            <small id="discoverStep">BIOMAS</small>
-            <h3 id="discoverTitle">Escolha um bioma</h3>
+            <small id="discoverStep">CATEGORIAS</small>
+            <h3 id="discoverTitle">Descubra a Terra</h3>
           </div>
           <button id="discoverClose" class="discover-close" aria-label="Fechar">×</button>
         </div>
         <div class="discover-actions">
-          <button id="discoverBack" class="discover-back-btn">← Voltar aos biomas</button>
+          <button id="discoverBack" class="discover-back-btn">← Todas as categorias</button>
         </div>
         <div id="discoverList" class="discover-list"></div>
       </section>
@@ -181,5 +182,6 @@
     <div class="toast" id="toast"></div>
   </main>
   <script type="module" src="./app.js?v=16"></script>
+  <script type="module" src="./discover-v18.js?v=18"></script>
 </body>
 </html>
