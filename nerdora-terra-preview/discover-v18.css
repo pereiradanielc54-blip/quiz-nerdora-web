@@ -1,0 +1,37 @@
+/* Nerdora Terra v18 — Discover expanded */
+.discover-card{max-height:86vh!important;padding:14px!important}
+.discover-head{margin-bottom:9px!important}
+.discover-head h3{font-size:22px!important}
+.discover-actions{display:flex!important;align-items:center!important;gap:8px!important;margin-bottom:10px!important;position:sticky;top:0;z-index:4;background:linear-gradient(180deg,rgba(4,36,61,.98) 70%,rgba(4,36,61,0));padding:2px 0 8px!important}
+.discover-back-btn{flex:0 0 auto!important}
+.discover-search-wrap{height:38px;min-width:0;flex:1;display:flex;align-items:center;gap:7px;padding:0 10px;border:1px solid rgba(102,228,255,.28);border-radius:12px;background:#051f35;box-shadow:inset 0 0 12px rgba(0,172,255,.05)}
+.discover-search-wrap span{color:#6ff1ff;font-size:17px;line-height:1}
+.discover-search-wrap input{width:100%;min-width:0;border:0;outline:none;background:transparent;color:#ecfbff;font:700 10px Inter,system-ui,sans-serif}
+.discover-search-wrap input::placeholder{color:#6f8998}
+.discover-list{gap:8px!important;padding-bottom:4px}
+.discover-root-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.discover-sub-grid,.discover-place-grid{grid-template-columns:1fr!important}
+.discover-category{min-height:126px;padding:11px!important;display:flex;flex-direction:column;justify-content:flex-start}
+.discover-root-grid .discover-category .top{align-items:flex-start!important}
+.discover-root-grid .discover-category .icon{font-size:27px!important}
+.discover-root-grid .discover-category b{font-size:13px!important;line-height:1.15}
+.discover-root-grid .discover-category p{font-size:9px!important;line-height:1.32!important;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.discover-root-grid .discover-category .meta{margin-top:auto!important}
+.discover-root-grid .discover-category .meta span{font-size:7px!important}
+.discover-sub-grid .discover-category{min-height:94px!important}
+.discover-sub-grid .discover-category .top .icon{font-size:24px!important}
+.discover-sub-grid .discover-category p{font-size:10px!important}
+.discover-place{min-height:92px!important;padding:11px 12px!important}
+.discover-place .top .icon{font-size:24px!important}
+.discover-place .top b{font-size:14px!important}
+.discover-place p{font-size:10px!important;line-height:1.35!important}
+.discover-place .meta span:last-child{max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.discover-empty{border:1px dashed rgba(100,220,255,.22);border-radius:16px;padding:22px;text-align:center;color:#92acb9;font-size:11px;background:rgba(3,25,43,.7)}
+@media(max-width:360px){
+ .discover-root-grid{grid-template-columns:1fr!important}
+ .discover-category{min-height:100px!important}
+}
+@media(min-width:600px){
+ .discover-root-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ .discover-sub-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
