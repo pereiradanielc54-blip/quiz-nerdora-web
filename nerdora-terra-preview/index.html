@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#00040a">
   <title>Nerdora Terra — Preview</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="./styles.css?v=14">
+  <link rel="stylesheet" href="./styles.css?v=15">
 </head>
 <body>
   <main class="screen">
@@ -67,10 +67,59 @@
           </button>
         </div>
 
+        <div class="live-filters" aria-label="Filtros das camadas ao vivo">
+          <label><span>〽️ Terremotos</span>
+            <select data-live-filter="earthquakes">
+              <option value="2.5">M 2,5+</option>
+              <option value="4">M 4+</option>
+              <option value="5">M 5+</option>
+              <option value="6">M 6+</option>
+            </select>
+          </label>
+          <label><span>🔥 Incêndios</span>
+            <select data-live-filter="fires">
+              <option value="all">Todos</option>
+              <option value="high">Alta confiança</option>
+              <option value="frp50">FRP ≥ 50 MW</option>
+            </select>
+          </label>
+          <label><span>🌀 Clima</span>
+            <select data-live-filter="weather">
+              <option value="all">Todos</option>
+              <option value="medium">Moderado+</option>
+              <option value="high">Severo</option>
+            </select>
+          </label>
+          <label><span>🛰️ Satélites</span>
+            <select data-live-filter="satellites">
+              <option value="all">Todos</option>
+              <option value="earth_obs">Observação da Terra</option>
+              <option value="weather">Meteorológicos</option>
+              <option value="navigation">Navegação</option>
+              <option value="science">Ciência / estações</option>
+              <option value="comms">Comunicações</option>
+            </select>
+          </label>
+        </div>
+
+        <button id="liveDossier" class="live-dossier-btn" type="button">📍 O que está acontecendo aqui?</button>
+
         <div class="live-foot">
           <span id="liveStatus">Ative uma camada para começar.</span>
           <button id="liveRefresh" type="button">↻ Atualizar</button>
         </div>
+      </section>
+    </aside>
+
+    <aside class="live-detail-sheet" id="liveDetailSheet" aria-hidden="true">
+      <div class="live-detail-backdrop" id="liveDetailBackdrop"></div>
+      <section class="live-detail-card panel">
+        <button id="liveDetailClose" class="live-detail-close" type="button" aria-label="Fechar">×</button>
+        <div id="liveDetailIcon" class="live-detail-icon">🌍</div>
+        <small id="liveDetailKind">TERRA AO VIVO</small>
+        <h3 id="liveDetailTitle">Detalhes</h3>
+        <div id="liveDetailBody" class="live-detail-body"></div>
+        <div id="liveDetailMeta" class="live-detail-meta"></div>
       </section>
     </aside>
 
@@ -99,17 +148,7 @@
       </div>
     </section>
 
-    <div class="hint panel ui-layer">☝️ <span>Arraste para girar • belisque para zoom</span></div>
-
     <section class="ui-layer bottom-ui">
-      <div class="shortcuts panel">
-        <h2>Atalhos de exploração</h2>
-        <div>
-          <button data-action="nature"><span>🏔️</span><b>Natureza</b><strong>›</strong></button>
-          <button data-action="ocean"><span>🌊</span><b>Oceanos</b><strong>›</strong></button>
-        </div>
-      </div>
-
       <nav class="nav panel">
         <button class="active" data-action="terra"><span>🌍</span><b>Terra</b></button>
         <button data-action="discover"><span>🧭</span><b>Descobrir</b></button>
@@ -146,6 +185,6 @@
 
     <div class="toast" id="toast"></div>
   </main>
-  <script type="module" src="./app.js?v=14"></script>
+  <script type="module" src="./app.js?v=15"></script>
 </body>
 </html>
