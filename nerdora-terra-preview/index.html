@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#00040a">
   <title>Nerdora Terra — Preview</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="./styles.css?v=15">
+  <link rel="stylesheet" href="./styles.css?v=16">
 </head>
 <body>
   <main class="screen">
@@ -17,13 +17,14 @@
       <div class="loading" id="loading">Carregando Terra 3D...</div>
     </section>
 
-    <button id="geoDivisionsBtn" class="geo-divisions-btn panel ui-layer" type="button" aria-pressed="false" title="Mostrar divisões geográficas">
-      <span>🗺️</span><b>Divisões</b>
-    </button>
-
-    <button id="liveDataBtn" class="live-data-btn panel ui-layer" type="button" aria-expanded="false" title="Abrir Terra ao Vivo">
-      <span class="live-data-dot"></span><b>Ao vivo</b>
-    </button>
+    <div class="map-tools ui-layer" aria-label="Ferramentas do mapa">
+      <button id="liveDataBtn" class="live-data-btn panel" type="button" aria-expanded="false" title="Abrir Terra ao Vivo">
+        <span class="live-data-dot"></span><b>Ao vivo</b>
+      </button>
+      <button id="geoDivisionsBtn" class="geo-divisions-btn panel" type="button" aria-pressed="false" title="Mostrar divisões geográficas">
+        <span>🗺️</span><b>Divisões</b>
+      </button>
+    </div>
 
     <aside class="live-sheet" id="liveSheet" aria-hidden="true">
       <div class="live-backdrop" id="liveBackdrop"></div>
@@ -134,18 +135,12 @@
         <button data-action="fullscreen" aria-label="Tela cheia">⌗</button>
       </header>
 
-      <div class="mini panel">EXPLORE <em>•</em> DESCUBRA <em>•</em> COMPARE</div>
-
       <h1>Nosso mundo é<br><span>absurdamente incrível.</span></h1>
 
       <div class="subtitle panel">
         Gire a Terra, toque nos pontos de interesse e viaje por bilhões de anos de história.
       </div>
 
-      <div class="main-actions">
-        <button class="action explore" data-action="explore"><span>🌍</span><b>Explorar agora</b><strong>›</strong></button>
-        <button class="action random" data-action="random"><span>🎲</span><b>Me surpreenda</b><strong>›</strong></button>
-      </div>
     </section>
 
     <section class="ui-layer bottom-ui">
@@ -185,6 +180,6 @@
 
     <div class="toast" id="toast"></div>
   </main>
-  <script type="module" src="./app.js?v=15"></script>
+  <script type="module" src="./app.js?v=16"></script>
 </body>
 </html>
