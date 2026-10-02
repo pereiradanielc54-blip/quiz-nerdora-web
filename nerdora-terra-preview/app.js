@@ -5,6 +5,20 @@ const MAPTERHORN_TILEJSON='https://tiles.mapterhorn.com/tilejson.json';
 const MAPTERHORN_DIRECT='https://tiles.mapterhorn.com/{z}/{x}/{y}.webp';
 const AWS_TERRAIN='https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png';
 
+const OSIRIS_BASE='https://osirisai.live';
+const LIVE_ENDPOINTS={
+ earthquakes:'/api/earthquakes',
+ fires:'/api/fires',
+ weather:'/api/weather',
+ satellites:'/api/satellites'
+};
+const LIVE_REFRESH_MS={
+ earthquakes:10*60*1000,
+ fires:10*60*1000,
+ weather:5*60*1000,
+ satellites:5*60*1000
+};
+
 const BRAZIL_STAC='https://data.inpe.br/bdc/stac/v1/search';
 const BRAZIL_COLLECTION='CB4A-WPM-PCA-FUSED-1';
 const BRAZIL_TMS='https://data.inpe.br/bdc/tms/tiles/WebMercatorQuad/{z}/{x}/{y}?url=';
@@ -267,6 +281,7 @@ async function refreshRegionalImagery(){
   activeImagery=region?region.name:'EOX Sentinel-2';
  }
  if(divisionsEnabled)raiseDivisionLayers();
+ if(liveAnyActive())raiseLiveLayers();
  updateCredit();
 }
 
@@ -468,6 +483,427 @@ async function toggleGeographicDivisions(){
  btn.disabled=false;
 }
 
+
+const LIVE_LAYER_IDS=[
+ 'live-earthquakes-glow','live-earthquakes',
+ 'live-fires-glow','live-fires',
+ 'live-weather-glow','live-weather',
+ 'live-satellites'
+];
+const liveState={
+ earthquakes:{active:false,count:null,loadedAt:0,loading:false},
+ fires:{active:false,count:null,loadedAt:0,loading:false},
+ weather:{active:false,count:null,loadedAt:0,loading:false},
+ satellites:{active:false,count:null,loadedAt:0,loading:false}
+};
+const livePollTimers={};
+let liveLayersReady=false;
+let livePopup=null;
+
+function liveAnyActive(){
+ return Object.values(liveState).some(v=>v.active);
+}
+
+function raiseLiveLayers(){
+ if(!map||!liveLayersReady)return;
+ for(const id of LIVE_LAYER_IDS){
+  try{if(map.getLayer(id))map.moveLayer(id)}catch(e){}
+ }
+}
+
+function liveEmptyFC(){
+ return {type:'FeatureCollection',features:[]};
+}
+
+function safeNum(v,fallback=0){
+ const n=Number(v);
+ return Number.isFinite(n)?n:fallback;
+}
+
+function validCoord(lng,lat){
+ return Number.isFinite(Number(lng))&&Number.isFinite(Number(lat))&&Math.abs(Number(lat))<=90&&Math.abs(Number(lng))<=180;
+}
+
+function asFeature(lng,lat,props){
+ return {type:'Feature',geometry:{type:'Point',coordinates:[Number(lng),Number(lat)]},properties:props};
+}
+
+function formatLiveCount(n){
+ return n==null?'—':new Intl.NumberFormat('pt-BR',{notation:n>9999?'compact':'standard',maximumFractionDigits:1}).format(n);
+}
+
+function setLiveStatus(msg){
+ const el=document.querySelector('#liveStatus');
+ if(el)el.textContent=msg;
+}
+
+function updateLiveUi(){
+ const countIds={
+  earthquakes:'#liveCountEarthquakes',
+  fires:'#liveCountFires',
+  weather:'#liveCountWeather',
+  satellites:'#liveCountSatellites'
+ };
+ for(const [key,state] of Object.entries(liveState)){
+  const row=document.querySelector('[data-live-feed="'+key+'"]');
+  const count=document.querySelector(countIds[key]);
+  if(row){
+   row.classList.toggle('active',state.active);
+   row.classList.toggle('loading',state.loading);
+   row.setAttribute('aria-pressed',String(state.active));
+  }
+  if(count)count.textContent=state.loading?'…':formatLiveCount(state.count);
+ }
+ const btn=document.querySelector('#liveDataBtn');
+ if(btn)btn.classList.toggle('has-live',liveAnyActive());
+}
+
+async function fetchLiveJson(url,ms=15000){
+ const controller=new AbortController();
+ const t=setTimeout(()=>controller.abort(),ms);
+ try{
+  const res=await fetch(url,{mode:'cors',credentials:'omit',cache:'no-store',signal:controller.signal,headers:{Accept:'application/json'}});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  return await res.json();
+ }finally{
+  clearTimeout(t);
+ }
+}
+
+async function fetchOsirisFeed(key){
+ return await fetchLiveJson(OSIRIS_BASE+LIVE_ENDPOINTS[key],key==='satellites'?24000:16000);
+}
+
+async function fetchEarthquakesFallback(){
+ const data=await fetchLiveJson('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson',12000);
+ return {
+  earthquakes:(data.features||[]).map(f=>{
+   const c=f.geometry?.coordinates||[];
+   const p=f.properties||{};
+   return {id:f.id,lng:c[0],lat:c[1],depth:c[2],magnitude:p.mag,place:p.place,time:p.time,tsunami:p.tsunami};
+  }),
+  total:(data.features||[]).length,
+  source:'USGS direto'
+ };
+}
+
+async function fetchWeatherFallback(){
+ const data=await fetchLiveJson('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=120',12000);
+ const events=[];
+ for(const e of data.events||[]){
+  const category=e.categories?.[0]?.id||'event';
+  if(category==='wildfires'||category==='earthquakes')continue;
+  const g=e.geometry?.[e.geometry.length-1];
+  if(!g?.coordinates||g.type!=='Point')continue;
+  const severity=category==='severeStorms'||category==='volcanoes'?'high':category==='seaIce'?'medium':'low';
+  events.push({
+   id:e.id,title:e.title,type:e.categories?.[0]?.title||'Evento natural',category,severity,
+   lng:g.coordinates[0],lat:g.coordinates[1],date:g.date,provider:'NASA EONET'
+  });
+ }
+ return {events,total:events.length,source:'NASA EONET direto'};
+}
+
+async function fetchFiresFallback(){
+ const data=await fetchLiveJson('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&category=wildfires&limit=300',12000);
+ const fires=[];
+ for(const e of data.events||[]){
+  const g=e.geometry?.[e.geometry.length-1];
+  if(!g?.coordinates||g.type!=='Point')continue;
+  fires.push({id:e.id,title:e.title,type:'fire',lng:g.coordinates[0],lat:g.coordinates[1],date:g.date,confidence:'event'});
+ }
+ return {fires,total:fires.length,source:'NASA EONET fallback'};
+}
+
+async function getLivePayload(key){
+ try{
+  const data=await fetchOsirisFeed(key);
+  return {...data,_source:'OSIRIS'};
+ }catch(err){
+  if(key==='earthquakes')return {...await fetchEarthquakesFallback(),_source:'USGS fallback'};
+  if(key==='fires')return {...await fetchFiresFallback(),_source:'NASA fallback'};
+  if(key==='weather')return {...await fetchWeatherFallback(),_source:'NASA fallback'};
+  throw err;
+ }
+}
+
+function buildEarthquakeGeo(data){
+ const arr=data.earthquakes||data.features||[];
+ return {
+  type:'FeatureCollection',
+  features:arr.filter(q=>validCoord(q.lng,q.lat)).map(q=>asFeature(q.lng,q.lat,{
+   id:q.id||'',kind:'earthquake',
+   magnitude:safeNum(q.magnitude??q.mag,0),
+   depth:safeNum(q.depth,0),
+   title:q.place||'Terremoto',
+   place:q.place||'Local não informado',
+   time:q.time||'',
+   tsunami:q.tsunami?1:0
+  }))
+ };
+}
+
+function buildFiresGeo(data){
+ const arr=data.fires||[];
+ return {
+  type:'FeatureCollection',
+  features:arr.filter(f=>validCoord(f.lng,f.lat)).map((f,i)=>asFeature(f.lng,f.lat,{
+   id:f.id||String(i),kind:f.type==='volcano'?'volcano':'fire',
+   title:f.title||'Foco de calor',
+   brightness:safeNum(f.brightness,0),
+   frp:safeNum(f.frp,0),
+   confidence:String(f.confidence||''),
+   date:String(f.date||''),
+   time:String(f.time||'')
+  }))
+ };
+}
+
+function buildWeatherGeo(data){
+ const arr=data.events||data.weather_events||[];
+ return {
+  type:'FeatureCollection',
+  features:arr.filter(e=>validCoord(e.lng,e.lat)).map((e,i)=>asFeature(e.lng,e.lat,{
+   id:e.id||String(i),kind:'weather',
+   title:e.title||e.type||'Evento climático',
+   type:e.type||e.category||'Evento',
+   severity:e.severity||'low',
+   provider:e.provider||'OSIRIS',
+   area:e.area||'',
+   date:e.date||''
+  }))
+ };
+}
+
+function buildSatellitesGeo(data){
+ let arr=data.satellites||[];
+ if(arr.length>2600){
+  const step=Math.ceil(arr.length/2400);
+  arr=arr.filter((s,i)=>i%step===0||/ISS|HUBBLE|SENTINEL|LANDSAT|TIANGONG/i.test(s.name||'')).slice(0,2800);
+ }
+ return {
+  type:'FeatureCollection',
+  features:arr.filter(s=>validCoord(s.lng,s.lat)).map((s,i)=>asFeature(s.lng,s.lat,{
+   id:s.noradId||String(i),kind:'satellite',
+   title:s.name||'Satélite',
+   mission:s.mission||'Objeto orbital',
+   category:s.category||'other',
+   alt:safeNum(s.alt,0),
+   color:s.color||'#5cf4ff'
+  }))
+ };
+}
+
+function livePopupContent(props){
+ const wrap=document.createElement('div');
+ wrap.className='live-popup';
+ const eyebrow=document.createElement('small');
+ const title=document.createElement('b');
+ const text=document.createElement('p');
+ if(props.kind==='earthquake'){
+  eyebrow.textContent='〽️ TERREMOTO • AO VIVO';
+  title.textContent='M '+safeNum(props.magnitude,0).toFixed(1)+' — '+(props.title||'Evento sísmico');
+  text.textContent='Profundidade: '+Math.round(safeNum(props.depth,0))+' km'+(Number(props.tsunami)?' • alerta de tsunami':'');
+ }else if(props.kind==='fire'||props.kind==='volcano'){
+  eyebrow.textContent=props.kind==='volcano'?'🌋 ATIVIDADE VULCÂNICA':'🔥 FOCO ATIVO';
+  title.textContent=props.title||'Evento térmico';
+  text.textContent=props.frp?'Potência radiativa: '+safeNum(props.frp,0).toFixed(1)+' MW':'Detecção recente de atividade térmica.';
+ }else if(props.kind==='weather'){
+  eyebrow.textContent='🌀 CLIMA SEVERO';
+  title.textContent=props.title||'Evento climático';
+  text.textContent=[props.type,props.area,props.provider].filter(Boolean).join(' • ');
+ }else{
+  eyebrow.textContent='🛰️ SATÉLITE';
+  title.textContent=props.title||'Objeto orbital';
+  text.textContent=(props.mission||'Objeto orbital')+' • altitude ~'+Math.round(safeNum(props.alt,0))+' km';
+ }
+ wrap.append(eyebrow,title,text);
+ return wrap;
+}
+
+function registerLiveClick(layerId){
+ map.on('click',layerId,e=>{
+  const f=e.features?.[0];
+  if(!f)return;
+  livePopup?.remove();
+  livePopup=new maplibregl.Popup({closeButton:true,closeOnClick:true,maxWidth:'260px',offset:10})
+   .setLngLat(f.geometry.coordinates.slice())
+   .setDOMContent(livePopupContent(f.properties||{}))
+   .addTo(map);
+ });
+ map.on('mouseenter',layerId,()=>{map.getCanvas().style.cursor='pointer'});
+ map.on('mouseleave',layerId,()=>{map.getCanvas().style.cursor=''});
+}
+
+async function ensureLiveLayers(){
+ if(liveLayersReady)return true;
+ if(!map)return false;
+ if(!map.isStyleLoaded())await new Promise(resolve=>map.once('load',resolve));
+ try{
+  for(const sourceId of ['live-earthquakes','live-fires','live-weather','live-satellites']){
+   if(!map.getSource(sourceId))map.addSource(sourceId,{type:'geojson',data:liveEmptyFC()});
+  }
+
+  map.addLayer({id:'live-earthquakes-glow',type:'circle',source:'live-earthquakes',layout:{visibility:'none'},paint:{
+   'circle-radius':['interpolate',['linear'],['get','magnitude'],2.5,8,5,17,7,28],
+   'circle-color':['interpolate',['linear'],['get','magnitude'],2.5,'#ffd166',4.5,'#ff8c42',6,'#ff3b30',8,'#ff005d'],
+   'circle-opacity':.18,'circle-blur':.65
+  }});
+  map.addLayer({id:'live-earthquakes',type:'circle',source:'live-earthquakes',layout:{visibility:'none'},paint:{
+   'circle-radius':['interpolate',['linear'],['get','magnitude'],2.5,3.2,5,6,7,9],
+   'circle-color':['interpolate',['linear'],['get','magnitude'],2.5,'#ffe66d',4.5,'#ff9f43',6,'#ff453a',8,'#ff1744'],
+   'circle-stroke-color':'rgba(255,255,255,.9)','circle-stroke-width':.7,'circle-opacity':.94
+  }});
+
+  map.addLayer({id:'live-fires-glow',type:'circle',source:'live-fires',layout:{visibility:'none'},paint:{
+   'circle-radius':['interpolate',['linear'],['zoom'],1,3,6,7,12,13],
+   'circle-color':'#ff3b00','circle-opacity':.22,'circle-blur':.8
+  }});
+  map.addLayer({id:'live-fires',type:'circle',source:'live-fires',layout:{visibility:'none'},paint:{
+   'circle-radius':['interpolate',['linear'],['zoom'],1,1.8,6,3.6,12,6],
+   'circle-color':['case',['==',['get','kind'],'volcano'],'#ff00a8','#ff6b00'],
+   'circle-stroke-color':'#ffd2a6','circle-stroke-width':.5,'circle-opacity':.9
+  }});
+
+  map.addLayer({id:'live-weather-glow',type:'circle',source:'live-weather',layout:{visibility:'none'},paint:{
+   'circle-radius':['interpolate',['linear'],['zoom'],1,8,6,14,12,22],
+   'circle-color':['match',['get','severity'],'high','#ff2d55','medium','#ffcc00','#45e7ff'],
+   'circle-opacity':.16,'circle-blur':.72
+  }});
+  map.addLayer({id:'live-weather',type:'circle',source:'live-weather',layout:{visibility:'none'},paint:{
+   'circle-radius':['interpolate',['linear'],['zoom'],1,3.8,6,6.2,12,8.5],
+   'circle-color':['match',['get','severity'],'high','#ff2d55','medium','#ffcc00','#45e7ff'],
+   'circle-stroke-color':'rgba(255,255,255,.88)','circle-stroke-width':.7,'circle-opacity':.92
+  }});
+
+  map.addLayer({id:'live-satellites',type:'circle',source:'live-satellites',layout:{visibility:'none'},paint:{
+   'circle-radius':['interpolate',['linear'],['zoom'],1,1.2,5,2.3,10,3.4],
+   'circle-color':['coalesce',['get','color'],'#62efff'],
+   'circle-opacity':.9,'circle-stroke-color':'rgba(255,255,255,.45)','circle-stroke-width':.35
+  }});
+
+  ['live-earthquakes','live-fires','live-weather','live-satellites'].forEach(registerLiveClick);
+  liveLayersReady=true;
+  raiseLiveLayers();
+  return true;
+ }catch(e){
+  console.warn('Ao Vivo layer init:',e);
+  return false;
+ }
+}
+
+function liveLayerIdsFor(key){
+ if(key==='earthquakes')return ['live-earthquakes-glow','live-earthquakes'];
+ if(key==='fires')return ['live-fires-glow','live-fires'];
+ if(key==='weather')return ['live-weather-glow','live-weather'];
+ return ['live-satellites'];
+}
+
+function setLiveLayerVisibility(key,visible){
+ for(const id of liveLayerIdsFor(key)){
+  try{if(map.getLayer(id))map.setLayoutProperty(id,'visibility',visible?'visible':'none')}catch(e){}
+ }
+ if(visible)raiseLiveLayers();
+}
+
+function setLiveSourceData(key,data){
+ const source=map?.getSource('live-'+key);
+ if(source?.setData)source.setData(data);
+}
+
+async function loadLiveFeed(key,force=false){
+ const state=liveState[key];
+ if(!state||state.loading)return;
+ const fresh=Date.now()-state.loadedAt<LIVE_REFRESH_MS[key];
+ if(fresh&&!force){
+  setLiveLayerVisibility(key,state.active);
+  return;
+ }
+ state.loading=true;
+ updateLiveUi();
+ setLiveStatus('Atualizando '+({earthquakes:'terremotos',fires:'incêndios',weather:'clima severo',satellites:'satélites'}[key])+'…');
+ try{
+  const payload=await getLivePayload(key);
+  let geo;
+  if(key==='earthquakes')geo=buildEarthquakeGeo(payload);
+  else if(key==='fires')geo=buildFiresGeo(payload);
+  else if(key==='weather')geo=buildWeatherGeo(payload);
+  else geo=buildSatellitesGeo(payload);
+
+  setLiveSourceData(key,geo);
+  state.count=safeNum(payload.total,geo.features.length);
+  state.loadedAt=Date.now();
+  setLiveStatus((payload._source||'OSIRIS')+' • '+formatLiveCount(state.count)+' itens');
+ }catch(e){
+  state.count=state.count??0;
+  setLiveStatus(key==='satellites'?'Satélites indisponíveis agora; as outras camadas continuam funcionando.':'Feed temporariamente indisponível.');
+  console.warn('Nerdora Terra Ao Vivo:',key,e);
+ }finally{
+  state.loading=false;
+  updateLiveUi();
+  if(state.active)setLiveLayerVisibility(key,true);
+ }
+}
+
+function startLivePolling(key){
+ clearInterval(livePollTimers[key]);
+ livePollTimers[key]=setInterval(()=>{
+  if(liveState[key]?.active&&!document.hidden)loadLiveFeed(key,true);
+ },LIVE_REFRESH_MS[key]);
+}
+
+function stopLivePolling(key){
+ clearInterval(livePollTimers[key]);
+ delete livePollTimers[key];
+}
+
+async function toggleLiveFeed(key){
+ const state=liveState[key];
+ if(!state)return;
+ const ready=await ensureLiveLayers();
+ if(!ready){
+  toast('Não foi possível preparar as camadas ao vivo.');
+  return;
+ }
+ state.active=!state.active;
+ setLiveLayerVisibility(key,state.active);
+ if(state.active){
+  await loadLiveFeed(key,false);
+  startLivePolling(key);
+ }else{
+  stopLivePolling(key);
+ }
+ updateLiveUi();
+}
+
+function openLiveSheet(){
+ closeSheet();
+ closeDiscoverSheet();
+ const el=document.querySelector('#liveSheet');
+ const btn=document.querySelector('#liveDataBtn');
+ el?.classList.add('open');
+ el?.setAttribute('aria-hidden','false');
+ btn?.setAttribute('aria-expanded','true');
+ updateLiveUi();
+}
+
+function closeLiveSheet(){
+ const el=document.querySelector('#liveSheet');
+ const btn=document.querySelector('#liveDataBtn');
+ el?.classList.remove('open');
+ el?.setAttribute('aria-hidden','true');
+ btn?.setAttribute('aria-expanded','false');
+}
+
+async function refreshActiveLiveFeeds(){
+ const keys=Object.keys(liveState).filter(k=>liveState[k].active);
+ if(!keys.length){
+  setLiveStatus('Ative uma camada para começar.');
+  return;
+ }
+ await Promise.all(keys.map(k=>loadLiveFeed(k,true)));
+}
+
 async function configureTerrain(){
  const loading=document.querySelector('#loading');
  try{
@@ -603,6 +1039,7 @@ function random(pool=spots){
 }
 
 function openDiscoverSheet(){
+ closeLiveSheet();
  closeSheet();
  discoverSheet.classList.add('open');
  discoverSheet.setAttribute('aria-hidden','false');
@@ -663,6 +1100,14 @@ function renderPlaceList(biome){
 }
 
 document.querySelector('#geoDivisionsBtn').onclick=toggleGeographicDivisions;
+document.querySelector('#liveDataBtn').onclick=()=>{
+ const livePanel=document.querySelector('#liveSheet');
+ livePanel?.classList.contains('open')?closeLiveSheet():openLiveSheet();
+};
+document.querySelector('#liveClose').onclick=closeLiveSheet;
+document.querySelector('#liveBackdrop').onclick=closeLiveSheet;
+document.querySelector('#liveRefresh').onclick=refreshActiveLiveFeeds;
+document.querySelectorAll('[data-live-feed]').forEach(row=>row.onclick=()=>toggleLiveFeed(row.dataset.liveFeed));
 document.querySelector('#closeSheet').onclick=closeSheet;
 document.querySelector('#locate').onclick=()=>{if(selected){closeSheet();fly(selected)}};
 discoverBackdrop.onclick=closeDiscoverSheet;
