@@ -1,20 +1,19 @@
-// Nerdora Terra Core 3.3
+// Nerdora Terra Core 3.4
 // Non-invasive bootstrap: captures the existing MapLibre instance, raises the
-// supported camera zoom, manages imagery visibility, relief, buildings and landmarks.
+// supported camera zoom, manages imagery visibility, relief and buildings.
+// Landmarks are loaded as an optional module so a Three.js/CDN failure can never
+// prevent the Earth, terrain, imagery or buildings from starting.
 
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.mjs';
 import {SatelliteSourceManager} from './satellite-source-manager.js';
 import {enableTerrainHillshade} from './terrain-enhancements.js';
 import {Buildings3DManager} from './buildings-3d.js';
-import {Landmarks3DManager} from './landmarks-3d.js';
 
-const CORE_VERSION='3.3.0';
+const CORE_VERSION='3.4.0';
 const booted=new WeakSet();
 
 function installSafeApiProxy(){
   const host=location.hostname.toLowerCase();
-  // GitHack/local preview keeps calling providers directly. Vercel production
-  // gets same-origin cached endpoints, with automatic provider fallback.
   const useProxy=host.endsWith('.vercel.app');
   if(!useProxy||window.__NERDORA_FETCH_PROXY__)return;
 
@@ -50,6 +49,20 @@ function installSafeApiProxy(){
   window.__NERDORA_FETCH_PROXY__={enabled:true,host};
 }
 
+async function bootOptionalLandmarks(map){
+  try{
+    const {Landmarks3DManager}=await import('./landmarks-3d.js');
+    const landmarks=new Landmarks3DManager(map,maplibregl);
+    window.__NERDORA_TERRA_CORE__.landmarks3D=landmarks;
+    window.__NERDORA_TERRA_CORE__.landmarks3DStatus='ready';
+    landmarks.start();
+  }catch(error){
+    window.__NERDORA_TERRA_CORE__.landmarks3D=null;
+    window.__NERDORA_TERRA_CORE__.landmarks3DStatus='unavailable';
+    console.warn('Nerdora Terra landmarks 3D unavailable; base globe remains active.',error);
+  }
+}
+
 function boot(map){
   if(!map||booted.has(map))return;
   booted.add(map);
@@ -64,6 +77,7 @@ function boot(map){
     satelliteSourceManager:null,
     buildings3D:null,
     landmarks3D:null,
+    landmarks3DStatus:'loading',
     hillshade:true,
     apiProxy:!!window.__NERDORA_FETCH_PROXY__?.enabled
   };
@@ -82,9 +96,8 @@ function boot(map){
   window.__NERDORA_TERRA_CORE__.buildings3D=buildings;
   buildings.start();
 
-  const landmarks=new Landmarks3DManager(map,maplibregl);
-  window.__NERDORA_TERRA_CORE__.landmarks3D=landmarks;
-  landmarks.start();
+  // Optional: does not block the core if Three.js or the external module fails.
+  setTimeout(()=>bootOptionalLandmarks(map),250);
 
   window.dispatchEvent(new CustomEvent('nerdora:terra-core-ready',{detail:{version:CORE_VERSION,map}}));
 }
@@ -99,9 +112,6 @@ function capture(map){
 
 installSafeApiProxy();
 
-// app.js owns the map instance. We keep that ownership intact and only observe
-// the first public Map event registration, which gives Core 3.x the same map
-// without rewriting the proven app.js implementation.
 if(!maplibregl.Map.prototype.__nerdoraCorePatched){
   const originalOn=maplibregl.Map.prototype.on;
   Object.defineProperty(maplibregl.Map.prototype,'__nerdoraCorePatched',{value:true,configurable:false});
