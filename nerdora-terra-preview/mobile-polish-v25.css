@@ -1,0 +1,50 @@
+/* Nerdora Terra v25 — mobile production polish and resilience */
+html,body{width:100%;height:100%;overscroll-behavior:none;touch-action:manipulation}
+.screen{width:100vw;height:100vh;height:100dvh;max-height:100dvh}
+
+/* Terra IA adds a fifth control to the header. Keep everything on one row. */
+.header{grid-template-columns:42px minmax(0,1fr) 34px 40px 40px!important}
+.header .brand{overflow:hidden}
+.header .brand>div{overflow:hidden;text-overflow:ellipsis}
+.header .terra-ai-head-btn{align-self:center;justify-self:center;margin:0!important;padding:0!important}
+
+/* Closed overlays must never leak into the initial frame. */
+.live-sheet:not(.open),
+.live-detail-sheet:not(.open),
+.discover-sheet:not(.open),
+.terra-ai-sheet:not(.open){visibility:hidden}
+.live-sheet.open,
+.live-detail-sheet.open,
+.discover-sheet.open,
+.terra-ai-sheet.open{visibility:visible}
+
+/* Keep controls comfortably tappable without covering the useful globe center. */
+button,a,select,input{-webkit-tap-highlight-color:transparent}
+.terra-tools-actions{isolation:isolate}
+.credit{max-width:58vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Compact browser viewports on Android lose a lot of vertical space to chrome. */
+@media(max-width:430px){
+  .header{grid-template-columns:38px minmax(0,1fr) 32px 36px 36px!important;gap:5px!important}
+  .brand>div{font-size:17px!important}
+  .top-ui h1{line-height:.94!important}
+  .terra-tools-actions{z-index:97!important}
+  .live-card,.discover-card,.terra-ai-card,.live-detail-card{max-height:min(86dvh,760px)!important}
+}
+
+@media(max-height:700px){
+  .top-ui{gap:3px!important;padding-top:0!important}
+  .header{height:44px!important;min-height:44px!important}
+  .logo{width:34px!important;height:34px!important;font-size:23px!important}
+  .header button,.header .terra-ai-head-btn{width:32px!important;height:32px!important;font-size:17px!important}
+  .top-ui h1{font-size:25px!important;line-height:.9!important}
+  .subtitle{min-height:30px!important;font-size:9px!important;padding:4px 7px!important}
+  .terra-tools-actions,.terra-tools-actions .live-data-btn,.terra-tools-actions .geo-divisions-btn{height:43px!important}
+  .globe-zone{top:19.7%!important}
+  .bottom-ui{height:12.8%!important}
+}
+
+/* Respect accessibility without changing normal motion. */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
