@@ -10,6 +10,20 @@ cp web-pwa-src/* site/
 # while current development lived only in /nerdora-terra-preview.
 cp -R nerdora-terra-preview site/nerdora-terra
 
+# Vercel uses cleanUrls=true, so /nerdora-terra/ can be canonicalized to
+# /nerdora-terra. Relative assets such as ./styles.css would then resolve to
+# /styles.css and the Terra opens as unstyled HTML. Add a production-only base
+# to every Terra HTML file; the GitHack preview source remains unchanged.
+python3 - <<'PY'
+from pathlib import Path
+for p in Path('site/nerdora-terra').rglob('*.html'):
+    s=p.read_text(encoding='utf-8')
+    if '<base href="/nerdora-terra/">' not in s:
+        s=s.replace('<head>', '<head>\n  <base href="/nerdora-terra/">', 1)
+        p.write_text(s,encoding='utf-8')
+        print('Terra base path fixed:',p)
+PY
+
 TAR="QuizNerdora-Android-v0.13.0.tar.gz"
 if compgen -G "web-transfer/tar.b64.part.*" > /dev/null; then
   echo "Reconstruindo pacote do Quiz Nerdora..."
