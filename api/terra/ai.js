@@ -32,9 +32,13 @@ module.exports=async function handler(req,res){
   if(req.method==='GET'){
     try{
       const sdk=await import('ai');
+      if(req.query?.probe==='terra-oidc-v1'){
+        const out=await sdk.generateText({model:MODEL,prompt:'Responda somente com a palavra OK.',maxOutputTokens:8,temperature:0});
+        return res.status(200).json({ok:true,mode:'vercel-ai-sdk-oidc',model:MODEL,inference:String(out.text||'').trim()});
+      }
       return res.status(200).json({ok:!!sdk.generateText,mode:'vercel-ai-sdk-oidc',model:MODEL});
     }catch(error){
-      return res.status(503).json({ok:false,mode:'sdk_unavailable',error:String(error?.message||error)});
+      return res.status(503).json({ok:false,mode:'sdk_unavailable',error:String(error?.message||error).slice(0,280)});
     }
   }
   if(req.method!=='POST')return res.status(405).json({error:'method_not_allowed'});
