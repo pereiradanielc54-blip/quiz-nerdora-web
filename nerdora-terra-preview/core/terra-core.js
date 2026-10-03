@@ -1,12 +1,14 @@
-// Nerdora Terra Core 3.0
+// Nerdora Terra Core 3.3
 // Non-invasive bootstrap: captures the existing MapLibre instance, raises the
-// supported camera zoom, manages imagery visibility and enhances 3D relief.
+// supported camera zoom, manages imagery visibility, relief, buildings and landmarks.
 
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.11.2/dist/maplibre-gl.mjs';
 import {SatelliteSourceManager} from './satellite-source-manager.js';
 import {enableTerrainHillshade} from './terrain-enhancements.js';
+import {Buildings3DManager} from './buildings-3d.js';
+import {Landmarks3DManager} from './landmarks-3d.js';
 
-const CORE_VERSION='3.0.0';
+const CORE_VERSION='3.3.0';
 const booted=new WeakSet();
 
 function installSafeApiProxy(){
@@ -60,6 +62,8 @@ function boot(map){
     maxZoom:21,
     imagery:'EOX Sentinel-2',
     satelliteSourceManager:null,
+    buildings3D:null,
+    landmarks3D:null,
     hillshade:true,
     apiProxy:!!window.__NERDORA_FETCH_PROXY__?.enabled
   };
@@ -71,7 +75,16 @@ function boot(map){
   });
   window.__NERDORA_TERRA_CORE__.satelliteSourceManager=imagery;
   imagery.start();
+
   enableTerrainHillshade(map);
+
+  const buildings=new Buildings3DManager(map);
+  window.__NERDORA_TERRA_CORE__.buildings3D=buildings;
+  buildings.start();
+
+  const landmarks=new Landmarks3DManager(map,maplibregl);
+  window.__NERDORA_TERRA_CORE__.landmarks3D=landmarks;
+  landmarks.start();
 
   window.dispatchEvent(new CustomEvent('nerdora:terra-core-ready',{detail:{version:CORE_VERSION,map}}));
 }
@@ -87,7 +100,7 @@ function capture(map){
 installSafeApiProxy();
 
 // app.js owns the map instance. We keep that ownership intact and only observe
-// the first public Map event registration, which gives Core 3.0 the same map
+// the first public Map event registration, which gives Core 3.x the same map
 // without rewriting the proven app.js implementation.
 if(!maplibregl.Map.prototype.__nerdoraCorePatched){
   const originalOn=maplibregl.Map.prototype.on;
