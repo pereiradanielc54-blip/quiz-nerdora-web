@@ -12,7 +12,7 @@ const booted=new WeakSet();
 function installSafeApiProxy(){
   const host=location.hostname.toLowerCase();
   // GitHack/local preview keeps calling providers directly. Vercel production
-  // gets a same-origin cache/proxy, with automatic direct-provider fallback.
+  // gets same-origin cached endpoints, with automatic provider fallback.
   const useProxy=host.endsWith('.vercel.app');
   if(!useProxy||window.__NERDORA_FETCH_PROXY__)return;
 
@@ -29,16 +29,15 @@ function installSafeApiProxy(){
       const u=new URL(raw,location.href);
 
       if(u.origin==='https://osirisai.live'&&u.pathname.startsWith('/api/')){
-        const target=new URL('/api/terra/proxy',location.origin);
-        target.searchParams.set('provider','osiris');
-        target.searchParams.set('path',u.pathname.slice('/api/'.length));
+        const feed=u.pathname.slice('/api/'.length);
+        const target=new URL('/api/terra/osiris',location.origin);
+        target.searchParams.set('feed',feed);
         u.searchParams.forEach((v,k)=>target.searchParams.append(k,v));
         return proxyFetch(target,input,init);
       }
 
       if(u.origin==='https://data.inpe.br'&&u.pathname==='/bdc/stac/v1/search'){
-        const target=new URL('/api/terra/proxy',location.origin);
-        target.searchParams.set('provider','inpe-stac');
+        const target=new URL('/api/terra/inpe-stac',location.origin);
         u.searchParams.forEach((v,k)=>target.searchParams.append(k,v));
         return proxyFetch(target,input,init);
       }
@@ -55,23 +54,24 @@ function boot(map){
 
   try{map.setMaxZoom(21)}catch{}
 
-  const imagery=new SatelliteSourceManager(map,{
-    onChange(provider){
-      window.__NERDORA_TERRA_CORE__.imagery=provider?.name||'EOX Sentinel-2';
-    }
-  });
-  imagery.start();
-  enableTerrainHillshade(map);
-
   window.__NERDORA_TERRA_CORE__={
     version:CORE_VERSION,
     map,
     maxZoom:21,
     imagery:'EOX Sentinel-2',
-    satelliteSourceManager:imagery,
+    satelliteSourceManager:null,
     hillshade:true,
     apiProxy:!!window.__NERDORA_FETCH_PROXY__?.enabled
   };
+
+  const imagery=new SatelliteSourceManager(map,{
+    onChange(provider){
+      if(window.__NERDORA_TERRA_CORE__)window.__NERDORA_TERRA_CORE__.imagery=provider?.name||'EOX Sentinel-2';
+    }
+  });
+  window.__NERDORA_TERRA_CORE__.satelliteSourceManager=imagery;
+  imagery.start();
+  enableTerrainHillshade(map);
 
   window.dispatchEvent(new CustomEvent('nerdora:terra-core-ready',{detail:{version:CORE_VERSION,map}}));
 }
