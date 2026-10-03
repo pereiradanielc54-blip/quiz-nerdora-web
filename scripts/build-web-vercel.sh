@@ -4,7 +4,11 @@ set -euo pipefail
 rm -rf site extracted
 mkdir -p site extracted
 cp web-pwa-src/* site/
-cp -R nerdora-terra site/nerdora-terra
+
+# Nerdora Terra production now follows the actively developed preview build.
+# This removes the split where Vercel published the legacy /nerdora-terra folder
+# while current development lived only in /nerdora-terra-preview.
+cp -R nerdora-terra-preview site/nerdora-terra
 
 TAR="QuizNerdora-Android-v0.13.0.tar.gz"
 if compgen -G "web-transfer/tar.b64.part.*" > /dev/null; then
