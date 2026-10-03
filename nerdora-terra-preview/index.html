@@ -36,41 +36,18 @@
           </div>
           <button id="liveClose" class="live-close" type="button" aria-label="Fechar">×</button>
         </div>
-
         <div class="live-feed-list">
-          <button class="live-feed-row" type="button" data-live-feed="earthquakes" aria-pressed="false">
-            <span class="live-feed-icon quake">〽️</span>
-            <span class="live-feed-copy"><b>Terremotos</b><small>USGS • últimas ocorrências</small></span>
-            <span class="live-feed-count" id="liveCountEarthquakes">—</span>
-            <span class="live-switch"><i></i></span>
-          </button>
-          <button class="live-feed-row" type="button" data-live-feed="fires" aria-pressed="false">
-            <span class="live-feed-icon fire">🔥</span>
-            <span class="live-feed-copy"><b>Incêndios</b><small>NASA FIRMS • focos ativos</small></span>
-            <span class="live-feed-count" id="liveCountFires">—</span>
-            <span class="live-switch"><i></i></span>
-          </button>
-          <button class="live-feed-row" type="button" data-live-feed="weather" aria-pressed="false">
-            <span class="live-feed-icon weather">🌀</span>
-            <span class="live-feed-copy"><b>Clima severo</b><small>NASA EONET / GDACS / NOAA</small></span>
-            <span class="live-feed-count" id="liveCountWeather">—</span>
-            <span class="live-switch"><i></i></span>
-          </button>
-          <button class="live-feed-row" type="button" data-live-feed="satellites" aria-pressed="false">
-            <span class="live-feed-icon satellite">🛰️</span>
-            <span class="live-feed-copy"><b>Satélites</b><small>Posições orbitais atuais</small></span>
-            <span class="live-feed-count" id="liveCountSatellites">—</span>
-            <span class="live-switch"><i></i></span>
-          </button>
+          <button class="live-feed-row" type="button" data-live-feed="earthquakes" aria-pressed="false"><span class="live-feed-icon quake">〽️</span><span class="live-feed-copy"><b>Terremotos</b><small>USGS • últimas ocorrências</small></span><span class="live-feed-count" id="liveCountEarthquakes">—</span><span class="live-switch"><i></i></span></button>
+          <button class="live-feed-row" type="button" data-live-feed="fires" aria-pressed="false"><span class="live-feed-icon fire">🔥</span><span class="live-feed-copy"><b>Incêndios</b><small>NASA FIRMS • focos ativos</small></span><span class="live-feed-count" id="liveCountFires">—</span><span class="live-switch"><i></i></span></button>
+          <button class="live-feed-row" type="button" data-live-feed="weather" aria-pressed="false"><span class="live-feed-icon weather">🌀</span><span class="live-feed-copy"><b>Clima severo</b><small>NASA EONET / GDACS / NOAA</small></span><span class="live-feed-count" id="liveCountWeather">—</span><span class="live-switch"><i></i></span></button>
+          <button class="live-feed-row" type="button" data-live-feed="satellites" aria-pressed="false"><span class="live-feed-icon satellite">🛰️</span><span class="live-feed-copy"><b>Satélites</b><small>Posições orbitais atuais</small></span><span class="live-feed-count" id="liveCountSatellites">—</span><span class="live-switch"><i></i></span></button>
         </div>
-
         <div class="live-filters" aria-label="Filtros das camadas ao vivo">
           <label><span>〽️ Terremotos</span><select data-live-filter="earthquakes"><option value="2.5">M 2,5+</option><option value="4">M 4+</option><option value="5">M 5+</option><option value="6">M 6+</option></select></label>
           <label><span>🔥 Incêndios</span><select data-live-filter="fires"><option value="all">Todos</option><option value="high">Alta confiança</option><option value="frp50">FRP ≥ 50 MW</option></select></label>
           <label><span>🌀 Clima</span><select data-live-filter="weather"><option value="all">Todos</option><option value="medium">Moderado+</option><option value="high">Severo</option></select></label>
           <label><span>🛰️ Satélites</span><select data-live-filter="satellites"><option value="all">Todos</option><option value="earth_obs">Observação da Terra</option><option value="weather">Meteorológicos</option><option value="navigation">Navegação</option><option value="science">Ciência / estações</option><option value="comms">Comunicações</option></select></label>
         </div>
-
         <button id="liveDossier" class="live-dossier-btn" type="button">📍 O que está acontecendo aqui?</button>
         <div class="live-foot"><span id="liveStatus">Ative uma camada para começar.</span><button id="liveRefresh" type="button">↻ Atualizar</button></div>
       </section>
@@ -78,53 +55,20 @@
 
     <aside class="live-detail-sheet" id="liveDetailSheet" aria-hidden="true">
       <div class="live-detail-backdrop" id="liveDetailBackdrop"></div>
-      <section class="live-detail-card panel">
-        <button id="liveDetailClose" class="live-detail-close" type="button" aria-label="Fechar">×</button>
-        <div id="liveDetailIcon" class="live-detail-icon">🌍</div>
-        <small id="liveDetailKind">TERRA AO VIVO</small>
-        <h3 id="liveDetailTitle">Detalhes</h3>
-        <div id="liveDetailBody" class="live-detail-body"></div>
-        <div id="liveDetailMeta" class="live-detail-meta"></div>
-      </section>
+      <section class="live-detail-card panel"><button id="liveDetailClose" class="live-detail-close" type="button" aria-label="Fechar">×</button><div id="liveDetailIcon" class="live-detail-icon">🌍</div><small id="liveDetailKind">TERRA AO VIVO</small><h3 id="liveDetailTitle">Detalhes</h3><div id="liveDetailBody" class="live-detail-body"></div><div id="liveDetailMeta" class="live-detail-meta"></div></section>
     </aside>
 
     <section class="ui-layer top-ui">
-      <header class="panel header">
-        <div class="logo">N</div>
-        <div class="brand"><div><b>Nerdora</b> <span>Terra</span></div><i></i></div>
-        <button data-action="sound" aria-label="Som">◉</button>
-        <button data-action="fullscreen" aria-label="Tela cheia">⌗</button>
-      </header>
+      <header class="panel header"><div class="logo">N</div><div class="brand"><div><b>Nerdora</b> <span>Terra</span></div><i></i></div><button data-action="sound" aria-label="Som">◉</button><button data-action="fullscreen" aria-label="Tela cheia">⌗</button></header>
       <h1>Nosso mundo é<br><span>absurdamente incrível.</span></h1>
       <div class="subtitle panel">Gire a Terra, toque nos pontos de interesse e viaje por bilhões de anos de história.</div>
-      <div class="main-actions terra-tools-actions">
-        <button id="liveDataBtn" class="live-data-btn panel" type="button" aria-expanded="false" title="Abrir Terra ao Vivo"><span class="live-data-dot"></span><b>Ao vivo</b></button>
-        <button id="geoDivisionsBtn" class="geo-divisions-btn panel" type="button" aria-pressed="false" title="Mostrar divisões geográficas"><span>🗺️</span><b>Divisões</b></button>
-      </div>
+      <div class="main-actions terra-tools-actions"><button id="liveDataBtn" class="live-data-btn panel" type="button" aria-expanded="false" title="Abrir Terra ao Vivo"><span class="live-data-dot"></span><b>Ao vivo</b></button><button id="geoDivisionsBtn" class="geo-divisions-btn panel" type="button" aria-pressed="false" title="Mostrar divisões geográficas"><span>🗺️</span><b>Divisões</b></button></div>
     </section>
 
-    <section class="ui-layer bottom-ui">
-      <nav class="nav panel">
-        <button class="active" data-action="terra"><span>🌍</span><b>Terra</b></button>
-        <button data-action="discover"><span>🧭</span><b>Descobrir</b></button>
-        <a class="nav-link" href="./tempo.html?v=25"><span>🦖</span><b>Tempo</b></a>
-        <button data-action="universe"><span>✨</span><b>Universe</b></button>
-      </nav>
-    </section>
+    <section class="ui-layer bottom-ui"><nav class="nav panel"><button class="active" data-action="terra"><span>🌍</span><b>Terra</b></button><button data-action="discover"><span>🧭</span><b>Descobrir</b></button><a class="nav-link" href="./tempo.html?v=27"><span>🦖</span><b>Tempo</b></a><button data-action="universe"><span>✨</span><b>Universe</b></button></nav></section>
 
-    <aside class="sheet" id="sheet" aria-hidden="true">
-      <button class="close" id="closeSheet" aria-label="Fechar">×</button>
-      <div id="sheetIcon" class="sheet-icon">🌍</div><small id="sheetKind">NERDORA TERRA</small><h3 id="sheetTitle">Terra</h3><p id="sheetText"></p><button class="locate" id="locate">Localizar no globo</button>
-    </aside>
-
-    <aside class="discover-sheet" id="discoverSheet" aria-hidden="true">
-      <div class="discover-backdrop" id="discoverBackdrop"></div>
-      <section class="discover-card panel">
-        <div class="discover-head"><div><small id="discoverStep">CATEGORIAS</small><h3 id="discoverTitle">Descubra a Terra</h3></div><button id="discoverClose" class="discover-close" aria-label="Fechar">×</button></div>
-        <div class="discover-actions"><button id="discoverBack" class="discover-back-btn">← Todas as categorias</button></div>
-        <div id="discoverList" class="discover-list"></div>
-      </section>
-    </aside>
+    <aside class="sheet" id="sheet" aria-hidden="true"><button class="close" id="closeSheet" aria-label="Fechar">×</button><div id="sheetIcon" class="sheet-icon">🌍</div><small id="sheetKind">NERDORA TERRA</small><h3 id="sheetTitle">Terra</h3><p id="sheetText"></p><button class="locate" id="locate">Localizar no globo</button></aside>
+    <aside class="discover-sheet" id="discoverSheet" aria-hidden="true"><div class="discover-backdrop" id="discoverBackdrop"></div><section class="discover-card panel"><div class="discover-head"><div><small id="discoverStep">CATEGORIAS</small><h3 id="discoverTitle">Descubra a Terra</h3></div><button id="discoverClose" class="discover-close" aria-label="Fechar">×</button></div><div class="discover-actions"><button id="discoverBack" class="discover-back-btn">← Todas as categorias</button></div><div id="discoverList" class="discover-list"></div></section></aside>
 
     <div class="toast" id="toast"></div>
   </main>
@@ -133,6 +77,6 @@
   <script type="module" src="./app.js?v=16"></script>
   <script type="module" src="./discover-v18.js?v=18"></script>
   <script type="module" src="./atlas/atlas-discover.js?v=24"></script>
-  <script type="module" src="./ai/terra-ai.js?v=26"></script>
+  <script type="module" src="./ai/terra-ai.js?v=27"></script>
 </body>
 </html>
